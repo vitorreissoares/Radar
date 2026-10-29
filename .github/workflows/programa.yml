@@ -106,9 +106,20 @@ jobs:
           bash build/rodar.sh "npm install" npm install --no-audit --no-fund
           bash build/rodar.sh "Montar o instalador" npx electron-builder ${{ matrix.builder }} --publish never
 
+      - name: Preparar o teste da janela (Linux)
+        if: matrix.plataforma == 'linux-64'
+        working-directory: desktop
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.49.1
+          npx playwright install --with-deps chromium
+
       - name: Testar o programa montado
         # O Mac Intel é montado num Mac com chip Apple: o teste depende do Rosetta
         continue-on-error: ${{ matrix.plataforma == 'osx-64' }}
+        env:
+          # No Linux, abre o app num navegador com uma pasta de dados vazia e passa pelas abas
+          TESTAR_JANELA: ${{ matrix.plataforma == 'linux-64' && '1' || '0' }}
+          NODE_PATH: ${{ github.workspace }}/desktop/node_modules
         run: bash desktop/build/rodar.sh "Testar o programa" bash desktop/build/testar_pacote.sh "desktop/${{ matrix.recursos }}"
 
       - uses: actions/upload-artifact@v4

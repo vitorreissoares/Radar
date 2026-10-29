@@ -332,6 +332,8 @@ importar_csv_validado <- function(arquivos, proporcao = PROPORCAO_TOP_PADRAO, mo
 # Postagens validadas de todas as rodadas; se a mesma postagem estiver em duas
 # rodadas, vale a da rodada mais recente
 base_validada_todas <- function(rodadas = listar_rodadas()) {
+  # Nenhuma rodada ainda (programa recém-instalado): base vazia
+  if (length(rodadas) == 0) return(tibble(shortCode = character(), rodada = character(), validada = logical()))
   map(rodadas, \(id) base_validada_rodada(id) %>% filter(validada) %>% mutate(rodada = id)) %>%
     bind_rows() %>%
     distinct(shortCode, .keep_all = TRUE)

@@ -34,6 +34,10 @@ for i in $(seq 1 240); do
   kill -0 $PID 2>/dev/null || break
   sleep 1
 done
+# Com TESTAR_JANELA=1, abre também o app num navegador e passa pelas abas
+if [ $OK = 1 ] && [ "${TESTAR_JANELA:-0}" = 1 ]; then
+  node "$(dirname "$0")/testar_janela.js" "http://127.0.0.1:$PORTA" || OK=0
+fi
 grep -v "^ \|masked\|Attaching" "$REGISTRO" | tail -25
 kill $PID 2>/dev/null || true
 taskkill //PID $PID //T //F >/dev/null 2>&1 || true
