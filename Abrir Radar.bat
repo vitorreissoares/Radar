@@ -1,10 +1,10 @@
 @echo off
 rem =========================================================
-rem  Abre o DoneInstagram no navegador, sem o RStudio.
+rem  Abre o Radar no navegador, sem o RStudio.
 rem  Basta dar dois cliques neste arquivo.
 rem  Para encerrar o app, feche esta janela preta.
 rem =========================================================
-title DoneInstagram
+title Radar
 cd /d "%~dp0"
 
 rem --- Procura o R instalado no computador ---
@@ -26,7 +26,7 @@ if not defined RSCRIPT (
 )
 
 echo.
-echo  Abrindo o DoneInstagram no navegador...
+echo  Abrindo o Radar no navegador...
 echo  Para encerrar o app, feche esta janela.
 echo.
 "%RSCRIPT%" -e "shiny::runApp('.', launch.browser = TRUE)"

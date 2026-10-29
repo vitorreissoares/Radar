@@ -1,4 +1,4 @@
-# DoneInstagram
+# Radar
 
 Programa para monitorar as postagens de candidatos no Instagram. Ele reúne as quatro etapas da pesquisa:
 
@@ -15,10 +15,10 @@ Baixe o instalador do seu sistema na página de **[versões (Releases)](../../re
 
 | Sistema | Arquivo |
 |---|---|
-| **Windows** 10 ou 11 | `DoneInstagram-…-win-x64.exe` |
-| **Mac com chip Apple** (M1, M2, M3, M4…) | `DoneInstagram-…-mac-arm64.dmg` |
-| **Mac com Intel** | `DoneInstagram-…-mac-x64.dmg` |
-| **Linux** | `DoneInstagram-…-linux-x86_64.AppImage` (qualquer distribuição) ou `….deb` (Ubuntu, Debian) |
+| **Windows** 10 ou 11 | `Radar-…-win-x64.exe` |
+| **Mac com chip Apple** (M1, M2, M3, M4…) | `Radar-…-mac-arm64.dmg` |
+| **Mac com Intel** | `Radar-…-mac-x64.dmg` |
+| **Linux** | `Radar-…-linux-x86_64.AppImage` (qualquer distribuição) ou `….deb` (Ubuntu, Debian) |
 
 O instalador já traz tudo o que o programa precisa, inclusive o R. Não é preciso instalar mais nada.
 
@@ -28,18 +28,18 @@ O instalador já traz tudo o que o programa precisa, inclusive o R. Não é prec
 
 1. Dê dois cliques no arquivo `.exe`.
 2. Se aparecer **"O Windows protegeu o computador"**, clique em **Mais informações → Executar assim mesmo**.
-3. Siga o instalador. No fim, o atalho **DoneInstagram** fica na área de trabalho e no Menu Iniciar.
+3. Siga o instalador. No fim, o atalho **Radar** fica na área de trabalho e no Menu Iniciar.
 
 ### Mac
 
-1. Abra o arquivo `.dmg` e arraste o **DoneInstagram** para a pasta **Aplicativos**.
-2. Na primeira vez, abra a pasta Aplicativos, clique no DoneInstagram com o **botão direito → Abrir** e confirme em **Abrir**.
+1. Abra o arquivo `.dmg` e arraste o **Radar** para a pasta **Aplicativos**.
+2. Na primeira vez, abra a pasta Aplicativos, clique no Radar com o **botão direito → Abrir** e confirme em **Abrir**.
 3. Se o Mac não deixar abrir:
    - vá em **Ajustes do Sistema → Privacidade e Segurança**;
-   - desça até a mensagem sobre o DoneInstagram e clique em **Abrir Mesmo Assim**.
+   - desça até a mensagem sobre o Radar e clique em **Abrir Mesmo Assim**.
 4. Se aparecer **"está danificado"**, abra o **Terminal**, cole o comando abaixo e tente de novo:
    ```
-   xattr -dr com.apple.quarantine /Applications/DoneInstagram.app
+   xattr -dr com.apple.quarantine /Applications/Radar.app
    ```
 
 ### Linux
@@ -48,11 +48,11 @@ O instalador já traz tudo o que o programa precisa, inclusive o R. Não é prec
   ```
   sudo apt install libfuse2
   ```
-- **.deb:** dê dois cliques ou use `sudo apt install ./DoneInstagram-…-linux-amd64.deb`.
+- **.deb:** dê dois cliques ou use `sudo apt install ./Radar-…-linux-amd64.deb`.
 
 ## Primeiro uso
 
-1. Abra o **DoneInstagram**. A primeira abertura pode levar até um minuto.
+1. Abra o **Radar**. A primeira abertura pode levar até um minuto.
 2. Na aba **1 · Categorização**, informe a **sua chave do OpenRouter** no painel **Chave da IA** (crie uma em [openrouter.ai/keys](https://openrouter.ai/keys)).
 3. Cada pessoa usa a **própria chave**. Ela fica guardada só no computador de quem a informou, e o botão **Apagar chave** a remove quando quiser.
 
@@ -60,7 +60,7 @@ O guia completo de uso está no [LEIA-ME](LEIA-ME.md). No programa, ele também 
 
 ## Onde ficam os dados
 
-Rodadas, validações, imagens e vídeos baixados, relatórios e a chave ficam na pasta **Documentos/DoneInstagram** de cada usuário. Para abri-la, use o menu **Arquivo → Abrir pasta de dados**.
+Rodadas, validações, imagens e vídeos baixados, relatórios e a chave ficam na pasta **Documentos/Radar** de cada usuário. Para abri-la, use o menu **Arquivo → Abrir pasta de dados**.
 
 Instalar uma versão nova ou desinstalar o programa **não apaga** essa pasta.
 
@@ -76,7 +76,7 @@ Enviar de novo sem mudar o número atualiza os instaladores dessa mesma versão.
 
 ### Rodar pelo R, sem instalar
 
-Com o R instalado, abra `app.R` no RStudio e clique em **Run App**. No Windows, também dá para usar `Abrir DoneInstagram.bat`. Veja a seção "Preparação" do [LEIA-ME](LEIA-ME.md).
+Com o R instalado, abra `app.R` no RStudio e clique em **Run App**. No Windows, também dá para usar `Abrir Radar.bat`. Veja a seção "Preparação" do [LEIA-ME](LEIA-ME.md).
 
 ### Como o programa é montado
 

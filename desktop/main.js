@@ -1,8 +1,8 @@
 // =========================================================
-// DONEINSTAGRAM — programa de computador
+// RADAR — programa de computador
 // Abre uma janela própria, inicia o R que vem junto com o programa
 // (pasta resources/r) e mostra o app quando ele estiver pronto.
-// Os dados de cada pessoa ficam em Documentos/DoneInstagram.
+// Os dados de cada pessoa ficam em Documentos/Radar.
 // =========================================================
 
 const { app, BrowserWindow, Menu, shell, dialog } = require("electron");
@@ -12,7 +12,7 @@ const fs = require("fs");
 const net = require("net");
 const http = require("http");
 
-const NOME = "DoneInstagram";
+const NOME = "Radar";
 const TEMPO_MAXIMO_MS = 180000; // a primeira abertura pode demorar (antivírus, disco lento)
 
 let janela = null;
@@ -28,7 +28,14 @@ const recursos = app.isPackaged ? process.resourcesPath : path.join(__dirname, "
 const pastaApp = app.isPackaged ? path.join(recursos, "app") : path.join(__dirname, "..");
 const pastaR = app.isPackaged ? path.join(recursos, "r") : path.join(__dirname, "r-env");
 const scriptInicio = app.isPackaged ? path.join(recursos, "iniciar.R") : path.join(__dirname, "iniciar.R");
-const pastaDados = process.env.DONEINSTAGRAM_DADOS || path.join(app.getPath("documents"), NOME);
+const pastaDados = process.env.RADAR_DADOS || path.join(app.getPath("documents"), NOME);
+
+// O programa se chamava DoneInstagram: a pasta de dados antiga passa a se chamar Radar
+function migrarPastaAntiga() {
+  const antiga = path.join(app.getPath("documents"), "DoneInstagram");
+  if (process.env.RADAR_DADOS || fs.existsSync(pastaDados) || !fs.existsSync(antiga)) return;
+  try { fs.renameSync(antiga, pastaDados); } catch (e) { /* segue com uma pasta nova */ }
+}
 const arquivoRegistro = path.join(pastaDados, "registro.txt");
 
 // ---------------------------------------------------------
@@ -39,9 +46,9 @@ function comandoR(porta) {
   const sep = path.delimiter;
   const env = {
     ...process.env,
-    DONEINSTAGRAM_APP: pastaApp,
-    DONEINSTAGRAM_DADOS: pastaDados,
-    DONEINSTAGRAM_PORTA: String(porta),
+    RADAR_APP: pastaApp,
+    RADAR_DADOS: pastaDados,
+    RADAR_PORTA: String(porta),
     R_LIBS_USER: "",          // usa só os pacotes que vêm com o programa
     R_PROFILE_USER: "",
     R_ENVIRON_USER: ""
@@ -112,6 +119,7 @@ function respondendo(url) {
 }
 
 function iniciarR(porta) {
+  migrarPastaAntiga();
   fs.mkdirSync(pastaDados, { recursive: true });
   const registro = fs.createWriteStream(arquivoRegistro, { flags: "w" });
   registro.write(`${NOME} ${app.getVersion()} · ${new Date().toISOString()} · ${process.platform}-${process.arch}\n`);

@@ -1,4 +1,4 @@
-# DoneInstagram
+# Radar
 
 Um único app com as três etapas do monitoramento de postagens no Instagram:
 
@@ -14,8 +14,8 @@ Um único app com as três etapas do monitoramento de postagens no Instagram:
 Baixe o instalador do seu sistema (Windows, Mac ou Linux) na página **Releases** do repositório no GitHub e siga o passo a passo do README. O instalador já traz o R e todos os pacotes.
 
 - **Chave da IA:** cada pessoa informa a **própria chave do OpenRouter** no painel **Chave da IA** da aba 1. Ela fica guardada só no computador de quem a informou.
-- **Seus dados:** rodadas, validações, mídias, relatórios e a chave ficam em **Documentos/DoneInstagram**. Para abrir essa pasta, use o menu **Arquivo → Abrir pasta de dados**. Instalar uma versão nova não apaga nada.
-- **Fotos dos candidatos e logo:** ficam em `Documentos/DoneInstagram/assets/img_cand/`. Também dá para trocar uma foto pelo app, na aba 4.
+- **Seus dados:** rodadas, validações, mídias, relatórios e a chave ficam em **Documentos/Radar**. Para abrir essa pasta, use o menu **Arquivo → Abrir pasta de dados**. Instalar uma versão nova não apaga nada.
+- **Fotos dos candidatos e logo:** ficam em `Documentos/Radar/assets/img_cand/`. Também dá para trocar uma foto pelo app, na aba 4.
 
 ## Rodar pelo R, sem instalar (só na primeira vez)
 
@@ -31,7 +31,7 @@ Baixe o instalador do seu sistema (Windows, Mac ou Linux) na página **Releases*
 
 ### Abrir o app
 
-- **Sem o RStudio:** dê dois cliques em **`Abrir DoneInstagram.bat`**. Para ter um ícone na área de trabalho, rode uma vez **`Criar atalho na area de trabalho.bat`**. Para fechar o app, feche a janela preta.
+- **Sem o RStudio:** dê dois cliques em **`Abrir Radar.bat`**. Para ter um ícone na área de trabalho, rode uma vez **`Criar atalho na area de trabalho.bat`**. Para fechar o app, feche a janela preta.
 - **Pelo RStudio:** abra `app.R` e clique em **Run App**.
 
 ### Como a tela é organizada

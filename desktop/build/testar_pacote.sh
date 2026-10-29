@@ -7,7 +7,7 @@ REC="$(cd "$1" && pwd)"
 DADOS="$(mktemp -d)/dados teste"
 PORTA=8799
 REGISTRO="$(mktemp)"
-export DONEINSTAGRAM_APP="$REC/app" DONEINSTAGRAM_DADOS="$DADOS" DONEINSTAGRAM_PORTA=$PORTA
+export RADAR_APP="$REC/app" RADAR_DADOS="$DADOS" RADAR_PORTA=$PORTA
 export R_LIBS_USER="" R_PROFILE_USER="" R_ENVIRON_USER=""
 
 case "$(uname -s)" in
@@ -16,7 +16,7 @@ case "$(uname -s)" in
     export PATH="$R:$R/Library/mingw-w64/bin:$R/Library/usr/bin:$R/Library/bin:$R/Scripts:$R/bin:$PATH"
     export CURL_CA_BUNDLE="$R/Library/ssl/cacert.pem"
     RS="$R/Lib/R/bin/x64/Rscript.exe"; [ -f "$RS" ] || RS="$R/Lib/R/bin/Rscript.exe"
-    export DONEINSTAGRAM_APP="$(cygpath -w "$REC/app")" DONEINSTAGRAM_DADOS="$(cygpath -w "$DADOS")"
+    export RADAR_APP="$(cygpath -w "$REC/app")" RADAR_DADOS="$(cygpath -w "$DADOS")"
     CMD=("$RS" --no-save --no-restore "$(cygpath -w "$REC/iniciar.R")") ;;
   *)
     RH="$REC/r/lib/R"
@@ -30,7 +30,7 @@ esac
 PID=$!
 OK=0
 for i in $(seq 1 240); do
-  if curl -s "http://127.0.0.1:$PORTA" | grep -q "DoneInstagram"; then OK=1; break; fi
+  if curl -s "http://127.0.0.1:$PORTA" | grep -q "Radar"; then OK=1; break; fi
   kill -0 $PID 2>/dev/null || break
   sleep 1
 done

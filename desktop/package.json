@@ -1,6 +1,6 @@
 {
-  "name": "doneinstagram",
-  "productName": "DoneInstagram",
+  "name": "radar",
+  "productName": "Radar",
   "version": "1.1.0",
   "description": "Monitoramento de postagens no Instagram: categorização com IA, validação humana e relatório",
   "main": "main.js",
@@ -15,9 +15,9 @@
     "electron-builder": "25.1.8"
   },
   "build": {
-    "appId": "org.doneinstagram.app",
-    "productName": "DoneInstagram",
-    "artifactName": "DoneInstagram-${version}-${os}-${arch}.${ext}",
+    "appId": "org.radar.app",
+    "productName": "Radar",
+    "artifactName": "Radar-${version}-${os}-${arch}.${ext}",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -77,8 +77,8 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "DoneInstagram",
-      "uninstallDisplayName": "DoneInstagram",
+      "shortcutName": "Radar",
+      "uninstallDisplayName": "Radar",
       "language": "1046",
       "installerLanguages": [
         "pt_BR"
@@ -96,7 +96,7 @@
       "gatekeeperAssess": false
     },
     "dmg": {
-      "title": "DoneInstagram"
+      "title": "Radar"
     },
     "linux": {
       "target": [
@@ -105,18 +105,18 @@
       ],
       "category": "Office",
       "icon": "build/icon.png",
-      "maintainer": "Equipe DoneInstagram <doneinstagram@users.noreply.github.com>",
+      "maintainer": "Equipe Radar <radar@users.noreply.github.com>",
       "synopsis": "Monitoramento de postagens no Instagram"
     },
     "publish": null
   },
   "author": {
-    "name": "Equipe DoneInstagram",
-    "email": "doneinstagram@users.noreply.github.com"
+    "name": "Equipe Radar",
+    "email": "radar@users.noreply.github.com"
   },
-  "homepage": "https://github.com/vitorreissoares/DoneInstagram",
+  "homepage": "https://github.com/vitorreissoares/Radar",
   "repository": {
     "type": "git",
-    "url": "https://github.com/vitorreissoares/DoneInstagram.git"
+    "url": "https://github.com/vitorreissoares/Radar.git"
   }
 }

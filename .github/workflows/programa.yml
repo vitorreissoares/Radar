@@ -1,4 +1,4 @@
-# Monta o programa DoneInstagram para Windows, Mac e Linux.
+# Monta o programa Radar para Windows, Mac e Linux.
 #
 # - A cada envio para a branch main, os instaladores são montados e publicados na
 #   página "Releases", na versão indicada em desktop/package.json ("version").
@@ -44,14 +44,14 @@ jobs:
             micromamba: osx-arm64
             plataforma: osx-arm64
             builder: --mac --arm64
-            recursos: dist/mac-arm64/DoneInstagram.app/Contents/Resources
+            recursos: dist/mac-arm64/Radar.app/Contents/Resources
             arquivos: desktop/dist/*.dmg
           - nome: Mac (Intel)
             os: macos-14
             micromamba: osx-arm64
             plataforma: osx-64
             builder: --mac --x64
-            recursos: dist/mac/DoneInstagram.app/Contents/Resources
+            recursos: dist/mac/Radar.app/Contents/Resources
             arquivos: desktop/dist/*.dmg
           - nome: Linux
             os: ubuntu-22.04
@@ -113,7 +113,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: DoneInstagram ${{ matrix.nome }}
+          name: Radar ${{ matrix.nome }}
           path: ${{ matrix.arquivos }}
           if-no-files-found: error
 
@@ -133,7 +133,7 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.versao.outputs.tag }}
-          name: DoneInstagram ${{ steps.versao.outputs.tag }}
+          name: Radar ${{ steps.versao.outputs.tag }}
           target_commitish: ${{ github.sha }}
           make_latest: "true"
           files: instaladores/*
@@ -142,9 +142,9 @@ jobs:
 
             | Sistema | Arquivo |
             |---|---|
-            | **Windows** | `DoneInstagram-…-win-x64.exe` |
-            | **Mac com chip Apple** (M1, M2, M3…) | `DoneInstagram-…-mac-arm64.dmg` |
-            | **Mac com Intel** | `DoneInstagram-…-mac-x64.dmg` |
+            | **Windows** | `Radar-…-win-x64.exe` |
+            | **Mac com chip Apple** (M1, M2, M3…) | `Radar-…-mac-arm64.dmg` |
+            | **Mac com Intel** | `Radar-…-mac-x64.dmg` |
             | **Linux** | `.AppImage` (qualquer distribuição) ou `.deb` (Ubuntu, Debian) |
 
             Na primeira vez, cada pessoa informa a **própria chave do OpenRouter** no programa.

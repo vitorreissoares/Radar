@@ -2,8 +2,8 @@
 #
 # PASTA_APP: onde estão os arquivos do programa (R/, prompts/, templates/...).
 # No programa instalado, os dados de cada pessoa (config/, saidas/, midia/,
-# assets/) ficam em outra pasta, indicada em DONEINSTAGRAM_DADOS.
-if (!exists("PASTA_APP")) PASTA_APP <- normalizePath(Sys.getenv("DONEINSTAGRAM_APP", getwd()))
+# assets/) ficam em outra pasta, indicada em RADAR_DADOS.
+if (!exists("PASTA_APP")) PASTA_APP <- normalizePath(Sys.getenv("RADAR_APP", getwd()))
 arquivo_app <- function(...) file.path(PASTA_APP, ...)
 
 for (arquivo in c("R/config.R", "R/categorizacao.R", "R/rodadas.R", "R/validacao_remota.R",
@@ -13,7 +13,7 @@ for (arquivo in c("R/config.R", "R/categorizacao.R", "R/rodadas.R", "R/validacao
 
 # Passa a trabalhar na pasta de dados (se houver uma). Na primeira vez, copia para
 # ela as configurações e imagens iniciais do programa, sem sobrescrever nada.
-usar_pasta_dados <- function(pasta = Sys.getenv("DONEINSTAGRAM_DADOS")) {
+usar_pasta_dados <- function(pasta = Sys.getenv("RADAR_DADOS")) {
   if (!nzchar(pasta)) return(invisible(getwd()))
   dir.create(pasta, recursive = TRUE, showWarnings = FALSE)
   pessoais <- c("chave_openrouter.txt", "chave_apify.txt", "validacao_remota.json")   # nunca vêm do programa

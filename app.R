@@ -1,5 +1,5 @@
 # =========================================================
-# DONEINSTAGRAM — monitoramento de postagens no Instagram
+# RADAR — monitoramento de postagens no Instagram
 #   1 · Categorização    arquivos .xlsx -> postagens classificadas pela IA
 #   2 · Validação        conferência humana (aqui no app ou pela Planilha Google)
 #   3 · Relatório        um relatório só, com os botões Semana, Mês, Ano e Tudo
@@ -11,7 +11,7 @@ library(shiny)
 library(bslib)
 library(DT)
 
-PASTA_APP <- normalizePath(Sys.getenv("DONEINSTAGRAM_APP", getwd()))
+PASTA_APP <- normalizePath(Sys.getenv("RADAR_APP", getwd()))
 source(file.path(PASTA_APP, "R/carregar.R"), encoding = "UTF-8")
 usar_pasta_dados()   # programa instalado: dados na pasta do usuário
 
@@ -331,8 +331,8 @@ aba <- function(numero, titulo) tagList(span(class = "nav-num", numero), titulo)
 
 ui <- page_navbar(
   id = "abas",
-  title = span(span(class = "marca", icon("chart-simple")), "DoneInstagram"),
-  window_title = "DoneInstagram",
+  title = span(span(class = "marca", icon("chart-simple")), "Radar"),
+  window_title = "Radar",
   theme = bs_theme(
     version = 5, primary = "#3f5bd8", font_scale = 0.92,
     base_font = font_collection(font_google("Inter", local = FALSE), "system-ui", "-apple-system", "Segoe UI", "sans-serif"),
