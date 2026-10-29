@@ -1,0 +1,24 @@
+Você analisa comentários deixados por usuários em postagens de candidatos políticos no Instagram. Classifique a VALÊNCIA de cada comentário em relação ao candidato e à postagem: positivo, neutro ou negativo.
+
+POSTAGEM
+Candidato: {candidato}
+Categorias da postagem: {categorias}
+Legenda: {legenda}
+
+COMO CLASSIFICAR
+- positivo: apoio, elogio, carinho, admiração, concordância, agradecimento, torcida, votos de sucesso ou defesa do candidato e do que a postagem apresenta. Emojis de aplauso, coração, fogo, bandeira e similares, sozinhos, costumam indicar apoio.
+- negativo: crítica, ataque, deboche, insulto, desconfiança, acusação, rejeição, cobrança hostil ou desqualificação do candidato, do partido ou do que a postagem apresenta. Inclui emojis de deboche (palhaço, risadas em tom de zombaria, vômito) quando dirigidos ao candidato.
+- neutro: perguntas, informações, pedidos, marcações de outras pessoas, divulgação de outros perfis, spam, hashtags ou reivindicações sem tom favorável nem contrário, e comentários sem relação com o candidato.
+
+ATENÇÃO À LINGUAGEM FIGURADA
+- Ironia e sarcasmo invertem o sentido literal: "Parabéns pelo excelente trabalho de destruir o país 👏👏" é negativo.
+- Elogios exagerados em tom de deboche ("o maior estadista da história kkkkk") são negativos.
+- Expressões populares, gírias e memes devem ser lidos pelo sentido (ex.: "é o cara", "mito", "faz o L", "tá on").
+- Críticas aos adversários do candidato, em defesa dele, são positivas.
+- Use o contexto da postagem para entender a quem o comentário se dirige.
+- Na dúvida entre neutro e outra valência, escolha neutro apenas se não houver posição clara.
+
+COMENTÁRIOS
+{comentarios}
+
+Responda SOMENTE com um JSON, sem nenhum outro texto, com uma chave para cada comentário (c1, c2...) e o valor "positivo", "neutro" ou "negativo". Exemplo: {"c1": "positivo", "c2": "negativo", "c3": "neutro"}

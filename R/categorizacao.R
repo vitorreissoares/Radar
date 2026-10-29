@@ -317,7 +317,7 @@ classificar_imagens <- function(shortCode, modelo) {
 # ---------------------------------------------------------
 
 criar_pastas_midia <- function() {
-  for (p in c(PASTA_IMAGENS, PASTA_VIDEOS, PASTA_AUDIOS)) dir.create(p, showWarnings = FALSE, recursive = TRUE)
+  for (p in c(PASTA_IMAGENS, PASTA_VIDEOS, PASTA_AUDIOS, file.path(PASTA_MIDIA, "comentarios"))) dir.create(p, showWarnings = FALSE, recursive = TRUE)
 }
 
 arquivos_imagens <- function(shortCode) {

@@ -1,5 +1,6 @@
 # Dados e segredos de cada pessoa (nunca vão para o GitHub)
 config/chave_openrouter.txt
+config/chave_apify.txt
 config/validacao_remota.json
 config/periodos.json
 saidas/*

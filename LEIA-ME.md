@@ -6,7 +6,8 @@ Um único app com as três etapas do monitoramento de postagens no Instagram:
 |---|---|---|
 | **1 · Categorização** | Adiciona os `.xlsx` coletados, um por candidato | Postagens mais curtidas de cada candidato no período escolhido, com **legenda, imagens e vídeo** analisados pela IA; imagens e vídeos salvos em `midia/` |
 | **2 · Validação** | Confere cada postagem e aponta a classificação final (sozinho ou com outros pesquisadores, pela Planilha Google) | Base validada e **acurácia da IA** |
-| **3 · Relatório** | Revisa o texto de cada botão, os candidatos e o "Sobre a pesquisa" | **Um único relatório**, com os botões **Semana, Mês, Ano e Tudo** no topo |
+| **3 · Comentários** | Coleta os comentários das postagens (Apify), a IA classifica a valência e você valida uma amostra | Comentários de cada postagem em `midia/comentarios/SHORTCODE.csv`, classificados como **positivos, neutros ou negativos** |
+| **4 · Relatório** | Revisa o texto de cada botão, os candidatos e o "Sobre a pesquisa" | **Um único relatório**, com os botões **Semana, Mês, Ano e Tudo** no topo e as seções de valência dos comentários |
 
 ## Instalar o programa (recomendado)
 
@@ -14,7 +15,7 @@ Baixe o instalador do seu sistema (Windows, Mac ou Linux) na página **Releases*
 
 - **Chave da IA:** cada pessoa informa a **própria chave do OpenRouter** no painel **Chave da IA** da aba 1. Ela fica guardada só no computador de quem a informou.
 - **Seus dados:** rodadas, validações, mídias, relatórios e a chave ficam em **Documentos/DoneInstagram**. Para abrir essa pasta, use o menu **Arquivo → Abrir pasta de dados**. Instalar uma versão nova não apaga nada.
-- **Fotos dos candidatos e logo:** ficam em `Documentos/DoneInstagram/assets/img_cand/`. Também dá para trocar uma foto pelo app, na aba 3.
+- **Fotos dos candidatos e logo:** ficam em `Documentos/DoneInstagram/assets/img_cand/`. Também dá para trocar uma foto pelo app, na aba 4.
 
 ## Rodar pelo R, sem instalar (só na primeira vez)
 
@@ -26,7 +27,7 @@ Baixe o instalador do seu sistema (Windows, Mac ou Linux) na página **Releases*
 2. Informe a **chave do OpenRouter** na aba 1, no painel **Chave da IA** da barra lateral (ele abre sozinho enquanto não houver chave): cole a chave e clique em **Salvar chave**. Ela fica guardada só nesta pasta, em `config/chave_openrouter.txt`.
    - Para **compartilhar a pasta** com outra pessoa, clique antes em **Apagar chave**. A chave é removida da pasta e também do `.Renviron` do computador, se estiver lá.
    - A pessoa que receber a pasta informa a própria chave no mesmo quadro.
-3. Coloque as fotos dos candidatos e o logo (`politica-logo.jpg`) em `assets/img_cand/`. O relatório busca as imagens nessa pasta. Também dá para trocar a foto de um candidato pelo app, na aba 3 (painel **Candidatos**).
+3. Coloque as fotos dos candidatos e o logo (`politica-logo.jpg`) em `assets/img_cand/`. O relatório busca as imagens nessa pasta. Também dá para trocar a foto de um candidato pelo app, na aba 4 (painel **Candidatos**).
 
 ### Abrir o app
 
@@ -37,21 +38,19 @@ Baixe o instalador do seu sistema (Windows, Mac ou Linux) na página **Releases*
 
 - A **barra lateral** de cada aba é dividida em painéis que abrem e fecham com um clique (por exemplo: Chave da IA, Arquivos, Período, O que a IA analisa, Modelos). O botão principal da aba fica sempre visível no rodapé da barra.
 - A seta no topo da barra lateral esconde a barra inteira, para dar mais espaço.
-- Na aba 3, **Análises salvas**, **Candidatos** e **Sobre a pesquisa** ficam recolhidos embaixo do texto. Clique no título para abrir.
+- Na aba 4, **Análises salvas**, **Candidatos** e **Sobre a pesquisa** ficam recolhidos embaixo do texto. Clique no título para abrir.
 
-## As subcategorias
+## Categorias e subcategorias
 
-Cada postagem pode receber **quantas subcategorias forem necessárias**, dos dois tipos ao mesmo tempo (ou nenhuma). A IA e a validação humana escolhem entre todas as 10:
+Cada postagem pode receber **quantas categorias forem necessárias** (ou nenhuma). A IA e a validação humana escolhem entre todas:
 
-| Conteúdo programático | Conteúdo personalista |
-|---|---|
-| Pautas e problemas públicos | Competência |
-| Propostas e soluções | **Valores** (antes "Identidade") |
-| Prestação de contas | Vida privada |
-| Mobilização política | **Apoio político** (antes "Relações pessoais e interpessoais") |
-| Campanha negativa | Campanha negativa |
+| Categoria | Quando | Subcategorias |
+|---|---|---|
+| **Liderança** | A postagem enfatiza características da liderança política | **Autenticidade** (genuinidade e coerência: sinceridade, consistência, valores, credibilidade e confiança) · **Competência** (capacidade de exercer as funções e cumprir compromissos: conhecimento, habilidades, experiência, liderança e desempenho) · **Humanização** (o líder como pessoa próxima e identificável: empatia, vida cotidiana, experiências pessoais, acessibilidade e identificação) |
+| **Partido** | A postagem enfatiza características do partido ou da sigla partidária | — |
+| **Políticas** | A postagem enfatiza características relacionadas a políticas públicas | — |
 
-As definições usadas pela IA estão em `prompts/definicoes.txt`. Os critérios não mudaram; só os nomes.
+A Liderança é marcada pelas suas subcategorias: uma postagem é de Liderança quando recebe ao menos uma delas. As definições completas usadas pela IA estão em `prompts/definicoes.txt`.
 
 ## 1 · Categorização
 
@@ -135,7 +134,34 @@ Na subaba **Validação compartilhada**, o app guia você em 4 passos:
 
 > **Atualização do Apps Script:** se você já tinha o Apps Script da versão anterior, cole os dois arquivos novos e use **Implantar → Gerenciar implantações → Editar → Nova versão**. Assim o link continua o mesmo.
 
-## 3 · Relatório
+## 3 · Comentários
+
+Para cada rodada, a aba reúne os comentários das postagens, a classificação da IA e a validação.
+
+### 1. Coletar
+
+Os comentários de cada postagem ficam em `midia/comentarios/SHORTCODE.csv` (uma linha por comentário: id, texto, curtidas, usuário, data e link). Há dois jeitos:
+
+- **Pelo Apify, direto do app:** informe a sua chave do Apify (em [console.apify.com → Settings → Integrations](https://console.apify.com/settings/integrations)) e escolha **quantos comentários por postagem** coletar.
+  - O app mostra antes o **máximo de comentários e o custo máximo estimado** (pelo preço por 1.000 comentários informado; confira o valor atual do *Instagram Comments Scraper* no Apify).
+  - Esse limite vai junto com a coleta: o Apify não coleta nem cobra além dele.
+  - Deixe marcado **Só postagens ainda sem comentários salvos** para não pagar duas vezes.
+  - A chave fica só nesta pasta (`config/chave_apify.txt`) e pode ser apagada pelo app.
+- **Arquivo baixado do Apify:** rode o *Instagram Comments Scraper* no site do Apify com os links das postagens, baixe o resultado em CSV ou JSON e escolha o arquivo no app. Os comentários são separados por postagem automaticamente.
+
+### 2. Classificar com IA
+
+A IA classifica cada comentário como **positivo, neutro ou negativo** em relação ao candidato e à postagem, considerando **ironia, sarcasmo, memes e figuras de linguagem** (que os dicionários de palavras não captam). As instruções ficam em `prompts/valencia_comentarios.txt` e podem ser ajustadas. O que já foi classificado não é cobrado de novo.
+
+### 3. Validar
+
+Em **Validar**, cada postagem mostra uma **amostra fixa** de comentários (30 por padrão, ajustável) com três botões: **Positivo · Neutro · Negativo**, que já vêm com a sugestão da IA. Corrija o que for preciso e clique em **Confirmar e próxima**. A subaba **Acurácia da IA** mostra a concordância entre a IA e a validação, por valência.
+
+### Índice de valência
+
+Para cada postagem, categoria ou período: **(positivos + 0,5 × neutros) ÷ total de comentários**. Vai de **0** (todos negativos) a **1** (todos positivos). Nas médias, cada comentário pesa igual (média ponderada pelo número de comentários).
+
+## 4 · Relatório
 
 O relatório é **um só**. No topo dele, quem lê escolhe um dos botões:
 
@@ -148,7 +174,16 @@ O relatório é **um só**. No topo dele, quem lê escolhe um dos botões:
 
 As datas saem da própria base validada; não há escolha de datas no relatório. Os gráficos, os rankings e as considerações finais mudam junto com o botão.
 
-**Passo a passo na aba 3:**
+Seções sobre os comentários:
+
+| Seção | O que mostra |
+|---|---|
+| **09 · Comentários: positivos, neutros e negativos** | Proporção de cada valência por categoria e subcategoria, e uma tabela com os comentários de cada postagem (percentuais e índice) |
+| **10 · Índice de valência** | Gráfico de linha com a evolução do índice da Autenticidade, da Competência e da Humanização ao longo do tempo, e um **radar** com a proporção de comentários positivos e negativos de todo o período (por subcategoria da Liderança ou por categoria). Quanto maior a área verde, melhor o desempenho; quanto maior a vermelha, pior. |
+
+Na barra lateral da aba 4, em **Comentários**, escolha se entram **todos** (os validados e, os demais, com a classificação da IA) ou **só os validados**.
+
+**Passo a passo na aba 4:**
 
 1. **Base validada:** **Tudo junto** (todas as rodadas e todos os arquivos) ou **Uma rodada**. Também dá para importar um CSV já validado.
 2. **Período da análise:** escolha **Semana**, **Mês**, **Ano** ou **Tudo**, os mesmos botões do relatório. O app mostra as datas de cada um.
@@ -160,27 +195,27 @@ As datas saem da própria base validada; não há escolha de datas no relatório
 - Quando entra uma rodada nova, a "última semana" muda e o texto anterior vira **registro**: continua guardado, mas sai do relatório.
 - **Editar** carrega o texto no formulário. **Excluir** apaga a análise; os dados validados continuam guardados.
 
-**Relatório gerado:** fica em `saidas/relatorio/` (`index.html` + `dados/monitoramento.csv` + `assets/img_cand/`), pronto para publicar no GitHub Pages.
+**Relatório gerado:** fica em `saidas/relatorio/` (`index.html` + `dados/monitoramento.csv` + `dados/comentarios_valencia.csv` + `assets/img_cand/`), pronto para publicar no GitHub Pages.
 - As fotos são lidas de `assets/img_cand/`, a mesma estrutura do projeto. Ao publicar, mantenha essa pasta ao lado do `index.html`.
 - **Baixar (.html com as fotos)** gera um arquivo único, com as fotos dentro, para mandar por e-mail ou abrir em qualquer lugar.
 - O link **Excluir** no quadro do relatório apaga essa pasta. Dá para gerar de novo quando quiser.
 - Para excluir uma **rodada** inteira, use **Excluir esta rodada** na aba 2.
 
-**Semanas antigas:** na primeira vez que o app abre, as semanas 01 a 06 que estavam dentro do relatório final anterior (`config/relatorio_final.html`) viram a rodada **"Semanas antigas"**, já validada. Os dados entram em Mês, Ano e Tudo; os textos publicados ficam nas análises salvas como registro.
+## Rodadas do esquema anterior
 
-## Rodadas antigas
-
-Rodadas e CSVs da versão anterior, com uma subcategoria só e validação "OK"/correção, continuam funcionando. A classificação antiga entra como a fonte "legenda" e os nomes antigos viram **Valores** e **Apoio político**.
+As rodadas categorizadas com o esquema anterior (Conteúdo programático e Conteúdo personalista) continuam guardadas em `saidas/rodadas`, mas não aparecem no app nem no relatório, porque as categorias mudaram. Para analisá-las com as categorias novas, categorize as postagens de novo na aba 1 (as imagens e os vídeos já baixados são reaproveitados).
 
 ## O que mudar e onde
 
 | O que | Onde |
 |---|---|
-| Modelos, % padrão, arredondamento, subcategorias | `R/config.R` |
-| Definições e regras das subcategorias | `prompts/definicoes.txt` |
+| Modelos, % padrão, arredondamento, categorias e cores | `R/config.R` |
+| Definições e regras das categorias e subcategorias | `prompts/definicoes.txt` |
+| Instruções da valência dos comentários | `prompts/valencia_comentarios.txt` |
+| Ator e preço de referência do Apify | `R/comentarios.R` (`APIFY_ATOR`, `APIFY_PRECO_MIL`) |
 | Instruções por fonte | `prompts/legenda.txt`, `prompts/imagem.txt`, `prompts/transcricao.txt`, `prompts/transcrever_audio.txt` |
-| Candidatos e textos do "Sobre a pesquisa" | Pelo app (aba 3) ou `config/` |
-| Análises salvas (textos de cada período) | Pelo app (aba 3) ou `config/periodos.json` |
+| Candidatos e textos do "Sobre a pesquisa" | Pelo app (aba 4) ou `config/` |
+| Análises salvas (textos de cada período) | Pelo app (aba 4) ou `config/periodos.json` |
 | Visual do relatório | `templates/relatorio_template.html` |
 | Validador compartilhado | `apps_script/` (depois de mudar, publique uma nova versão no Apps Script) |
 

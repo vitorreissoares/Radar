@@ -1,6 +1,6 @@
 Você é pesquisador(a) de comunicação política e está redigindo a seção "Considerações Finais" de um relatório sobre as postagens de candidatos à Presidência no Instagram.
 
-As postagens foram classificadas em CONTEÚDO PROGRAMÁTICO (pautas e problemas públicos, propostas e soluções, prestação de contas, mobilização política, campanha negativa) e CONTEÚDO PERSONALISTA (competência, valores, vida privada, apoio político, campanha negativa). Cada postagem pode ter várias subcategorias, dos dois tipos ao mesmo tempo; por isso, as contagens por subcategoria podem somar mais do que o número de postagens.
+As postagens foram classificadas em três categorias: LIDERANÇA (com as subcategorias autenticidade, competência e humanização), PARTIDO e POLÍTICAS (políticas públicas). Cada postagem pode receber mais de uma categoria e subcategoria; por isso, as contagens podem somar mais do que o número de postagens. Os comentários das postagens foram classificados como positivos, neutros ou negativos, e o índice de valência vai de 0 (todos negativos) a 1 (todos positivos).
 
 Abaixo estão:
 1. Um RASCUNHO com todos os números do período, calculados a partir da base validada.
@@ -8,15 +8,15 @@ Abaixo estão:
 
 Reescreva o rascunho em parágrafos corridos, em português, com tom acadêmico e objetivo, seguindo estas regras:
 - Mantenha TODOS os números exatamente como estão no rascunho. Não invente, arredonde nem recalcule números.
-- Mantenha a mesma ordem: visão geral, um parágrafo por candidato, comparação entre candidatos, subcategorias e rankings, formatos e conclusão.
-- No parágrafo de cada candidato, descreva os TEMAS concretos das postagens (por exemplo: quais propostas, quem é criticado, que apoio político ou valores são mobilizados), com base nas legendas e nas transcrições.
+- Mantenha a mesma ordem: visão geral, um parágrafo por candidato, comparação entre candidatos, rankings, comentários, formatos e conclusão.
+- No parágrafo de cada candidato, descreva os TEMAS concretos das postagens (por exemplo: que atributos da liderança são destacados, como o partido aparece, quais políticas públicas são apresentadas), com base nas legendas e nas transcrições.
 - Inclua um parágrafo sobre o estilo de linguagem de cada candidato (textos longos ou curtos, tom, recursos usados).
 - Termine com um parágrafo de conclusão sobre o período.
 - Não use títulos, listas nem marcadores. Separe os parágrafos com uma linha em branco.
 - Responda somente com os parágrafos.
 
 Exemplo de estilo de um parágrafo de candidato:
-"Augusto Cury apresentou 7 postagens programáticas e 6 personalistas. Nas postagens programáticas, aparecem propostas e soluções, mobilização política e campanha negativa. Apresentou propostas, como: segurança para mulheres, sugestão de mudanças na jornada de trabalho distinta do fim da escala 6x1, saúde emocional e teceu críticas a Lula e Flávio Bolsonaro. Nos conteúdos personalistas, predominam a tentativa de gerar identificação na audiência, com registros de fé, trajetória, carreatas, recepção de apoiadores e construção de proximidade."
+"Augusto Cury publicou 13 postagens analisadas: 8 de liderança, 1 de partido e 7 de políticas. Nas postagens de liderança, predomina a humanização, com registros de fé, trajetória e encontros com apoiadores, seguida pela competência, associada à sua formação e experiência. Nas postagens de políticas, apresentou propostas de segurança para mulheres, mudanças na jornada de trabalho e saúde emocional."
 
 RASCUNHO:
 {rascunho}

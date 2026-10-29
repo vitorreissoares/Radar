@@ -86,7 +86,7 @@ corpo_envio_google <- function(id, token) {
               final, formato = formato_validado, avaliador, validado_em) %>%
     mutate(across(everything(), \(x) coalesce(as.character(x), "")))
   toJSON(list(token = token, acao = "enviar", rodada = id, linhas = linhas,
-              subcategorias = SUBCATEGORIAS_TAB),
+              subcategorias = SUBCATEGORIAS_TAB %>% mutate(cor = unname(CORES_CATEGORIAS[categoria]))),
          auto_unbox = TRUE, dataframe = "rows")
 }
 

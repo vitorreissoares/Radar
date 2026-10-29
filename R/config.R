@@ -34,25 +34,33 @@ CANDIDATOS <- c(
 # ---------------------------------------------------------
 # Categorias e subcategorias
 # ---------------------------------------------------------
-# Cada postagem pode receber quantas subcategorias forem necessárias, dos dois tipos ao mesmo tempo.
+# Três categorias: Liderança, Partido e Políticas. Só a Liderança tem
+# subcategorias (Autenticidade, Competência e Humanização): uma postagem é de
+# Liderança quando recebe ao menos uma delas. Partido e Políticas são marcadas
+# diretamente. Uma postagem pode receber quantas forem necessárias (ou nenhuma).
 # "chave" é o nome usado pela IA (JSON) e nas colunas da base; não mude as chaves.
 # "rotulo" é o que aparece no app e nos relatórios (pode mudar).
+# "subcategoria": FALSE quando a chave é a própria categoria (sem subcategorias).
 SUBCATEGORIAS_TAB <- tibble::tribble(
-  ~chave,              ~categoria,              ~rotulo,
-  "prog_pautas",       "Conteúdo programático", "Pautas e problemas públicos",
-  "prog_propostas",    "Conteúdo programático", "Propostas e soluções",
-  "prog_prestacao",    "Conteúdo programático", "Prestação de contas",
-  "prog_mobilizacao",  "Conteúdo programático", "Mobilização política",
-  "prog_negativa",     "Conteúdo programático", "Campanha negativa",
-  "pers_competencia",  "Conteúdo personalista", "Competência",
-  "pers_valores",      "Conteúdo personalista", "Valores",
-  "pers_vida_privada", "Conteúdo personalista", "Vida privada",
-  "pers_apoio",        "Conteúdo personalista", "Apoio político",
-  "pers_negativa",     "Conteúdo personalista", "Campanha negativa"
+  ~chave,              ~categoria,   ~rotulo,          ~subcategoria,
+  "lid_autenticidade", "Liderança",  "Autenticidade",  TRUE,
+  "lid_competencia",   "Liderança",  "Competência",    TRUE,
+  "lid_humanizacao",   "Liderança",  "Humanização",    TRUE,
+  "partido",           "Partido",    "Partido",        FALSE,
+  "politicas",         "Políticas",  "Políticas",      FALSE
 )
 CHAVES <- SUBCATEGORIAS_TAB$chave
-CATEGORIAS <- c("Conteúdo personalista", "Conteúdo programático")
+CATEGORIAS <- unique(SUBCATEGORIAS_TAB$categoria)
 SUBCATEGORIAS <- split(SUBCATEGORIAS_TAB$rotulo, SUBCATEGORIAS_TAB$categoria)
+# Subcategorias da Liderança (usadas nos gráficos de valência dos comentários)
+CHAVES_LIDERANCA <- SUBCATEGORIAS_TAB$chave[SUBCATEGORIAS_TAB$subcategoria]
+
+# Cores das categorias no relatório
+CORES_CATEGORIAS <- c("Liderança" = "#7c3aed", "Partido" = "#0e7490", "Políticas" = "#ea580c")
+
+# Versão do esquema de categorias. Rodadas de esquemas anteriores (Programático e
+# Personalista) ficam guardadas em saidas/rodadas, mas não entram no app nem no relatório.
+ESQUEMA_VERSAO <- 2L
 
 # Fontes analisadas pela IA em cada postagem
 FONTES <- c(legenda = "Legenda", imagem = "Imagem", transcricao = "Vídeo (transcrição)")
@@ -70,7 +78,8 @@ PROMPTS <- list(
   legenda    = arquivo_app("prompts/legenda.txt"),
   imagem     = arquivo_app("prompts/imagem.txt"),
   transcricao = arquivo_app("prompts/transcricao.txt"),
-  transcrever = arquivo_app("prompts/transcrever_audio.txt")
+  transcrever = arquivo_app("prompts/transcrever_audio.txt"),
+  valencia   = arquivo_app("prompts/valencia_comentarios.txt")
 )
 
 # Ordem das colunas principais da base classificada/validada
@@ -94,4 +103,4 @@ PASTA_RELATORIO <- "saidas/relatorio"
 
 # Cache de classificações (evita pagar duas vezes pela mesma postagem
 # e permite retomar se a classificação for interrompida)
-ARQUIVO_CACHE <- "saidas/cache_classificacoes_multimodal.csv"
+ARQUIVO_CACHE <- "saidas/cache_classificacoes_v2.csv"   # v2: categorias Liderança/Partido/Políticas

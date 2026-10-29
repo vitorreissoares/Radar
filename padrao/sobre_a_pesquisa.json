@@ -9,19 +9,19 @@
   },
   {
     "titulo": "Metodologia",
-    "texto": "A unidade de análise desta pesquisa é cada postagem realizada pelos candidatos à Presidência da República no Brasil, feitas em seus perfis oficiais no Instagram. {proporcao} das postagens mais curtidas de cada candidato no período analisado foram categorizadas pelo modelo de linguagem {modelo} (LLM) a partir de três fontes: a legenda, as imagens e a transcrição do áudio dos vídeos. Cada postagem pode receber mais de uma subcategoria. A classificação foi posteriormente submetida à validação por pesquisadores humanos. A partir de categorias que emergem da literatura."
+    "texto": "A unidade de análise desta pesquisa é cada postagem realizada pelos candidatos à Presidência da República no Brasil, feitas em seus perfis oficiais no Instagram. {proporcao} das postagens mais curtidas de cada candidato no período analisado foram categorizadas pelo modelo de linguagem {modelo} (LLM) a partir de três fontes: a legenda, as imagens e a transcrição do áudio dos vídeos. Cada postagem pode receber mais de uma categoria e subcategoria. Os comentários das postagens foram classificados pela IA como positivos, neutros ou negativos, considerando ironias, sarcasmos e figuras de linguagem. As classificações foram submetidas à validação por pesquisadores humanos."
   },
   {
     "titulo": "Critério de seleção",
-    "texto": "O Instagram foi selecionado por ser a plataforma em que os candidatos possuem maior número de seguidores. Enquanto, os candidatos foram selecionados conforme a intenção de voto alcançada nas pesquisas eleitorais oficiais no período de análise. Foi determinado o alcance mínimo de 2% ou mais de intenção de voto. <a href=\"https://noticias.uol.com.br/eleicoes/agregador-de-pesquisas-eleitorais/\" target=\"_blank\" rel=\"noopener noreferrer\" > Acessar a pesquisa. <\/a>"
+    "texto": "O Instagram foi selecionado por ser a plataforma em que os candidatos possuem maior número de seguidores. Enquanto, os candidatos foram selecionados conforme a intenção de voto alcançada nas pesquisas eleitorais oficiais no período de análise. Foi determinado o alcance mínimo de 2% ou mais de intenção de voto. <a href=\"https://noticias.uol.com.br/eleicoes/agregador-de-pesquisas-eleitorais/\" target=\"_blank\" rel=\"noopener noreferrer\" > Acessar a pesquisa. </a>"
   },
   {
     "titulo": "Categorização",
-    "texto": "Orientada por categorias derivadas da literatura, a análise distingue entre apelos individuais, associados ao conteúdo personalista, e apelos coletivos, relacionados ao conteúdo programático."
+    "texto": "Orientada por categorias derivadas da literatura sobre marca humana política, a análise identifica se a postagem enfatiza a Liderança (características da liderança política), o Partido (características do partido ou da sigla partidária) ou as Políticas (características relacionadas a políticas públicas)."
   },
   {
     "titulo": "Subcategorias",
-    "texto": "Emergentes e sustentadas pela literatura, são elas: Propostas e Soluções, Mobilização Política, Pautas e Problemas Públicos, Prestação de Contas, Valores, Competência, Apoio Político e Campanha Negativa."
+    "texto": "A Liderança é analisada em três subcategorias: Autenticidade (percepção de genuinidade e coerência do líder: sinceridade, consistência, valores, credibilidade e confiança), Competência (capacidade de exercer suas funções e cumprir compromissos: conhecimento, habilidades, experiência, liderança e desempenho) e Humanização (o líder como pessoa próxima e identificável: empatia, vida cotidiana, experiências pessoais, acessibilidade e identificação)."
   },
   {
     "titulo": "Formatos",

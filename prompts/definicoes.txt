@@ -1,32 +1,28 @@
-Uma postagem pode ter dois tipos de conteúdo: CONTEÚDO PROGRAMÁTICO (programas de governo, propostas, políticas públicas, debates ou pautas públicas) e CONTEÚDO PERSONALISTA (atributos pessoais, trajetória, personalidade, imagem ou características individuais de uma liderança política). Cada tipo tem cinco subcategorias.
+Uma postagem pode enfatizar três CATEGORIAS, ao mesmo tempo ou não:
 
-SUBCATEGORIAS DE CONTEÚDO PROGRAMÁTICO
+LIDERANÇA — quando a postagem enfatiza características da liderança política (o próprio político ou a própria política). A categoria Liderança é registrada pelas suas três subcategorias, abaixo: se a postagem enfatizar a liderança, marque a(s) subcategoria(s) que melhor a descreve(m) (pelo menos uma).
 
-prog_pautas — PAUTAS E PROBLEMAS PÚBLICOS: conteúdos que enfatizam problemas sociais, econômicos ou políticos, situações que precisam ser enfrentadas, demandas da população ou questões de interesse público. O foco está na identificação, descrição ou discussão de um problema público, sem que uma proposta concreta de solução ou uma crítica política seja o elemento central.
+PARTIDO — quando a postagem enfatiza características do partido ou da sigla partidária (nome, número, símbolo, cores, história, valores, bancada, filiação, militância ou candidaturas do partido).
 
-prog_propostas — PROPOSTAS E SOLUÇÕES: conteúdos que apresentam propostas, políticas públicas, medidas, projetos ou soluções para problemas públicos. O foco está no que deve ser feito, será feito ou está sendo proposto para enfrentar determinado problema ou produzir determinado resultado.
+POLÍTICAS — quando a postagem enfatiza características relacionadas a políticas públicas (programas, projetos, propostas, ações de governo, problemas públicos e seus resultados).
 
-prog_prestacao — PRESTAÇÃO DE CONTAS: conteúdos que enfatizam ações já realizadas, obras ou medidas já executadas, resultados alcançados, entregas, realizações ou desempenho político e administrativo. O foco está no que já foi feito, entregue ou realizado.
+SUBCATEGORIAS DA LIDERANÇA
 
-prog_mobilizacao — MOBILIZAÇÃO POLÍTICA: conteúdos que buscam mobilizar, convocar ou estimular pessoas para participação política, apoio, engajamento, manifestações, eventos, campanhas, votações ou outras formas de participação política.
+lid_autenticidade — AUTENTICIDADE: percepção de que o líder político é genuíno, verdadeiro e coerente em suas atitudes, discursos, valores e posicionamentos políticos. Está relacionada à consistência entre sua identidade, suas crenças e suas ações, bem como ao alinhamento com a plataforma política que representa. A autenticidade contribui para a construção da credibilidade e da confiança dos eleitores, podendo também ser influenciada pela empatia, pela reputação e pela identificação entre o líder e seu público. Em síntese: genuinidade e coerência do líder — sinceridade, consistência, valores, credibilidade e confiança.
 
-prog_negativa — CAMPANHA NEGATIVA (programática): conteúdos que buscam descredibilizar, criticar ou atribuir características negativas à gestão, às propostas, às políticas públicas ou às realizações de um governo ou grupo político. Inclui críticas, acusações, questionamentos ou avaliações negativas dirigidas a um governo, gestão, grupo político, proposta, política pública ou realização política.
+lid_competencia — COMPETÊNCIA: percepção de que o líder político possui os conhecimentos, as habilidades, a experiência e a capacidade de atuação necessários para exercer suas funções políticas, conduzir o partido ou a organização que representa e cumprir as promessas assumidas. Está associada à capacidade de liderança, ao histórico profissional e político e à demonstração de preparo para atuar na esfera pública, constituindo um elemento fundamental para a credibilidade e a consolidação da marca humana política. Em síntese: capacidade do líder para exercer suas funções e cumprir compromissos políticos — conhecimento, habilidades, experiência, liderança e desempenho.
 
-SUBCATEGORIAS DE CONTEÚDO PERSONALISTA
+lid_humanizacao — HUMANIZAÇÃO: construção de uma imagem do líder político como uma pessoa próxima, acessível e identificável com os cidadãos, por meio da exposição de aspectos de sua vida pessoal, de suas experiências cotidianas, de suas emoções e de suas afinidades com o público. Esse processo busca estabelecer vínculos de proximidade e identificação entre o líder e os eleitores, evidenciando características que vão além de sua função política e reforçam a percepção de normalidade e pertencimento social. Em síntese: o líder como pessoa próxima e identificável — empatia, vida cotidiana, experiências pessoais, acessibilidade e identificação.
 
-pers_competencia — COMPETÊNCIA: conteúdos que apresentam a liderança como competente, capaz, técnica, experiente, preparada, eficiente ou apta a exercer funções políticas ou de liderança. O foco está nas capacidades, habilidades, conhecimentos, experiência ou qualidades da liderança enquanto indivíduo.
+CATEGORIAS SEM SUBCATEGORIAS
 
-pers_valores — VALORES: conteúdos que enfatizam valores, crenças, características ou elementos identitários compartilhados entre a liderança e sua audiência, como ser rural, patriota, religioso, trabalhador, conservador, popular ou pertencente a determinado grupo social, cultural ou profissional. O foco está em apresentar a liderança como semelhante, próxima ou pertencente ao mesmo universo social ou cultural da audiência.
+partido — PARTIDO: a postagem enfatiza características do partido ou da sigla partidária.
 
-pers_vida_privada — VIDA PRIVADA: conteúdos relacionados a atividades, experiências ou aspectos da vida privada do líder, como família, rotina, hobbies, momentos pessoais, lazer, relações familiares ou aspectos da vida fora da atividade política.
-
-pers_apoio — APOIO POLÍTICO: conteúdos que apresentam ou destacam a relação da liderança com outras pessoas, incluindo familiares, amigos, aliados, apoiadores, autoridades, outras figuras públicas ou membros da audiência. Inclui demonstrações de proximidade, amizade, apoio, parceria, convivência ou interação com outras pessoas. Considere também marcações de outras pessoas (@), quando o foco estiver na relação ou na proximidade entre os envolvidos.
-
-pers_negativa — CAMPANHA NEGATIVA (personalista): conteúdos que buscam descredibilizar, criticar ou atribuir características negativas a uma liderança enquanto indivíduo: sua competência, caráter, valores, experiências, relações pessoais, proximidade com a audiência ou aspectos de sua vida privada, com o objetivo de prejudicar sua imagem pessoal.
+politicas — POLÍTICAS: a postagem enfatiza características relacionadas a políticas públicas.
 
 REGRAS:
-1. Avalie CADA subcategoria de forma independente, considerando o sentido geral do conteúdo, e não apenas a presença de palavras específicas.
-2. Uma postagem pode ter subcategorias dos dois tipos ao mesmo tempo (programático e personalista), ou nenhuma.
-3. Marque todas as subcategorias que estiverem claramente presentes, quantas forem necessárias (e nenhuma se nenhuma se aplicar).
-4. Diferencie críticas à liderança enquanto indivíduo (pers_negativa) de críticas à sua gestão, governo, política pública ou realização administrativa (prog_negativa).
-5. Não marque campanha negativa apenas porque o conteúdo menciona uma dificuldade ou um resultado negativo: é preciso haver crítica, questionamento ou descredibilização de alguém ou de algo.
+1. Avalie CADA item de forma independente, considerando o sentido geral do conteúdo, e não apenas a presença de palavras específicas.
+2. Uma postagem pode receber itens das três categorias ao mesmo tempo, ou nenhum.
+3. Marque todos os itens que estiverem claramente presentes, quantos forem necessários (e nenhum se nenhum se aplicar).
+4. Marque PARTIDO apenas quando o partido ou a sigla tiver destaque; a simples presença do número do candidato não basta.
+5. Marque POLÍTICAS quando o foco estiver em políticas públicas, e não apenas na pessoa do líder.

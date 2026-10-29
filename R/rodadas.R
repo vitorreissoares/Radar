@@ -28,17 +28,28 @@ criar_rodada <- function(classificados, data_inicio, data_fim, proporcao, modelo
     proporcao = proporcao,
     modelo = modelo,
     criada_em = format(Sys.time(), "%Y-%m-%d %H:%M"),
-    remota = FALSE
+    remota = FALSE,
+    esquema = ESQUEMA_VERSAO
   ), file.path(pasta, "rodada.json"), auto_unbox = TRUE, pretty = TRUE)
 
   pasta
 }
 
-# Rodadas existentes, da mais recente para a mais antiga (pela data de início)
-listar_rodadas <- function() {
+# Esquema de categorias da rodada (rodadas sem a informação são do esquema 1:
+# Programático e Personalista)
+esquema_rodada <- function(id) {
+  as.integer(tryCatch(ler_rodada(id)$esquema, error = function(e) NULL) %||% 1L)
+}
+
+# Rodadas existentes, da mais recente para a mais antiga (pela data de início).
+# Só as do esquema atual; antigas = TRUE lista as dos esquemas anteriores.
+listar_rodadas <- function(antigas = FALSE) {
   if (!dir.exists(PASTA_RODADAS)) return(character())
   ids <- list.dirs(PASTA_RODADAS, full.names = FALSE, recursive = FALSE)
   ids <- ids[file.exists(file.path(PASTA_RODADAS, ids, "base_classificada.csv"))]
+  if (length(ids) == 0) return(character())
+  atual <- map_lgl(ids, \(id) identical(esquema_rodada(id), ESQUEMA_VERSAO))
+  ids <- ids[if (antigas) !atual else atual]
   if (length(ids) == 0) return(character())
   inicio <- map_chr(ids, \(id) tryCatch(ler_rodada(id)$inicio, error = function(e) "0000-00-00"))
   ids[order(inicio, ids, decreasing = TRUE)]
@@ -86,14 +97,23 @@ renomear_rotulo <- function(x) {
     str_replace(regex("^identidade$", ignore_case = TRUE), "Valores")
 }
 
-# ("Conteúdo personalista", "Identidade") -> "pers_valores"
+# ("Liderança", "Competência") -> "lid_competencia"; ("Partido", "") -> "partido"
 chave_de <- function(categoria, subcategoria) {
   tab <- SUBCATEGORIAS_TAB %>% mutate(c = str_to_lower(categoria), r = str_to_lower(rotulo))
   map2_chr(str_to_lower(coalesce(categoria, "")), str_to_lower(renomear_rotulo(coalesce(subcategoria, ""))),
-           \(ca, su) tab$chave[tab$c == ca & tab$r == su][1] %||% NA_character_)
+           \(ca, su) {
+             k <- tab$chave[tab$c == ca & tab$r == su][1]
+             if (is.na(k) && su == "") k <- tab$chave[tab$c == ca & !tab$subcategoria][1]
+             k %||% NA_character_
+           })
 }
 
 rotulo_de <- function(chave) SUBCATEGORIAS_TAB$rotulo[match(chave, SUBCATEGORIAS_TAB$chave)]
+# Nome da subcategoria ("" para Partido e Políticas, que não têm subcategorias)
+subcategoria_de <- function(chave) {
+  i <- match(chave, SUBCATEGORIAS_TAB$chave)
+  ifelse(SUBCATEGORIAS_TAB$subcategoria[i], SUBCATEGORIAS_TAB$rotulo[i], "")
+}
 categoria_de <- function(chave) SUBCATEGORIAS_TAB$categoria[match(chave, SUBCATEGORIAS_TAB$chave)]
 
 # "pers_valores;pers_apoio" <-> c("pers_valores", "pers_apoio")
@@ -231,7 +251,7 @@ para_longo <- function(d) {
     pivot_longer(all_of(paste0("final_", CHAVES)), names_to = "chave", values_to = "marcada",
                  names_prefix = "final_") %>%
     filter(marcada == 1) %>%
-    mutate(categoria = categoria_de(chave), subcategoria = rotulo_de(chave)) %>%
+    mutate(categoria = categoria_de(chave), subcategoria = subcategoria_de(chave)) %>%
     select(-marcada)
 }
 

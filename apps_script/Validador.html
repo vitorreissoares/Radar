@@ -34,7 +34,7 @@ details summary{cursor:pointer;font-size:12px;font-weight:800;text-transform:upp
 .tabela td{padding:7px 4px;border-top:1px solid var(--line);text-align:center}
 .tabela td:first-child{text-align:left}
 .tabela tr.grupo td{background:#fafbfc;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
-.tabela tr.grupo.prog td{color:var(--prog)}.tabela tr.grupo.pers td{color:var(--pers)}
+.tabela td.categoria-unica{font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--cor);border-left:3px solid var(--cor);padding-left:8px}
 .tabela tr.escolhida td{background:#eef4ff}
 .dot{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid #cfd4dc}
 .dot.on{background:var(--accent);border-color:var(--accent)}
@@ -138,12 +138,16 @@ function tabela(r){
   const fontes=chaves(r.fontes);
   const ia={};FONTES.forEach(([f])=>ia[f]=chaves(r["ia_"+f]));
   const sugestao=chaves(r.ia_sugestao);
-  const cab='<tr><th>Subcategoria</th>'+FONTES.map(([,n])=>`<th>${n}</th>`).join("")+'<th>Final</th></tr>';
+  const cab='<tr><th>Categoria / subcategoria</th>'+FONTES.map(([,n])=>`<th>${n}</th>`).join("")+'<th>Final</th></tr>';
   let html="",grupo="";
+  // Categorias com subcategorias (Liderança) ganham cabeçalho; Partido e Políticas são uma linha só
+  const comSub=new Set(SUBS.filter(s=>s.subcategoria!==false).map(s=>s.categoria));
   SUBS.forEach(s=>{
-    if(s.categoria!==grupo){grupo=s.categoria;html+=`<tr class="grupo ${grupo.includes("program")?"prog":"pers"}"><td colspan="5">${esc(grupo)}</td></tr>`;}
+    const cor=s.cor||"#475467";
+    if(comSub.has(s.categoria)&&s.categoria!==grupo){grupo=s.categoria;html+=`<tr class="grupo"><td colspan="5" style="color:${cor}">${esc(grupo)}</td></tr>`;}
     const marcada=sugestao.includes(s.chave);
-    html+=`<tr class="${marcada?"escolhida":""}" data-chave="${s.chave}"><td>${esc(s.rotulo)}</td>`+
+    const rotulo=comSub.has(s.categoria)?`<td>${esc(s.rotulo)}</td>`:`<td class="categoria-unica" style="--cor:${cor}">${esc(s.categoria)}</td>`;
+    html+=`<tr class="${marcada?"escolhida":""}" data-chave="${s.chave}">${rotulo}`+
       FONTES.map(([f])=>fontes.includes(f)?`<td><span class="dot ${ia[f].includes(s.chave)?"on":""}" title="${ia[f].includes(s.chave)?"A IA marcou":"A IA não marcou"}"></span></td>`:'<td class="na" title="Sem esta fonte">—</td>').join("")+
       `<td><label class="switch"><input type="checkbox" class="final" value="${s.chave}" ${marcada?"checked":""}><span class="slider"></span></label></td></tr>`;
   });

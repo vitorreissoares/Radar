@@ -1,5 +1,5 @@
 # =========================================================
-# FUNÇÕES DA ETAPA 3 — RELATÓRIO SEMANAL
+# FUNÇÕES DO RELATÓRIO
 # =========================================================
 
 # ---------------------------------------------------------
@@ -20,18 +20,14 @@ aplicar_validacao <- function(dados) {
     )
 }
 
-# TRUE para as postagens que têm alguma subcategoria final da categoria
+# TRUE para as postagens que têm alguma marcação final da categoria
 tem_categoria <- function(d, categoria) {
   cols <- paste0("final_", SUBCATEGORIAS_TAB$chave[SUBCATEGORIAS_TAB$categoria == categoria])
   rowSums(as.matrix(d[cols]) == 1, na.rm = TRUE) > 0
 }
 
-# Nome da subcategoria no texto (as duas "campanha negativa" são diferenciadas)
-rotulo_texto <- function(chave) {
-  r <- str_to_lower(rotulo_de(chave))
-  ifelse(chave == "prog_negativa", paste(r, "(programática)"),
-         ifelse(chave == "pers_negativa", paste(r, "(personalista)"), r))
-}
+# Nome de uma chave no texto: "autenticidade", "partido", "políticas"
+rotulo_texto <- function(chave) str_to_lower(rotulo_de(chave))
 
 ler_candidatos_info <- function() {
   read_csv("config/candidatos.csv", col_types = cols(.default = col_character()),
@@ -90,93 +86,83 @@ FORMATOS_TEXTO <- tribble(
   "Produzido por IA", "conteúdos produzidos por IA",  "os",    "dos"
 )
 
-curto <- function(categoria) {
-  recode(categoria, "Conteúdo programático" = "programático",
-         "Conteúdo personalista" = "personalista")
-}
-
 # ---------------------------------------------------------
 # 3. Rascunho automático das Considerações Finais
 #    (todos os números saem da base; trechos entre [colchetes]
 #    são lembretes para completar a análise qualitativa)
 # ---------------------------------------------------------
 
-# Médias de curtidas/comentários das postagens com cada tipo de conteúdo
-# (uma postagem com os dois tipos entra nas duas médias)
-frase_medias <- function(d) {
-  prog <- d[tem_categoria(d, "Conteúdo programático"), ]
-  pers <- d[tem_categoria(d, "Conteúdo personalista"), ]
+# Nome da categoria dentro da frase ("liderança", "partido", "políticas")
+cat_texto <- function(categoria) str_to_lower(categoria)
 
-  if (nrow(prog) == 0 || nrow(pers) == 0) {
+# Quantas postagens de cada categoria (uma postagem pode estar em mais de uma)
+contagem_categorias <- function(d) {
+  map_int(set_names(CATEGORIAS), \(cat) sum(tem_categoria(d, cat)))
+}
+
+# "12 de liderança, 5 de partido e 9 de políticas"
+listar_categorias <- function(n) {
+  listar(sprintf("%d de %s", n, cat_texto(names(n))))
+}
+
+# Médias de curtidas/comentários das postagens de cada categoria
+# (uma postagem com mais de uma categoria entra em todas as médias dela)
+frase_medias <- function(d) {
+  medias <- map(CATEGORIAS, \(cat) {
+    x <- d[tem_categoria(d, cat), ]
+    if (nrow(x) == 0) return(NULL)
+    tibble(categoria = cat, n = nrow(x), likes = mean(x$likes), coment = mean(x$comentarios))
+  }) %>% bind_rows()
+  if (nrow(medias) < 2) {
     return(sprintf("As postagens registraram média de %s curtidas e %s comentários por publicação.",
                    num(mean(d$likes)), num(mean(d$comentarios))))
   }
-  m <- list(pl = mean(prog$likes), pc = mean(prog$comentarios),
-            sl = mean(pers$likes), sc = mean(pers$comentarios))
-
-  frase <- sprintf(
-    "Em média, as postagens com conteúdo programático registraram %s curtidas e %s comentários, contra %s curtidas e %s comentários nas postagens com conteúdo personalista.",
-    num(m$pl), num(m$pc), num(m$sl), num(m$sc)
+  partes <- sprintf("%s curtidas e %s comentários nas de %s", num(medias$likes), num(medias$coment),
+                    cat_texto(medias$categoria))
+  mais_l <- medias %>% slice_max(likes, n = 1, with_ties = FALSE)
+  mais_c <- medias %>% slice_max(coment, n = 1, with_ties = FALSE)
+  paste0(
+    sprintf("Em média, as postagens registraram %s.", listar(partes)),
+    if (identical(mais_l$categoria, mais_c$categoria)) {
+      sprintf(" As postagens de %s tiveram as maiores médias de curtidas e de comentários.", cat_texto(mais_l$categoria))
+    } else {
+      sprintf(" A maior média de curtidas foi das postagens de %s, e a de comentários, das de %s.",
+              cat_texto(mais_l$categoria), cat_texto(mais_c$categoria))
+    }
   )
-  dif <- function(a, b) (max(a, b) / min(a, b) - 1) * 100
-  quem <- function(a, b) if (a >= b) "programáticas" else "personalistas"
-  q_l <- quem(m$pl, m$sl); q_c <- quem(m$pc, m$sc)
-  # Diferenças abaixo de 1% são tratadas como empate
-  if (dif(m$pc, m$sc) < 1) q_c <- "iguais"
-  if (dif(m$pl, m$sl) < 1) q_l <- "iguais"
-  extra <- if (q_l == "iguais" && q_c == "iguais") {
-    " As médias dos dois tipos de conteúdo são praticamente iguais."
-  } else if (q_l == "iguais" || q_c == "iguais") {
-    q <- if (q_l == "iguais") q_c else q_l
-    sprintf(" As postagens %s tiveram aproximadamente %s mais %s; na outra métrica, as médias são praticamente iguais.",
-            q, pct(if (q_l == "iguais") dif(m$pc, m$sc) else dif(m$pl, m$sl)),
-            if (q_l == "iguais") "comentários" else "curtidas")
-  } else if (q_l == q_c) {
-    sprintf(" A diferença corresponde a aproximadamente %s mais curtidas e %s mais comentários nas postagens %s.",
-            pct(dif(m$pl, m$sl)), pct(dif(m$pc, m$sc)), q_l)
-  } else {
-    sprintf(" As postagens %s tiveram aproximadamente %s mais curtidas, enquanto as %s tiveram %s mais comentários.",
-            q_l, pct(dif(m$pl, m$sl)), q_c, pct(dif(m$pc, m$sc)))
-  }
-  paste0(frase, extra)
 }
 
 paragrafo_geral <- function(d, periodo = NULL) {
   k <- n_distinct(d$candidato)
   quem <- if (k == 1) paste("de", unique(d$candidato)) else sprintf("dos %d candidatos monitorados", k)
-  prog <- tem_categoria(d, "Conteúdo programático")
-  pers <- tem_categoria(d, "Conteúdo personalista")
-  n_class <- nrow(para_longo(d))
+  n <- contagem_categorias(d)
+  marcadas <- map(CATEGORIAS, \(cat) tem_categoria(d, cat)) %>% reduce(`+`)
   partes <- c(
     sprintf("A análise das publicações no Instagram de %s reúne %d postagens %s, analisadas a partir da legenda, das imagens e da transcrição dos vídeos.",
             periodo %||% periodo_extenso(min(d$data), max(d$data)), nrow(d), quem),
-    sprintf("%s têm conteúdo personalista e %s têm conteúdo programático; %s combinam os dois tipos.",
-            qtd(sum(pers), "postagem", "postagens"), qtd(sum(prog), "postagem", "postagens"),
-            qtd(sum(prog & pers), "postagem", "postagens")),
-    if (sum(!prog & !pers) > 0)
-      sprintf("%s em nenhuma subcategoria.", qtd(sum(!prog & !pers), "postagem não se encaixa", "postagens não se encaixam")),
-    sprintf("Como cada postagem pode receber mais de uma subcategoria, o conjunto soma %d classificações.",
-            n_class),
+    sprintf("Por categoria, são %s; %s.", listar_categorias(n),
+            qtd(sum(marcadas > 1), "postagem combina mais de uma categoria", "postagens combinam mais de uma categoria")),
+    if (sum(marcadas == 0) > 0)
+      sprintf("%s em nenhuma categoria.", qtd(sum(marcadas == 0), "postagem não se encaixa", "postagens não se encaixam")),
+    paragrafo_lideranca(d),
     frase_medias(d)
   )
   paste(partes, collapse = " ")
 }
 
+# Subcategorias da Liderança (Autenticidade, Competência, Humanização)
+paragrafo_lideranca <- function(d) {
+  s <- para_longo(d) %>% filter(chave %in% CHAVES_LIDERANCA) %>% count(chave, sort = TRUE)
+  if (nrow(s) == 0) return(NULL)
+  sprintf("Entre as postagens de liderança, aparecem %s.", listar(sprintf("%s (%d)", rotulo_texto(s$chave), s$n)))
+}
+
 paragrafo_candidato <- function(d, nome) {
   dc <- d %>% filter(candidato == nome)
-  longo <- para_longo(dc)
-  n_prog <- sum(tem_categoria(dc, "Conteúdo programático"))
-  n_pers <- sum(tem_categoria(dc, "Conteúdo personalista"))
+  n <- contagem_categorias(dc)
 
-  abertura <- sprintf("%s publicou %s no período: %s com conteúdo programático e %s com conteúdo personalista.",
-                      nome, qtd(nrow(dc), "postagem analisada", "postagens analisadas"),
-                      n_prog, n_pers)
-
-  subs <- function(cat, rotulo) {
-    s <- longo %>% filter(categoria == cat) %>% count(chave, sort = TRUE)
-    if (nrow(s) == 0) return(NULL)
-    sprintf("No campo %s, aparecem %s.", rotulo, listar(sprintf("%s (%d)", rotulo_texto(s$chave), s$n)))
-  }
+  abertura <- sprintf("%s publicou %s no período: %s.",
+                      nome, qtd(nrow(dc), "postagem analisada", "postagens analisadas"), listar_categorias(n))
 
   mais_curtida <- dc %>% slice_max(likes, n = 1, with_ties = FALSE)
   mais_comentada <- dc %>% slice_max(comentarios, n = 1, with_ties = FALSE)
@@ -196,8 +182,7 @@ paragrafo_candidato <- function(d, nome) {
 
   paste(c(
     abertura,
-    subs("Conteúdo programático", "programático"),
-    subs("Conteúdo personalista", "personalista"),
+    paragrafo_lideranca(dc),
     sprintf("[Descreva os temas das postagens de %s.]", nome),
     # Com um só candidato as médias já estão no parágrafo geral
     if (n_distinct(d$candidato) > 1) frase_medias(dc),
@@ -207,53 +192,61 @@ paragrafo_candidato <- function(d, nome) {
 
 paragrafo_comparativo <- function(d) {
   if (n_distinct(d$candidato) < 2) return(NULL)
-  prop <- d %>%
-    mutate(prog = tem_categoria(d, "Conteúdo programático"), pers = tem_categoria(d, "Conteúdo personalista")) %>%
-    group_by(candidato) %>%
-    summarise(p = mean(prog) * 100, n_prog = sum(prog), n_pers = sum(pers), .groups = "drop") %>%
-    arrange(desc(p))
-  por <- function(col) {
-    x <- prop %>% arrange(desc(.data[[col]])) %>% filter(.data[[col]] > 0)
-    if (nrow(x) == 0) return("nenhum candidato publicou conteúdos desse tipo")
-    itens <- sprintf("%s com %d", x$candidato, x[[col]])
-    listar(itens)
-  }
-  menor <- if (tail(prop$p, 1) == 0) {
-    sprintf("%s não publicou conteúdos programáticos", listar(prop$candidato[prop$p == 0]))
-  } else {
-    sprintf("%s teve a menor (%s)", tail(prop$candidato, 1), pct(tail(prop$p, 1)))
-  }
-  sprintf(
-    "Em termos comparativos, %s foi o candidato com maior proporção de postagens com conteúdo programático (%s), enquanto %s. Postagens com conteúdo programático: %s. Postagens com conteúdo personalista: %s.",
-    prop$candidato[1], pct(prop$p[1]), menor, por("n_prog"), por("n_pers")
-  )
+  frases <- map_chr(CATEGORIAS, \(cat) {
+    prop <- d %>% mutate(tem = tem_categoria(d, cat)) %>%
+      group_by(candidato) %>% summarise(p = mean(tem) * 100, n = sum(tem), .groups = "drop") %>%
+      arrange(desc(p))
+    if (prop$n[1] == 0) return(sprintf("Nenhum candidato publicou postagens de %s.", cat_texto(cat)))
+    sprintf("%s teve a maior proporção de postagens de %s (%s).", prop$candidato[1], cat_texto(cat), pct(prop$p[1]))
+  })
+  paste("Em termos comparativos:", paste(frases, collapse = " "))
 }
 
 paragrafo_subcategorias <- function(d) {
   longo <- para_longo(d)
   if (nrow(longo) == 0) return(NULL)
-  s <- longo %>% count(chave, sort = TRUE)
   n_top <- min(10, nrow(d))
   top_l <- d %>% slice_max(likes, n = n_top, with_ties = FALSE)
   top_c <- d %>% slice_max(comentarios, n = n_top, with_ties = FALSE)
-  comp <- function(t) sprintf("%d têm conteúdo programático e %d, personalista",
-                              sum(tem_categoria(t, "Conteúdo programático")),
-                              sum(tem_categoria(t, "Conteúdo personalista")))
-  subs_top <- para_longo(top_l) %>% count(chave, sort = TRUE) %>% filter(n >= 2) %>%
-    { sprintf("%s aparece em %d", rotulo_texto(.$chave), .$n) }
   dono <- top_l %>% count(candidato, sort = TRUE)
-
   paste(c(
-    sprintf("Entre as subcategorias, %s foi a mais frequente, presente em %s das postagens, seguida por %s.",
-            rotulo_texto(s$chave[1]), pct(s$n[1] / nrow(d) * 100),
-            listar(sprintf("%s (%s)", rotulo_texto(s$chave[2:min(3, nrow(s))]),
-                           pct(s$n[2:min(3, nrow(s))] / nrow(d) * 100)))),
-    sprintf("Entre as %d publicações mais curtidas, %s. Entre as %d mais comentadas, %s.",
-            n_top, comp(top_l), n_top, comp(top_c)),
-    if (length(subs_top) > 0) sprintf("Entre as mais curtidas, %s delas.", listar(subs_top)),
+    sprintf("Entre as %d publicações mais curtidas, há %s. Entre as %d mais comentadas, %s.",
+            n_top, listar_categorias(contagem_categorias(top_l)), n_top, listar_categorias(contagem_categorias(top_c))),
     if (n_distinct(d$candidato) > 1)
       sprintf("%s concentra %d das %d publicações mais curtidas.", dono$candidato[1], dono$n[1], n_top)
   ), collapse = " ")
+}
+
+# Valência dos comentários: índice de 0 (todos negativos) a 1 (todos positivos).
+# Neutros contam como 0,5; a média é ponderada pelo número de comentários.
+indice_valencia <- function(pos, neu, neg) {
+  total <- pos + neu + neg
+  ifelse(total > 0, (pos + 0.5 * neu) / total, NA_real_)
+}
+
+# d precisa das colunas com_pos, com_neu, com_neg (comentários de cada postagem)
+paragrafo_comentarios <- function(d) {
+  if (!all(c("com_pos", "com_neu", "com_neg") %in% names(d))) return(NULL)
+  d <- d %>% filter(com_pos + com_neu + com_neg > 0)
+  if (nrow(d) == 0) return(NULL)
+  dec <- function(x) format(round(x, 2), nsmall = 2, decimal.mark = ",")
+  tot <- c(pos = sum(d$com_pos), neu = sum(d$com_neu), neg = sum(d$com_neg))
+  geral <- sprintf(
+    "Nos comentários analisados (%s, de %s), %s são positivos, %s neutros e %s negativos, o que resulta num índice de valência de %s (0 = todos negativos; 1 = todos positivos).",
+    num(sum(tot)), qtd(nrow(d), "postagem", "postagens"), pct(tot[["pos"]] / sum(tot) * 100),
+    pct(tot[["neu"]] / sum(tot) * 100), pct(tot[["neg"]] / sum(tot) * 100),
+    dec(indice_valencia(tot[["pos"]], tot[["neu"]], tot[["neg"]])))
+  por_chave <- map(CHAVES, \(k) {
+    x <- d[d[[paste0("final_", k)]] %in% 1, ]
+    if (nrow(x) == 0) return(NULL)
+    tibble(chave = k, indice = indice_valencia(sum(x$com_pos), sum(x$com_neu), sum(x$com_neg)))
+  }) %>% bind_rows() %>% arrange(desc(indice))
+  comp <- if (nrow(por_chave) >= 2) {
+    sprintf("Por categoria e subcategoria, o índice foi maior em %s e menor em %s.",
+            listar(sprintf("%s (%s)", rotulo_texto(por_chave$chave[1]), dec(por_chave$indice[1]))),
+            sprintf("%s (%s)", rotulo_texto(tail(por_chave$chave, 1)), dec(tail(por_chave$indice, 1))))
+  }
+  paste(c(geral, comp, "[Comente o tom dos comentários: elogios, críticas, ironias e temas recorrentes.]"), collapse = " ")
 }
 
 paragrafo_formatos <- function(d) {
@@ -288,6 +281,7 @@ gerar_rascunho <- function(d, periodo = NULL) {
     map_chr(candidatos, \(c) paragrafo_candidato(d, c)),
     paragrafo_comparativo(d),
     paragrafo_subcategorias(d),
+    paragrafo_comentarios(d),
     paragrafo_formatos(d),
     "[Escreva aqui a análise do estilo de linguagem de cada candidato e a conclusão do período.]"
   ) %>%
@@ -455,6 +449,22 @@ embutir_imagens <- function(html) {
   html
 }
 
+# Categorias, cores e subcategorias para os gráficos do relatório
+esquema_js <- function() {
+  list(categorias = map(CATEGORIAS, \(cat) list(
+    nome = cat, cor = unname(CORES_CATEGORIAS[[cat]]),
+    subcategorias = I(SUBCATEGORIAS_TAB$rotulo[SUBCATEGORIAS_TAB$categoria == cat & SUBCATEGORIAS_TAB$subcategoria])
+  )))
+}
+
+# Comentários de cada postagem: {shortCode: [positivos, neutros, negativos]}
+# (d precisa das colunas com_pos, com_neu, com_neg; ver juntar_valencia)
+valencia_js <- function(d) {
+  if (!all(c("com_pos", "com_neu", "com_neg") %in% names(d))) return(set_names(list(), character()))
+  v <- d %>% distinct(shortCode, .keep_all = TRUE) %>% filter(com_pos + com_neu + com_neg > 0)
+  set_names(pmap(list(v$com_pos, v$com_neu, v$com_neg), \(a, b, c) c(a, b, c)), v$shortCode)
+}
+
 # Colunas do monitoramento.csv usado pelos relatórios
 COLUNAS_RELATORIO <- c("candidato", "url", "caption", "likes", "shortCode", "comentarios",
                        "data", "semana", "categoria", "subcategoria", "formato")
@@ -486,7 +496,9 @@ gerar_relatorio <- function(d, pasta = PASTA_RELATORIO, periodo_inicial = NULL,
   dados_js <- paste0(
     "    window.MONITORAMENTO_CSV = ", json_js(csv), ";\n",
     "    window.PERIODOS = ", json_js(periodos), ";\n",
-    "    window.PERIODO_INICIAL = ", json_js(periodo_inicial %||% ""), ";"
+    "    window.PERIODO_INICIAL = ", json_js(periodo_inicial %||% ""), ";\n",
+    "    window.ESQUEMA = ", json_js(esquema_js()), ";\n",
+    "    window.VALENCIA = ", json_js(valencia_js(d)), ";"
   )
 
   # Texto inicial do cabeçalho e das considerações (o JavaScript troca ao mudar de período)
@@ -510,6 +522,13 @@ gerar_relatorio <- function(d, pasta = PASTA_RELATORIO, periodo_inicial = NULL,
   writeLines(html, arquivo, useBytes = TRUE)
   # Cópias para guardar/publicar: os dados do relatório e as fotos
   writeLines(csv, file.path(pasta, "dados", "monitoramento.csv"), useBytes = TRUE)
+  if (all(c("com_pos", "com_neu", "com_neg") %in% names(d))) {
+    d %>% distinct(shortCode, .keep_all = TRUE) %>%
+      transmute(candidato, data = as.character(data), shortCode, url, categorias = subcategorias,
+                positivos = com_pos, neutros = com_neu, negativos = com_neg,
+                indice = round(indice_valencia(com_pos, com_neu, com_neg), 4)) %>%
+      write_csv(file.path(pasta, "dados", "comentarios_valencia.csv"), na = "")
+  }
   # As fotos vão junto, na mesma estrutura do projeto (assets/img_cand)
   fotos <- list.files(PASTA_FOTOS, pattern = "\\.(jpe?g|png|webp)$", full.names = TRUE, ignore.case = TRUE)
   unlink(file.path(pasta, "img_cand"), recursive = TRUE)   # pasta da versão anterior

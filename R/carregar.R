@@ -7,7 +7,7 @@ if (!exists("PASTA_APP")) PASTA_APP <- normalizePath(Sys.getenv("DONEINSTAGRAM_A
 arquivo_app <- function(...) file.path(PASTA_APP, ...)
 
 for (arquivo in c("R/config.R", "R/categorizacao.R", "R/rodadas.R", "R/validacao_remota.R",
-                  "R/relatorio.R", "R/periodos.R", "R/historico.R")) {
+                  "R/relatorio.R", "R/periodos.R", "R/historico.R", "R/comentarios.R")) {
   source(arquivo_app(arquivo), encoding = "UTF-8", local = environment())
 }
 
@@ -16,7 +16,7 @@ for (arquivo in c("R/config.R", "R/categorizacao.R", "R/rodadas.R", "R/validacao
 usar_pasta_dados <- function(pasta = Sys.getenv("DONEINSTAGRAM_DADOS")) {
   if (!nzchar(pasta)) return(invisible(getwd()))
   dir.create(pasta, recursive = TRUE, showWarnings = FALSE)
-  pessoais <- c("chave_openrouter.txt", "validacao_remota.json")   # nunca vêm do programa
+  pessoais <- c("chave_openrouter.txt", "chave_apify.txt", "validacao_remota.json")   # nunca vêm do programa
   for (sub in c("config", "assets")) {
     origem <- arquivo_app(sub)
     if (normalizePath(origem, mustWork = FALSE) == normalizePath(file.path(pasta, sub), mustWork = FALSE)) next

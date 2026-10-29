@@ -1,12 +1,13 @@
 # DoneInstagram
 
-Programa para monitorar as postagens de candidatos no Instagram. Ele reúne as três etapas da pesquisa:
+Programa para monitorar as postagens de candidatos no Instagram. Ele reúne as quatro etapas da pesquisa:
 
 | Etapa | O que faz |
 |---|---|
-| **1 · Categorização** | Lê as planilhas coletadas, seleciona as postagens mais curtidas de cada candidato e as classifica com IA (legenda, imagens e vídeos) |
+| **1 · Categorização** | Lê as planilhas coletadas, seleciona as postagens mais curtidas de cada candidato e as classifica com IA (legenda, imagens e vídeos) em Liderança (Autenticidade, Competência, Humanização), Partido e Políticas |
 | **2 · Validação** | Confere a classificação da IA, sozinho ou com outros pesquisadores, e mostra a acurácia da IA |
-| **3 · Relatório** | Gera o relatório com os botões Semana, Mês, Ano e Tudo |
+| **3 · Comentários** | Coleta os comentários das postagens (pelo Apify), classifica a valência com IA (positivo, neutro, negativo) e valida uma amostra |
+| **4 · Relatório** | Gera o relatório com os botões Semana, Mês, Ano e Tudo, incluindo a valência dos comentários |
 
 ## Baixar e instalar
 

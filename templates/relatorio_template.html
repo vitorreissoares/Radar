@@ -1209,6 +1209,30 @@ content="Monitoramento das estratégias de comunicação política dos candidato
 }
 
 /* Seletor de período (Semana / Mês / Ano / Tudo) */
+
+    /* ---------- Valência dos comentários ---------- */
+    .valencia-wrap { height: 420px; }
+    .valencia-tabela-wrap { overflow-x: auto; }
+    .valencia-tabela { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    .valencia-tabela th { text-align: left; font-size: .7rem; text-transform: uppercase; letter-spacing: .04em;
+                          color: var(--muted); padding: 8px 6px; border-bottom: 1px solid var(--border); }
+    .valencia-tabela td { padding: 8px 6px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .valencia-tabela .num { text-align: right; white-space: nowrap; }
+    .valencia-sub { display: block; color: var(--muted); font-size: .72rem; margin-top: 2px; }
+    .valencia-barra { display: flex; height: 10px; border-radius: 99px; overflow: hidden; min-width: 140px; background: #eef2f6; }
+    .valencia-barra span { display: block; height: 100%; }
+    .radar-modos { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; padding: 3px; margin: 4px 0 10px; background: #fff; }
+    .radar-modo { border: 0; background: transparent; color: var(--muted); font-weight: 700; font-size: .76rem;
+                  padding: 6px 14px; border-radius: 999px; cursor: pointer; }
+    .radar-modo.ativo { background: var(--primary); color: #fff; }
+    .radar-grade { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; align-items: center; }
+    .radar-wrap { height: 400px; }
+    .radar-tabela { display: flex; flex-direction: column; gap: 10px; font-size: .82rem; }
+    .radar-item { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; display: grid;
+                  grid-template-columns: 12px 1fr auto; gap: 2px 8px; align-items: center; }
+    .radar-item .valencia-sub { grid-column: 2 / 4; margin: 0; }
+    .radar-cor { width: 10px; height: 10px; border-radius: 50%; }
+    @media (max-width: 760px) { .radar-grade { grid-template-columns: 1fr; } }
 .periodo-switch { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
 .periodo-modos { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; background: #fff; padding: 3px; }
 .periodo-modo { border: 0; background: transparent; color: var(--muted); font-weight: 700; font-size: .78rem;
@@ -1454,7 +1478,7 @@ __SOBRE_A_PESQUISA__
   >
     <span class="section-title">
       <span class="result-number">01</span>
-      Programáticos e Personalistas
+      Liderança, Partido e Políticas
     </span>
 
     <i class="fas fa-chevron-down section-icon"></i>
@@ -1474,7 +1498,8 @@ __SOBRE_A_PESQUISA__
 
       <p class="chart-note">
         Selecione um ou mais candidatos para visualizar a distribuição
-        das postagens programáticas e personalistas no período.
+        das postagens de Liderança, Partido e Políticas no período.
+        Uma postagem pode estar em mais de uma categoria.
       </p>
 
       <div class="candidate-filter-bar">
@@ -1571,9 +1596,8 @@ __SOBRE_A_PESQUISA__
       </h3>
 
       <p class="chart-note">
-        Selecione os candidatos que deseja comparar. Os resultados
-        são separados entre subcategorias de conteúdos programáticos
-        e personalistas para facilitar a leitura.
+        Selecione os candidatos que deseja comparar. A Liderança é
+        analisada em Autenticidade, Competência e Humanização.
       </p>
 
 
@@ -1592,42 +1616,7 @@ __SOBRE_A_PESQUISA__
       </div>
 
 
-      <div class="subcategory-chart-grid">
-
-        <div class="subcategory-chart-card">
-
-          <h3 class="chart-title">
-            Subcategorias programáticas
-          </h3>
-
-          <p class="chart-note">
-            Temas e propostas associados ao conteúdo programático.
-          </p>
-
-          <div class="subcategory-chart-wrap">
-            <canvas id="subcategoryProgrammaticBar"></canvas>
-          </div>
-
-        </div>
-
-
-        <div class="subcategory-chart-card">
-
-          <h3 class="chart-title">
-            Subcategorias personalistas
-          </h3>
-
-          <p class="chart-note">
-            Temas associados aos atributos e características pessoais.
-          </p>
-
-          <div class="subcategory-chart-wrap">
-            <canvas id="subcategoryPersonalistBar"></canvas>
-          </div>
-
-        </div>
-
-      </div>
+      <div class="subcategory-chart-grid" id="subcategoryCharts"></div>
 
     </div>
 
@@ -1945,6 +1934,95 @@ __SOBRE_A_PESQUISA__
 
 
 <!-- ===================================================
+     RESULTADO 09 — VALÊNCIA DOS COMENTÁRIOS
+     =================================================== -->
+<section class="project-section">
+  <div class="section-head" data-target="resultadoValencia" tabindex="0" role="button" aria-expanded="false">
+    <span class="section-title">
+      <span class="result-number">09</span>
+      Comentários: positivos, neutros e negativos
+    </span>
+    <i class="fas fa-chevron-down section-icon"></i>
+  </div>
+  <div class="section-content" id="resultadoValencia">
+    <div class="chart-card wide">
+      <h3 class="chart-title">Valência dos comentários por categoria</h3>
+      <p class="chart-note">
+        Proporção de comentários positivos, neutros e negativos nas postagens de cada categoria e subcategoria.
+        Os comentários foram classificados por IA e validados por pesquisadores, considerando ironias e sarcasmos.
+        Sem candidatos selecionados, todos entram na conta.
+      </p>
+      <div class="candidate-filter-bar">
+        <span class="filter-label"><i class="fas fa-filter"></i> Selecionar candidatos:</span>
+        <div id="valenciaCandidateFilterButtons" class="filter-buttons"></div>
+      </div>
+      <div class="chart-wrap valencia-wrap">
+        <canvas id="valenciaCategoriasBar"></canvas>
+      </div>
+    </div>
+    <div class="chart-card wide">
+      <h3 class="chart-title">Comentários de cada postagem</h3>
+      <p class="chart-note">
+        As 20 postagens com mais comentários analisados no período. Índice: de 0 (todos os comentários negativos)
+        a 1 (todos positivos); os neutros contam como 0,5.
+      </p>
+      <div class="valencia-tabela-wrap">
+        <table class="valencia-tabela">
+          <thead><tr><th>Postagem</th><th>Categorias</th><th class="num">Comentários</th>
+            <th>Positivos · neutros · negativos</th><th class="num">Índice</th></tr></thead>
+          <tbody id="valenciaTabela"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================
+     RESULTADO 10 — ÍNDICE DE VALÊNCIA
+     =================================================== -->
+<section class="project-section">
+  <div class="section-head" data-target="resultadoIndice" tabindex="0" role="button" aria-expanded="false">
+    <span class="section-title">
+      <span class="result-number">10</span>
+      Índice de valência: evolução e desempenho
+    </span>
+    <i class="fas fa-chevron-down section-icon"></i>
+  </div>
+  <div class="section-content" id="resultadoIndice">
+    <div class="candidate-filter-bar">
+      <span class="filter-label"><i class="fas fa-filter"></i> Selecionar candidatos:</span>
+      <div id="indiceCandidateFilterButtons" class="filter-buttons"></div>
+    </div>
+    <div class="chart-card wide">
+      <h3 class="chart-title">Evolução do índice de valência — subcategorias da Liderança</h3>
+      <p class="chart-note">
+        Índice de 0 (todos os comentários negativos) a 1 (todos positivos), calculado <span id="indiceValenciaUnidade">por período</span>
+        com a proporção ponderada pelo número de comentários: (positivos + 0,5 × neutros) ÷ total.
+        Sem candidatos selecionados, todos entram na conta.
+      </p>
+      <div class="chart-wrap">
+        <canvas id="indiceValenciaLinha"></canvas>
+      </div>
+    </div>
+    <div class="chart-card wide">
+      <h3 class="chart-title">Desempenho no período: comentários positivos e negativos</h3>
+      <p class="chart-note">
+        Média ponderada de todo o período selecionado. Quanto maior a área verde (positivos), melhor o desempenho
+        nas mídias sociais; quanto maior a área vermelha (negativos), pior.
+      </p>
+      <div class="radar-modos" role="group" aria-label="O que comparar">
+        <button type="button" class="radar-modo ativo" data-modo="subcategorias">Subcategorias da Liderança</button>
+        <button type="button" class="radar-modo" data-modo="categorias">Categorias</button>
+      </div>
+      <div class="radar-grade">
+        <div class="chart-wrap radar-wrap"><canvas id="radarValencia"></canvas></div>
+        <div id="radarValenciaTabela" class="radar-tabela"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================
      RESULTADO 08
      =================================================== -->
 
@@ -1959,7 +2037,7 @@ __SOBRE_A_PESQUISA__
   >
 
     <span class="section-title">
-      <span class="result-number">09</span>
+      <span class="result-number">11</span>
       Formatos das postagens
     </span>
 
@@ -2024,7 +2102,7 @@ __SOBRE_A_PESQUISA__
   >
 
     <span class="section-title">
-      <span class="result-number">10</span>
+      <span class="result-number">12</span>
       Considerações Finais
     </span>
 
@@ -2186,8 +2264,9 @@ __DADOS__
         comentariosSubcategorias:
           new Set(),
 
-        engajamento:
-          new Set()
+        engajamento: new Set(),
+        valencia: new Set(),
+        indice: new Set()
 
       },
 
@@ -2889,54 +2968,11 @@ __DADOS__
     }
 
 
-    function categoriaTipo(
-      categoria
-    ) {
-
-      const valor =
-        normalizarTexto(
-          categoria
-        );
-
-
-      if (
-        valor.includes(
-          "personal"
-        )
-      ) {
-
-        return "Personalista";
-
-      }
-
-
-      if (
-        valor.includes(
-          "program"
-        ) ||
-        valor.includes(
-          "coletiv"
-        )
-      ) {
-
-        return "Programático";
-
-      }
-
-
-      if (
-        valor.includes(
-          "individual"
-        )
-      ) {
-
-        return "Personalista";
-
-      }
-
-
-      return null;
-
+    function categoriaTipo(categoria) {
+      const valor = normalizarTexto(categoria);
+      if (!valor) return null;
+      const cat = ESQUEMA.categorias.find(c => normalizarTexto(c.nome) === valor);
+      return cat ? cat.nome : null;
     }
 
 
@@ -3237,290 +3273,410 @@ __DADOS__
        GRÁFICO 01 — PROGRAMÁTICO × PERSONALISTA
        ========================================================= */
 
-    function criarGraficoApelos() {
 
-      const canvas =
-        document.getElementById(
-          "graficoApelosTempo"
-        );
+    /* =========================================================
+       ESQUEMA DE CATEGORIAS (vem do app; o padrão abaixo é só para teste)
+       ========================================================= */
 
+    const ESQUEMA = window.ESQUEMA || {
+      categorias: [
+        { nome: "Liderança", cor: "#7c3aed", subcategorias: ["Autenticidade", "Competência", "Humanização"] },
+        { nome: "Partido", cor: "#0e7490", subcategorias: [] },
+        { nome: "Políticas", cor: "#ea580c", subcategorias: [] }
+      ]
+    };
 
-      if (!canvas) {
-        return;
-      }
+    /* Comentários de cada postagem: { shortCode: [positivos, neutros, negativos] } */
+    const VALENCIA = window.VALENCIA || {};
 
+    const CORES_VALENCIA = { positivo: "#16a34a", neutro: "#94a3b8", negativo: "#dc2626" };
 
-      destruirChart(
-        "graficoApelosTempo"
-      );
+    function corCategoria(nome) {
+      const cat = ESQUEMA.categorias.find(c => c.nome === nome);
+      return cat ? cat.cor : "#64748b";
+    }
 
+    function corSubcategoria(nome) {
+      const todas = ESQUEMA.categorias.flatMap(c => c.subcategorias);
+      const i = Math.max(0, todas.indexOf(nome));
+      return CONFIG.subcategoryPalette[i % CONFIG.subcategoryPalette.length];
+    }
 
-      const selecionados =
-        [
-          ...STATE
-            .candidatosSelecionados
-            .apelos
-        ];
+    function hexParaRgba(hex, alfa) {
+      const h = String(hex || "#64748b").replace("#", "");
+      const n = parseInt(h.length === 3 ? h.split("").map(c => c + c).join("") : h, 16);
+      return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alfa})`;
+    }
 
+    /* Uma postagem pode ter várias categorias e subcategorias (uma linha por marcação no CSV).
+       Estas funções evitam contar a mesma postagem mais de uma vez. */
+    function chavePostagem(item) {
+      return item.url || [item.candidato, item.data, item.likes, item.comentarios].join("|");
+    }
 
-      if (
-        !selecionados.length
-      ) {
+    function dadosPorCategoria() {
+      const vistos = new Set();
+      return STATE.dados.filter(item => {
+        const chave = chavePostagem(item) + "|" + categoriaTipo(item.categoria);
+        if (vistos.has(chave)) return false;
+        vistos.add(chave);
+        return true;
+      });
+    }
 
-        mostrarEstadoVazio(
-          canvas,
-          "Selecione um ou mais candidatos acima."
-        );
+    function dadosPorPostagem() {
+      const mapa = new Map();
+      STATE.dados.forEach(item => {
+        const chave = chavePostagem(item);
+        if (!mapa.has(chave)) mapa.set(chave, { ...item, _subs: [], _cats: [] });
+        const atual = mapa.get(chave);
+        const cat = categoriaTipo(item.categoria);
+        if (cat && !atual._cats.includes(cat)) atual._cats.push(cat);
+        if (item.subcategoria && !atual._subs.includes(item.subcategoria)) atual._subs.push(item.subcategoria);
+      });
+      return [...mapa.values()].map(item => ({
+        ...item, categoria: item._cats.join(" · "), subcategoria: item._subs.join(" · ")
+      }));
+    }
 
-        return;
+    /* ---------- Valência dos comentários ---------- */
 
-      }
+    function codigoPostagem(item) {
+      const m = String(item.url || "").match(/\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]+)/);
+      return m ? m[1] : "";
+    }
 
+    function indiceValencia(pos, neu, neg) {
+      const total = pos + neu + neg;
+      return total ? (pos + 0.5 * neu) / total : null;
+    }
 
-      restaurarCanvas(
-        canvas
-      );
+    function formatarIndice(valor) {
+      return valor === null || valor === undefined ? "—" :
+        valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
 
-
-      const datasets = [];
-
-
-      selecionados.forEach(
-        candidato => {
-
-          const dadosCandidato =
-            STATE.dados.filter(
-              item =>
-                normalizarCandidato(
-                  item.candidato
-                ) === candidato
-            );
-
-
-          const totalPublicacoesCandidato =
-            dadosCandidato.length;
-
-
-          const personalistas =
-            STATE.datas.map(
-              data =>
-                dadosCandidato.filter(
-                  item =>
-                    item.data === data &&
-                    categoriaTipo(
-                      item.categoria
-                    ) ===
-                      "Personalista"
-                ).length
-            );
-
-
-          const programaticos =
-            STATE.datas.map(
-              data =>
-                dadosCandidato.filter(
-                  item =>
-                    item.data === data &&
-                    categoriaTipo(
-                      item.categoria
-                    ) ===
-                      "Programático"
-                ).length
-            );
-
-
-          const corForte =
-            getCandidateColor(
-              candidato,
-              "strong"
-            );
-
-
-          const corClara =
-            getCandidateColor(
-              candidato,
-              "light"
-            );
-
-
-          datasets.push({
-
-            label:
-              `${candidato} — Programático`,
-
-            candidateName:
-              candidato,
-
-            tipoConteudo:
-              "Programático",
-
-            data:
-              programaticos,
-
-            backgroundColor:
-              corForte,
-
-            borderColor:
-              corForte,
-
-            borderWidth:
-              1,
-
-            borderRadius:
-              2
-
-          });
-
-
-          datasets.push({
-
-            label:
-              `${candidato} — Personalista`,
-
-            candidateName:
-              candidato,
-
-            tipoConteudo:
-              "Personalista",
-
-            data:
-              personalistas,
-
-            backgroundColor:
-              corClara,
-
-            borderColor:
-              corClara,
-
-            borderWidth:
-              1,
-
-            borderRadius:
-              2
-
-          });
-
+    /* Uma linha por postagem do período com comentários classificados
+       (selecionados vazio = todos os candidatos) */
+    function postagensComValencia(selecionados) {
+      const mapa = new Map();
+      STATE.dados.forEach(item => {
+        const codigo = codigoPostagem(item);
+        const v = VALENCIA[codigo];
+        if (!v || v[0] + v[1] + v[2] === 0) return;
+        const candidato = normalizarCandidato(item.candidato);
+        if (selecionados && selecionados.size && !selecionados.has(candidato)) return;
+        if (!mapa.has(codigo)) {
+          mapa.set(codigo, { codigo, candidato, data: item.data, url: item.url,
+                             cats: new Set(), subs: new Set(), pos: v[0], neu: v[1], neg: v[2] });
         }
-      );
+        const p = mapa.get(codigo);
+        const cat = categoriaTipo(item.categoria);
+        if (cat) p.cats.add(cat);
+        if (item.subcategoria) p.subs.add(String(item.subcategoria).trim());
+      });
+      return [...mapa.values()];
+    }
 
+    /* Grupos da análise: cada categoria e cada subcategoria */
+    function gruposValencia(soSubcategorias) {
+      const grupos = [];
+      ESQUEMA.categorias.forEach(c => {
+        if (!soSubcategorias) grupos.push({ nome: c.nome, cor: c.cor, nivel: "categoria", testa: p => p.cats.has(c.nome) });
+        c.subcategorias.forEach(s => grupos.push({ nome: s, cor: corSubcategoria(s), nivel: "subcategoria", pai: c.nome, testa: p => p.subs.has(s) }));
+      });
+      return grupos;
+    }
 
-      STATE.charts.graficoApelosTempo =
-        new Chart(
-          canvas,
-          {
+    function somarValencia(posts) {
+      return posts.reduce((t, p) => ({ pos: t.pos + p.pos, neu: t.neu + p.neu, neg: t.neg + p.neg, n: t.n + 1 }),
+                          { pos: 0, neu: 0, neg: 0, n: 0 });
+    }
 
-            type:
-              "bar",
-
-            data: {
-
-              labels:
-                STATE.datas.map(
-                  formatarData
-                ),
-
-              datasets
-
-            },
-
-            options: {
-
-              responsive:
-                true,
-
-              maintainAspectRatio:
-                false,
-
-              interaction: {
-                mode:
-                  "index",
-                intersect:
-                  false
-              },
-
-              plugins: {
-
-                legend: {
-                  display:
-                    true,
-                  position:
-                    "bottom",
-                  labels: {
-                    usePointStyle: true,
-                    pointStyle: "rectRounded",
-                    boxWidth: 9,
-                    boxHeight: 9,
-                    padding: 10,
-                    font: {
-                      size: 9.5,
-                      weight: "600"
-                    }
-                  }
+    /* 09 — Proporção de comentários positivos, neutros e negativos por categoria */
+    function criarGraficoValenciaCategorias() {
+      const canvas = document.getElementById("valenciaCategoriasBar");
+      if (!canvas) return;
+      destruirChart("valenciaCategoriasBar");
+      const posts = postagensComValencia(STATE.candidatosSelecionados.valencia);
+      if (!posts.length) {
+        mostrarEstadoVazio(canvas, "Não há comentários classificados para as postagens deste período.");
+        renderizarTabelaValencia([]);
+        return;
+      }
+      restaurarCanvas(canvas);
+      const grupos = gruposValencia(false)
+        .map(g => ({ ...g, soma: somarValencia(posts.filter(g.testa)) }))
+        .filter(g => g.soma.n > 0);
+      const rotulos = grupos.map(g => g.nivel === "subcategoria" ? `   ${g.nome}` : g.nome);
+      const serie = (campo, nome, cor) => ({
+        label: nome, backgroundColor: cor, borderWidth: 0, borderRadius: 3, maxBarThickness: 26,
+        data: grupos.map(g => {
+          const t = g.soma.pos + g.soma.neu + g.soma.neg;
+          return t ? (g.soma[campo] / t) * 100 : 0;
+        })
+      });
+      STATE.charts.valenciaCategoriasBar = new Chart(canvas, {
+        type: "bar",
+        data: {
+          labels: rotulos,
+          datasets: [
+            serie("pos", "Positivos", CORES_VALENCIA.positivo),
+            serie("neu", "Neutros", CORES_VALENCIA.neutro),
+            serie("neg", "Negativos", CORES_VALENCIA.negativo)
+          ]
+        },
+        options: {
+          indexAxis: "y", responsive: true, maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: { position: "bottom" },
+            tooltip: {
+              callbacks: {
+                title: itens => {
+                  const g = grupos[itens[0].dataIndex];
+                  const t = g.soma.pos + g.soma.neu + g.soma.neg;
+                  return `${g.nome} · ${g.soma.n} postagens · ${t.toLocaleString("pt-BR")} comentários · índice ${formatarIndice(indiceValencia(g.soma.pos, g.soma.neu, g.soma.neg))}`;
                 },
-
-                tooltip: {
-
-                  callbacks: {
-
-                    label:
-                      context =>
-                        `${context.dataset.label}: ${Number(context.raw).toLocaleString("pt-BR")}`
-
-                  }
-
-                }
-
-              },
-
-              scales: {
-
-                x: {
-                  stacked:
-                    true
-                },
-
-                y: {
-
-                  stacked:
-                    true,
-
-                  beginAtZero:
-                    true,
-
-                  ticks: {
-
-                    precision:
-                      0,
-
-                    callback:
-                      valor =>
-                        Number(
-                          valor
-                        ).toLocaleString(
-                          "pt-BR"
-                        )
-
-                  },
-
-                  title: {
-
-                    display:
-                      true,
-
-                    text:
-                      "Quantidade de postagens"
-
-                  }
-
-                }
-
+                label: ctx => `${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
               }
-
             }
-
+          },
+          scales: {
+            x: { stacked: true, max: 100, ticks: { callback: v => `${v}%` }, title: { display: true, text: "Percentual dos comentários" } },
+            y: { stacked: true, ticks: { autoSkip: false, font: ctx => ({ weight: grupos[ctx.index] && grupos[ctx.index].nivel === "categoria" ? "700" : "400" }) } }
           }
-        );
+        }
+      });
+      renderizarTabelaValencia(posts);
+    }
 
+    /* Tabela: comentários de cada postagem (as mais comentadas primeiro) */
+    function renderizarTabelaValencia(posts) {
+      const corpo = document.getElementById("valenciaTabela");
+      if (!corpo) return;
+      corpo.innerHTML = "";
+      if (!posts.length) {
+        corpo.innerHTML = '<tr><td colspan="6" class="chart-empty">Sem comentários classificados no período.</td></tr>';
+        return;
+      }
+      [...posts]
+        .sort((a, b) => (b.pos + b.neu + b.neg) - (a.pos + a.neu + a.neg))
+        .slice(0, 20)
+        .forEach(p => {
+          const t = p.pos + p.neu + p.neg;
+          const pc = x => (x / t) * 100;
+          const categorias = [...p.cats].map(c => {
+            const subs = (ESQUEMA.categorias.find(x => x.nome === c) || { subcategorias: [] }).subcategorias.filter(s => p.subs.has(s));
+            return subs.length ? `${c} (${subs.join(", ")})` : c;
+          }).join(" · ") || "Sem categoria";
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><strong>${p.candidato}</strong><span class="valencia-sub">${formatarData(p.data)}${p.url ? ` · <a href="${p.url}" target="_blank" rel="noopener noreferrer">ver</a>` : ""}</span></td>
+            <td>${categorias}</td>
+            <td class="num">${t.toLocaleString("pt-BR")}</td>
+            <td><div class="valencia-barra" title="Positivos ${pc(p.pos).toFixed(0)}% · Neutros ${pc(p.neu).toFixed(0)}% · Negativos ${pc(p.neg).toFixed(0)}%">
+              <span style="width:${pc(p.pos)}%;background:${CORES_VALENCIA.positivo}"></span><span style="width:${pc(p.neu)}%;background:${CORES_VALENCIA.neutro}"></span><span style="width:${pc(p.neg)}%;background:${CORES_VALENCIA.negativo}"></span>
+            </div><span class="valencia-sub">${pc(p.pos).toFixed(0)}% · ${pc(p.neu).toFixed(0)}% · ${pc(p.neg).toFixed(0)}%</span></td>
+            <td class="num"><strong>${formatarIndice(indiceValencia(p.pos, p.neu, p.neg))}</strong></td>`;
+          corpo.appendChild(tr);
+        });
+    }
+
+    /* Agrupa datas em dias, semanas ou meses, conforme o tamanho do período */
+    function unidadeTempo(datas) {
+      if (!datas.length) return "day";
+      const dias = (Math.max(...datas) - Math.min(...datas)) / 86400000;
+      return dias <= 31 ? "day" : dias <= 180 ? "week" : "month";
+    }
+
+    function inicioDoPeriodo(data, unidade) {
+      const d = new Date(data.getFullYear(), data.getMonth(), data.getDate());
+      if (unidade === "week") d.setDate(d.getDate() - ((d.getDay() + 6) % 7));   // segunda-feira
+      if (unidade === "month") d.setDate(1);
+      return d;
+    }
+
+    function rotuloTempo(data, unidade) {
+      if (unidade === "month") return data.toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
+      const dia = data.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+      return unidade === "week" ? `sem. ${dia}` : dia;
+    }
+
+    /* 10 — Evolução do índice de valência das subcategorias da Liderança */
+    function criarGraficoIndiceTempo() {
+      const canvas = document.getElementById("indiceValenciaLinha");
+      if (!canvas) return;
+      destruirChart("indiceValenciaLinha");
+      const posts = postagensComValencia(STATE.candidatosSelecionados.indice)
+        .map(p => ({ ...p, quando: parseData(p.data) })).filter(p => p.quando);
+      const grupos = gruposValencia(true);
+      if (!posts.length || !grupos.length) {
+        mostrarEstadoVazio(canvas, "Não há comentários classificados para as postagens deste período.");
+        return;
+      }
+      restaurarCanvas(canvas);
+      const unidade = unidadeTempo(posts.map(p => p.quando));
+      // Todos os períodos entre a primeira e a última postagem (os sem comentários ficam em branco)
+      const inicios = posts.map(p => inicioDoPeriodo(p.quando, unidade).getTime());
+      const chaves = [];
+      for (let d = new Date(Math.min(...inicios)); d.getTime() <= Math.max(...inicios); ) {
+        chaves.push(d.getTime());
+        d = new Date(d);
+        if (unidade === "month") d.setMonth(d.getMonth() + 1); else d.setDate(d.getDate() + (unidade === "week" ? 7 : 1));
+      }
+      const nota = document.getElementById("indiceValenciaUnidade");
+      if (nota) nota.textContent = { day: "por dia", week: "por semana", month: "por mês" }[unidade];
+      const datasets = grupos.map(g => {
+        const pontos = chaves.map(k => {
+          const doPeriodo = posts.filter(p => g.testa(p) && inicioDoPeriodo(p.quando, unidade).getTime() === k);
+          const s = somarValencia(doPeriodo);
+          return { y: indiceValencia(s.pos, s.neu, s.neg), n: s.pos + s.neu + s.neg, posts: s.n };
+        });
+        return {
+          label: g.nome, data: pontos.map(p => p.y), extra: pontos,
+          borderColor: g.cor, backgroundColor: g.cor, pointRadius: 3.5, pointHoverRadius: 6,
+          borderWidth: 2.2, tension: 0.25, spanGaps: true
+        };
+      });
+      STATE.charts.indiceValenciaLinha = new Chart(canvas, {
+        type: "line",
+        data: { labels: chaves.map(k => rotuloTempo(new Date(k), unidade)), datasets },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: { position: "bottom" },
+            tooltip: {
+              callbacks: {
+                label: ctx => {
+                  const e = ctx.dataset.extra[ctx.dataIndex];
+                  return ctx.raw === null ? `${ctx.dataset.label}: sem comentários` :
+                    `${ctx.dataset.label}: ${formatarIndice(ctx.raw)} (${e.n.toLocaleString("pt-BR")} comentários em ${e.posts} postagens)`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: { min: 0, max: 1, ticks: { stepSize: 0.25, callback: v => formatarIndice(v) },
+                 title: { display: true, text: "Índice de valência (0 a 1)" } },
+            x: { title: { display: false } }
+          }
+        }
+      });
+    }
+
+    /* 10 — Radar: positivos e negativos (média ponderada do período) */
+    function criarGraficoRadarValencia() {
+      const canvas = document.getElementById("radarValencia");
+      if (!canvas) return;
+      destruirChart("radarValencia");
+      const posts = postagensComValencia(STATE.candidatosSelecionados.indice);
+      const modo = STATE.radarModo || "subcategorias";
+      document.querySelectorAll(".radar-modo").forEach(b => b.classList.toggle("ativo", b.dataset.modo === modo));
+      const grupos = gruposValencia(modo === "subcategorias")
+        .filter(g => modo === "subcategorias" ? true : g.nivel === "categoria")
+        .map(g => ({ ...g, soma: somarValencia(posts.filter(g.testa)) }));
+      const tabela = document.getElementById("radarValenciaTabela");
+      if (!posts.length || !grupos.some(g => g.soma.n)) {
+        mostrarEstadoVazio(canvas, "Não há comentários classificados para as postagens deste período.");
+        if (tabela) tabela.innerHTML = "";
+        return;
+      }
+      restaurarCanvas(canvas);
+      const pct = (g, campo) => {
+        const t = g.soma.pos + g.soma.neu + g.soma.neg;
+        return t ? (g.soma[campo] / t) * 100 : 0;
+      };
+      STATE.charts.radarValencia = new Chart(canvas, {
+        type: "radar",
+        data: {
+          labels: grupos.map(g => g.nome),
+          datasets: [
+            { label: "Positivos (%)", data: grupos.map(g => pct(g, "pos")), borderColor: CORES_VALENCIA.positivo,
+              backgroundColor: hexParaRgba(CORES_VALENCIA.positivo, 0.18), pointBackgroundColor: CORES_VALENCIA.positivo, borderWidth: 2 },
+            { label: "Negativos (%)", data: grupos.map(g => pct(g, "neg")), borderColor: CORES_VALENCIA.negativo,
+              backgroundColor: hexParaRgba(CORES_VALENCIA.negativo, 0.14), pointBackgroundColor: CORES_VALENCIA.negativo, borderWidth: 2 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: "bottom" },
+            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label.replace(" (%)", "")}: ${Number(ctx.raw).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%` } }
+          },
+          scales: { r: { min: 0, max: 100, ticks: { stepSize: 25, callback: v => `${v}%`, backdropColor: "transparent" },
+                         pointLabels: { font: { size: 12, weight: "600" } } } }
+        }
+      });
+      if (tabela) {
+        tabela.innerHTML = grupos.map(g => {
+          const t = g.soma.pos + g.soma.neu + g.soma.neg;
+          return `<div class="radar-item"><span class="radar-cor" style="background:${g.cor}"></span><strong>${g.nome}</strong>
+            <span>índice ${formatarIndice(indiceValencia(g.soma.pos, g.soma.neu, g.soma.neg))}</span>
+            <span class="valencia-sub">${t.toLocaleString("pt-BR")} comentários · ${g.soma.n} postagens</span></div>`;
+        }).join("");
+      }
+    }
+
+    function criarSecaoValencia() {
+      criarGraficoValenciaCategorias();
+      criarGraficoIndiceTempo();
+      criarGraficoRadarValencia();
+    }
+
+    function criarGraficoApelos() {
+      const canvas = document.getElementById("graficoApelosTempo");
+      if (!canvas) return;
+      destruirChart("graficoApelosTempo");
+      const selecionados = [...STATE.candidatosSelecionados.apelos];
+      if (!selecionados.length) {
+        mostrarEstadoVazio(canvas, "Selecione um ou mais candidatos acima.");
+        return;
+      }
+      restaurarCanvas(canvas);
+      const base = dadosPorCategoria();
+      const alfas = [1, 0.62, 0.34, 0.2];
+      const datasets = [];
+      selecionados.forEach(candidato => {
+        const dadosCandidato = base.filter(item => normalizarCandidato(item.candidato) === candidato);
+        const cor = getCandidateColor(candidato, "strong");
+        ESQUEMA.categorias.forEach((cat, i) => {
+          datasets.push({
+            label: `${candidato} — ${cat.nome}`,
+            candidateName: candidato,
+            tipoConteudo: cat.nome,
+            data: STATE.datas.map(data => dadosCandidato.filter(item =>
+              item.data === data && categoriaTipo(item.categoria) === cat.nome).length),
+            backgroundColor: hexParaRgba(cor, alfas[i % alfas.length]),
+            borderColor: cor,
+            borderWidth: 1,
+            borderRadius: 2
+          });
+        });
+      });
+      STATE.charts.graficoApelosTempo = new Chart(canvas, {
+        type: "bar",
+        data: { labels: STATE.datas.map(formatarData), datasets },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: {
+              display: true, position: "bottom",
+              labels: { usePointStyle: true, pointStyle: "rectRounded", boxWidth: 9, boxHeight: 9, padding: 10,
+                        font: { size: 9.5, weight: "600" } }
+            },
+            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString("pt-BR")}` } }
+          },
+          scales: {
+            x: { stacked: true },
+            y: { stacked: true, beginAtZero: true,
+                 ticks: { precision: 0, callback: v => Number(v).toLocaleString("pt-BR") },
+                 title: { display: true, text: "Quantidade de postagens" } }
+          }
+        }
+      });
     }
 
 
@@ -3582,56 +3738,14 @@ __DADOS__
             "color-legend-types";
 
 
-          const programatico =
-            document.createElement(
-              "span"
-            );
-
-
-          programatico.className =
-            "color-legend-swatch";
-
-
-          programatico.style.background =
-            getCandidateColor(
-              candidato,
-              "strong"
-            );
-
-
-          programatico.title =
-            "Conteúdo programático";
-
-
-          const personalista =
-            document.createElement(
-              "span"
-            );
-
-
-          personalista.className =
-            "color-legend-swatch";
-
-
-          personalista.style.background =
-            getCandidateColor(
-              candidato,
-              "light"
-            );
-
-
-          personalista.title =
-            "Conteúdo personalista";
-
-
-          tipos.appendChild(
-            programatico
-          );
-
-
-          tipos.appendChild(
-            personalista
-          );
+          // Um tom da cor do candidato para cada categoria (o mesmo do gráfico 01)
+          ESQUEMA.categorias.forEach((cat, i) => {
+            const amostra = document.createElement("span");
+            amostra.className = "color-legend-swatch";
+            amostra.style.background = hexParaRgba(getCandidateColor(candidato, "strong"), [1, 0.62, 0.34, 0.2][i % 4]);
+            amostra.title = cat.nome;
+            tipos.appendChild(amostra);
+          });
 
 
           wrapper.appendChild(
@@ -3659,259 +3773,56 @@ __DADOS__
        ========================================================= */
 
     function criarDonuts() {
-
-      const grid =
-        document.getElementById(
-          "donutGrid"
-        );
-
-
-      if (!grid) {
-        return;
-      }
-
-
-      grid.innerHTML =
-        "";
-
-
-      STATE.candidatos.forEach(
-        (candidato, index) => {
-
-          const id =
-            `donut-${index}`;
-
-
-          const card =
-            document.createElement(
-              "div"
-            );
-
-
-          card.className =
-            "chart-card candidate-donut-card";
-
-
-          const titulo =
-            document.createElement(
-              "h3"
-            );
-
-
-          titulo.className =
-            "chart-title";
-
-
-          titulo.textContent =
-            candidato;
-
-
-          const wrap =
-            document.createElement(
-              "div"
-            );
-
-
-          wrap.className =
-            "chart-wrap";
-
-
-          const canvas =
-            document.createElement(
-              "canvas"
-            );
-
-
-          canvas.id =
-            id;
-
-
-          wrap.appendChild(
-            canvas
-          );
-
-
-          card.appendChild(
-            titulo
-          );
-
-
-          card.appendChild(
-            wrap
-          );
-
-
-          grid.appendChild(
-            card
-          );
-
-
-          const dadosCandidato =
-            STATE.dados.filter(
-              item =>
-                normalizarCandidato(
-                  item.candidato
-                ) === candidato
-            );
-
-
-          const personalistas =
-            dadosCandidato.filter(
-              item =>
-                categoriaTipo(
-                  item.categoria
-                ) ===
-                  "Personalista"
-            ).length;
-
-
-          const programaticos =
-            dadosCandidato.filter(
-              item =>
-                categoriaTipo(
-                  item.categoria
-                ) ===
-                  "Programático"
-            ).length;
-
-
-          const totalCategorias =
-            programaticos +
-            personalistas;
-
-
-          const personalistasPercentual =
-            calcularPercentual(
-              personalistas,
-              totalCategorias
-            );
-
-
-          const programaticosPercentual =
-            calcularPercentual(
-              programaticos,
-              totalCategorias
-            );
-
-
-          STATE.charts[id] =
-            new Chart(
-              canvas,
-              {
-
-                type:
-                  "doughnut",
-
-                data: {
-
-                  labels: [
-                    "Conteúdo programático",
-                    "Conteúdo personalista"
-                  ],
-
-                  datasets: [
-
-                    {
-
-                      data: [
-
-                        programaticosPercentual,
-
-                        personalistasPercentual
-
-                      ],
-
-                      backgroundColor: [
-
-                        CONFIG.categoryColors.programmatic,
-
-                        CONFIG.categoryColors.personalist
-
-                      ],
-
-                      borderWidth:
-                        0
-
-                    }
-
-                  ]
-
-                },
-
-                options: {
-
-                  responsive:
-                    true,
-
-                  maintainAspectRatio:
-                    false,
-
-                  /*
-                    Aumento do espaço útil central.
-                    Como a foto usa 88% do raio interno,
-                    este cutout permite uma imagem maior
-                    mantendo uma rosca visualmente equilibrada.
-                  */
-
-                  cutout:
-                    "68%",
-
-                  plugins: {
-
-                    donutCenterImage: {
-
-                      src:
-                        CONFIG
-                          .candidateImages[
-                            candidato
-                          ] || "",
-
-                      _image:
-                        null,
-
-                      _imageError:
-                        false
-
-                    },
-
-                    legend: {
-
-                      position:
-                        "bottom"
-
-                    },
-
-                    tooltip: {
-
-                      /*
-                        O tooltip permanece completamente
-                        nativo do Chart.js e é desenhado por cima
-                        da imagem central.
-                      */
-
-                      callbacks: {
-
-                        label:
-                          context =>
-                            `${context.label}: ${Number(context.raw).toLocaleString("pt-BR", {
-                              minimumFractionDigits: 1,
-                              maximumFractionDigits: 1
-                            })}%`
-
-                      }
-
-                    }
-
-                  }
-
+      const grid = document.getElementById("donutGrid");
+      if (!grid) return;
+      grid.innerHTML = "";
+      const base = dadosPorCategoria();
+      STATE.candidatos.forEach((candidato, index) => {
+        const id = `donut-${index}`;
+        const card = document.createElement("div");
+        card.className = "chart-card candidate-donut-card";
+        const titulo = document.createElement("h3");
+        titulo.className = "chart-title";
+        titulo.textContent = candidato;
+        const wrap = document.createElement("div");
+        wrap.className = "chart-wrap";
+        const canvas = document.createElement("canvas");
+        canvas.id = id;
+        wrap.appendChild(canvas);
+        card.appendChild(titulo);
+        card.appendChild(wrap);
+        grid.appendChild(card);
+
+        const dadosCandidato = base.filter(item => normalizarCandidato(item.candidato) === candidato);
+        const contagens = ESQUEMA.categorias.map(cat =>
+          dadosCandidato.filter(item => categoriaTipo(item.categoria) === cat.nome).length);
+        const total = contagens.reduce((a, b) => a + b, 0);
+        STATE.charts[id] = new Chart(canvas, {
+          type: "doughnut",
+          data: {
+            labels: ESQUEMA.categorias.map(c => c.nome),
+            datasets: [{
+              data: contagens.map(n => calcularPercentual(n, total)),
+              backgroundColor: ESQUEMA.categorias.map(c => c.cor),
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            /* A foto do candidato ocupa o centro da rosca */
+            cutout: "68%",
+            plugins: {
+              donutCenterImage: { src: CONFIG.candidateImages[candidato] || "", _image: null, _imageError: false },
+              legend: { position: "bottom" },
+              tooltip: {
+                callbacks: {
+                  label: ctx => `${ctx.label}: ${Number(ctx.raw).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
                 }
-
               }
-            );
-
-        }
-      );
-
+            }
+          }
+        });
+      });
     }
 
 
@@ -3919,316 +3830,52 @@ __DADOS__
        GRÁFICO DE DISPERSÃO
        ========================================================= */
 
-    function criarGraficoDispersao(
-      campo,
-      canvasId,
-      chartId,
-      eixoY
-    ) {
-
-      const canvas =
-        document.getElementById(
-          canvasId
-        );
-
-
-      if (!canvas) {
-        return;
-      }
-
-
-      destruirChart(
-        chartId
-      );
-
-
-      const personalistas =
-        [];
-
-
-      const programaticos =
-        [];
-
-
-      STATE.dados.forEach(
-        item => {
-
-          const tipo =
-            categoriaTipo(
-              item.categoria
-            );
-
-
-          if (!tipo) {
-            return;
-          }
-
-
-          const data =
-            parseData(
-              item.data
-            );
-
-
-          if (!data) {
-            return;
-          }
-
-
-          const ponto = {
-
-            x:
-              data,
-
-            y:
-              parseNumero(
-                item[campo]
-              ),
-
-            candidato:
-              normalizarCandidato(
-                item.candidato
-              ),
-
-            categoria:
-              item.categoria,
-
-            dataOriginal:
-              item.data,
-
-            tipo
-
-          };
-
-
-          if (
-            tipo ===
-            "Personalista"
-          ) {
-
-            personalistas.push(
-              ponto
-            );
-
-          } else {
-
-            programaticos.push(
-              ponto
-            );
-
-          }
-
-        }
-      );
-
-
-      const personalistasQuantidade =
-        personalistas;
-
-
-      const programaticosQuantidade =
-        programaticos;
-
-
-      restaurarCanvas(
-        canvas
-      );
-
-
-      STATE.charts[chartId] =
-        new Chart(
-          canvas,
-          {
-
-            type:
-              "scatter",
-
-            data: {
-
-              datasets: [
-
-                {
-
-                  label:
-                    "Conteúdo personalista",
-
-                  data:
-                    personalistasQuantidade,
-
-                  pointRadius:
-                    5,
-
-                  pointHoverRadius:
-                    8,
-
-                  backgroundColor:
-                    CONFIG.categoryColors.personalist,
-
-                  borderColor:
-                    CONFIG.categoryColors.personalist,
-
-                  borderWidth:
-                    1
-
-                },
-
-
-                {
-
-                  label:
-                    "Conteúdo programático",
-
-                  data:
-                    programaticosQuantidade,
-
-                  pointRadius:
-                    5,
-
-                  pointHoverRadius:
-                    8,
-
-                  backgroundColor:
-                    CONFIG.categoryColors.programmatic,
-
-                  borderColor:
-                    CONFIG.categoryColors.programmatic,
-
-                  borderWidth:
-                    1
-
+    function criarGraficoDispersao(campo, canvasId, chartId, eixoY) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      destruirChart(chartId);
+      const grupos = Object.fromEntries(ESQUEMA.categorias.map(c => [c.nome, []]));
+      dadosPorCategoria().forEach(item => {
+        const tipo = categoriaTipo(item.categoria);
+        const data = parseData(item.data);
+        if (!tipo || !data) return;
+        grupos[tipo].push({
+          x: data, y: parseNumero(item[campo]), candidato: normalizarCandidato(item.candidato),
+          categoria: tipo, dataOriginal: item.data
+        });
+      });
+      restaurarCanvas(canvas);
+      STATE.charts[chartId] = new Chart(canvas, {
+        type: "scatter",
+        data: {
+          datasets: ESQUEMA.categorias.map(c => ({
+            label: c.nome, data: grupos[c.nome], pointRadius: 5, pointHoverRadius: 8,
+            backgroundColor: hexParaRgba(c.cor, 0.8), borderColor: c.cor, borderWidth: 1
+          }))
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: "bottom" },
+            tooltip: {
+              callbacks: {
+                title: () => "Publicação",
+                label: ctx => {
+                  const p = ctx.raw;
+                  return [`Candidato: ${p.candidato}`, `Categoria: ${p.categoria}`,
+                          `Data: ${formatarData(p.dataOriginal)}`, `${eixoY}: ${Number(p.y).toLocaleString("pt-BR")}`];
                 }
-
-              ]
-
-            },
-
-            options: {
-
-              responsive:
-                true,
-
-              maintainAspectRatio:
-                false,
-
-              plugins: {
-
-                legend: {
-
-                  position:
-                    "bottom"
-
-                },
-
-                tooltip: {
-
-                  callbacks: {
-
-                    title:
-                      () =>
-                        "Publicação",
-
-                    label:
-                      context => {
-
-                        const ponto =
-                          context.raw;
-
-
-                        return [
-
-                          `Candidato: ${ponto.candidato}`,
-
-                          `Categoria: ${ponto.categoria}`,
-
-                          `Data: ${formatarData(ponto.dataOriginal)}`,
-
-                          `${eixoY}: ${Number(ponto.y).toLocaleString("pt-BR")}`
-
-                        ];
-
-                      }
-
-                  }
-
-                }
-
-              },
-
-              scales: {
-
-                x: {
-
-                  type:
-                    "time",
-
-                  time: {
-
-                    unit:
-                      "day",
-
-                    tooltipFormat:
-                      "dd/MM/yyyy",
-
-                    displayFormats: {
-
-                      day:
-                        "dd/MM"
-
-                    }
-
-                  },
-
-                  title: {
-
-                    display:
-                      true,
-
-                    text:
-                      "Data"
-
-                  }
-
-                },
-
-                y: {
-
-                  beginAtZero:
-                    true,
-
-                  ticks: {
-
-                    precision:
-                      0,
-
-                    callback:
-                      valor =>
-                        Number(
-                          valor
-                        ).toLocaleString(
-                          "pt-BR"
-                        )
-
-                  },
-
-                  title: {
-
-                    display:
-                      true,
-
-                    text:
-                      eixoY
-
-                  }
-
-                }
-
               }
-
             }
-
+          },
+          scales: {
+            x: { type: "time", time: { unit: "day", tooltipFormat: "dd/MM/yyyy", displayFormats: { day: "dd/MM" } },
+                 title: { display: true, text: "Data" } },
+            y: { beginAtZero: true, ticks: { precision: 0, callback: v => Number(v).toLocaleString("pt-BR") },
+                 title: { display: true, text: eixoY } }
           }
-        );
-
+        }
+      });
     }
 
 
@@ -4237,389 +3884,60 @@ __DADOS__
        ========================================================= */
 
     function criarGraficoSubcategorias() {
-
-      const configuracoes = [
-
-        {
-
-          canvasId:
-            "subcategoryProgrammaticBar",
-
-          chartId:
-            "subcategoryProgrammaticBar",
-
-          tipo:
-            "Programático",
-
-          titulo:
-            "Subcategorias programáticas",
-
-          mensagem:
-            "Não há subcategorias programáticas para os candidatos selecionados."
-
-        },
-
-        {
-
-          canvasId:
-            "subcategoryPersonalistBar",
-
-          chartId:
-            "subcategoryPersonalistBar",
-
-          tipo:
-            "Personalista",
-
-          titulo:
-            "Subcategorias personalistas",
-
-          mensagem:
-            "Não há subcategorias personalistas para os candidatos selecionados."
-
+      const grade = document.getElementById("subcategoryCharts");
+      if (!grade) return;
+      const categorias = ESQUEMA.categorias.filter(c => c.subcategorias.length);
+      grade.style.gridTemplateColumns = categorias.length > 1 ? "" : "1fr";
+      const selecionados = [...STATE.candidatosSelecionados.subcategorias];
+      categorias.forEach((cat, indice) => {
+        const id = `subcategoryBar-${indice}`;
+        let canvas = document.getElementById(id);
+        if (!canvas) {
+          const card = document.createElement("div");
+          card.className = "subcategory-chart-card";
+          card.innerHTML = `<h3 class="chart-title">Subcategorias de ${cat.nome}</h3>
+            <p class="chart-note">Percentual das postagens de ${cat.nome.toLowerCase()} de cada candidato em que a subcategoria aparece.</p>
+            <div class="subcategory-chart-wrap"><canvas id="${id}"></canvas></div>`;
+          grade.appendChild(card);
+          canvas = document.getElementById(id);
         }
-
-      ];
-
-
-      const selecionados =
-        [
-          ...STATE
-            .candidatosSelecionados
-            .subcategorias
-        ];
-
-
-      configuracoes.forEach(
-        configuracao => {
-
-          const canvas =
-            document.getElementById(
-              configuracao.canvasId
-            );
-
-
-          if (!canvas) {
-            return;
-          }
-
-
-          destruirChart(
-            configuracao.chartId
-          );
-
-
-          if (
-            !selecionados.length
-          ) {
-
-            mostrarEstadoVazio(
-              canvas,
-              "Selecione um ou mais candidatos acima."
-            );
-
-            return;
-
-          }
-
-
-          restaurarCanvas(
-            canvas
-          );
-
-
-          const subcategorias =
-            [
-              ...new Set(
-                STATE.dados
-                  .filter(
-                    item =>
-                      categoriaTipo(
-                        item.categoria
-                      ) ===
-                        configuracao.tipo
-                  )
-                  .map(
-                    item =>
-                      String(
-                        item.subcategoria ||
-                        ""
-                      ).trim()
-                  )
-                  .filter(Boolean)
-              )
-            ];
-
-
-          const subcategoriasOrdenadas =
-            subcategorias
-              .map(
-                subcategoria => ({
-
-                  nome:
-                    subcategoria,
-
-                  total:
-                    selecionados.reduce(
-                      (
-                        soma,
-                        candidato
-                      ) =>
-                        soma +
-                        STATE.dados.filter(
-                          item =>
-                            normalizarCandidato(
-                              item.candidato
-                            ) ===
-                              candidato &&
-
-                            categoriaTipo(
-                              item.categoria
-                            ) ===
-                              configuracao.tipo &&
-
-                            normalizarTexto(
-                              item.subcategoria
-                            ) ===
-                            normalizarTexto(
-                              subcategoria
-                            )
-                        ).length,
-
-                      0
-
-                    )
-
-                })
-              )
-              .sort(
-                (a, b) =>
-                  b.total - a.total ||
-                  a.nome.localeCompare(
-                    b.nome,
-                    "pt-BR"
-                  )
-              )
-              .map(
-                item =>
-                  item.nome
-              );
-
-
-          if (
-            !subcategoriasOrdenadas.length
-          ) {
-
-            mostrarEstadoVazio(
-              canvas,
-              "A coluna de subcategoria não possui dados para este tipo de conteúdo."
-            );
-
-            return;
-
-          }
-
-
-          const datasets =
-            selecionados.map(
-              candidato => {
-
-                const dadosComSubcategoria =
-                  STATE.dados.filter(
-                    item =>
-                      normalizarCandidato(
-                        item.candidato
-                      ) ===
-                        candidato &&
-
-                      categoriaTipo(
-                        item.categoria
-                      ) ===
-                        configuracao.tipo &&
-
-                      String(
-                        item.subcategoria ||
-                        ""
-                      ).trim() !== ""
-                  );
-
-
-                const totalComSubcategoria =
-                  dadosComSubcategoria.length;
-
-
-                const valores =
-                  subcategoriasOrdenadas.map(
-                    subcategoria =>
-                      calcularPercentual(
-                        dadosComSubcategoria.filter(
-                          item =>
-                            normalizarTexto(
-                              item.subcategoria
-                            ) ===
-                            normalizarTexto(
-                              subcategoria
-                            )
-                        ).length,
-                        totalComSubcategoria
-                      )
-                  );
-
-
-                return {
-
-                  label:
-                    candidato,
-
-                  data:
-                    valores,
-
-                  backgroundColor:
-                    getCandidateColor(
-                      candidato,
-                      "strong"
-                    ),
-
-                  borderRadius:
-                    5,
-
-                  borderWidth:
-                    0,
-
-                  maxBarThickness:
-                    24
-
-                };
-
-              }
-            );
-
-
-          STATE.charts[
-            configuracao.chartId
-          ] =
-            new Chart(
-              canvas,
-              {
-
-                type:
-                  "bar",
-
-                data: {
-
-                  labels:
-                    subcategoriasOrdenadas,
-
-                  datasets
-
-                },
-
-                options: {
-
-                  indexAxis:
-                    "y",
-
-                  responsive:
-                    true,
-
-                  maintainAspectRatio:
-                    false,
-
-                  interaction: {
-
-                    mode:
-                      "index",
-
-                    intersect:
-                      false
-
-                  },
-
-                  plugins: {
-
-                    legend: {
-
-                      position:
-                        "bottom"
-
-                    },
-
-                    tooltip: {
-
-                      callbacks: {
-
-                        label:
-                          context =>
-                            `${context.dataset.label}: ${Number(context.raw).toLocaleString("pt-BR", {
-                              minimumFractionDigits: 1,
-                              maximumFractionDigits: 1
-                            })}%`
-
-                      }
-
-                    }
-
-                  },
-
-                  scales: {
-
-                    x: {
-
-                      beginAtZero:
-                        true,
-
-                      max:
-                        100,
-
-                      ticks: {
-
-                        precision:
-                          1,
-
-                        stepSize:
-                          10,
-
-                        callback:
-                          valor =>
-                            `${valor}%`
-
-                      },
-
-                      title: {
-
-                        display:
-                          true,
-
-                        text:
-                          "Percentual de postagens"
-
-                      }
-
-                    },
-
-                    y: {
-
-                      stacked:
-                        false,
-
-                      ticks: {
-
-                        autoSkip:
-                          false
-
-                      }
-
-                    }
-
-                  }
-
-                }
-
-              }
-            );
-
+        destruirChart(id);
+        if (!selecionados.length) {
+          mostrarEstadoVazio(canvas, "Selecione um ou mais candidatos acima.");
+          return;
         }
-      );
-
+        restaurarCanvas(canvas);
+        const datasets = selecionados.map(candidato => {
+          const linhas = STATE.dados.filter(item =>
+            normalizarCandidato(item.candidato) === candidato && categoriaTipo(item.categoria) === cat.nome);
+          const postagens = new Set(linhas.map(chavePostagem)).size;
+          return {
+            label: candidato,
+            data: cat.subcategorias.map(s => calcularPercentual(
+              new Set(linhas.filter(item => normalizarTexto(item.subcategoria) === normalizarTexto(s)).map(chavePostagem)).size,
+              postagens)),
+            backgroundColor: getCandidateColor(candidato, "strong"),
+            borderRadius: 5, borderWidth: 0, maxBarThickness: 24
+          };
+        });
+        STATE.charts[id] = new Chart(canvas, {
+          type: "bar",
+          data: { labels: cat.subcategorias, datasets },
+          options: {
+            indexAxis: "y", responsive: true, maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+              legend: { position: "bottom" },
+              tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%` } }
+            },
+            scales: {
+              x: { beginAtZero: true, max: 100, ticks: { stepSize: 10, callback: v => `${v}%` },
+                   title: { display: true, text: `Percentual das postagens de ${cat.nome.toLowerCase()}` } },
+              y: { ticks: { autoSkip: false } }
+            }
+          }
+        });
+      });
     }
 
 
@@ -6143,6 +5461,7 @@ __DADOS__
       criarGraficoComentariosSubcategorias();
       renderizarListasEngajamento();
       criarGraficoFormatos();
+      criarSecaoValencia();
       criarGraficoDispersao("likes", "likesScatter", "likesScatter", "Número de curtidas");
       criarGraficoDispersao("comentarios", "commentsScatter", "commentsScatter", "Número de comentários");
 
@@ -6300,6 +5619,14 @@ __DADOS__
 
       });
 
+      criarFiltroCandidatos({ containerId: "valenciaCandidateFilterButtons",
+                              estado: STATE.candidatosSelecionados.valencia, onChange: criarGraficoValenciaCategorias });
+      criarFiltroCandidatos({ containerId: "indiceCandidateFilterButtons",
+                              estado: STATE.candidatosSelecionados.indice,
+                              onChange: () => { criarGraficoIndiceTempo(); criarGraficoRadarValencia(); } });
+      document.querySelectorAll(".radar-modo").forEach(botao => {
+        botao.onclick = () => { STATE.radarModo = botao.dataset.modo; criarGraficoRadarValencia(); };
+      });
     }
 
 
@@ -6355,8 +5682,7 @@ __DADOS__
 
                 candidato,
 
-                categoria:
-                  "Programático",
+                categoria: ESQUEMA.categorias[Math.floor(Math.random() * ESQUEMA.categorias.length)].nome,
 
                 data,
 
@@ -6375,8 +5701,7 @@ __DADOS__
                 formato:
                   "Imagem",
 
-                subcategoria:
-                  "Segurança"
+                subcategoria: ""
 
               });
 
@@ -6385,8 +5710,7 @@ __DADOS__
 
                 candidato,
 
-                categoria:
-                  "Personalista",
+                categoria: "Liderança",
 
                 data,
 
@@ -6405,8 +5729,7 @@ __DADOS__
                 formato:
                   "Vídeo",
 
-                subcategoria:
-                  "Família"
+                subcategoria: "Humanização"
 
               });
 
@@ -6419,8 +5742,7 @@ __DADOS__
 
                   candidato,
 
-                  categoria:
-                    "Programático",
+                  categoria: ESQUEMA.categorias[Math.floor(Math.random() * ESQUEMA.categorias.length)].nome,
 
                   data,
 
@@ -6439,8 +5761,7 @@ __DADOS__
                   formato:
                     "IA",
 
-                  subcategoria:
-                    "Trabalho"
+                  subcategoria: ""
 
                 });
 
