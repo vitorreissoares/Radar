@@ -58,6 +58,17 @@ estilos <- tags$head(
     });
     // Ao mostrar uma nova postagem, já calcula o contador e envia a seleção inicial
     $(document).on('shiny:value', function(e) { if (e.name === 'cartao_validacao') setTimeout(enviarFinal, 150); });
+    // Se a sessão cair, mostra uma caixa com o botão de recarregar (em vez de só a tela cinza)
+    $(document).on('shiny:disconnected', function() {
+      if (document.getElementById('aviso-desconectado')) return;
+      var caixa = document.createElement('div');
+      caixa.id = 'aviso-desconectado';
+      caixa.innerHTML = '<div><b>O programa encontrou um erro e precisou parar esta tela.</b>' +
+        '<p>Seus dados estão salvos. Clique em Recarregar para continuar de onde parou. ' +
+        'Se o erro voltar, envie o arquivo do menu Ajuda → Registro do programa.</p>' +
+        '<button type=\"button\" class=\"btn btn-primary\" onclick=\"location.reload()\">Recarregar</button></div>';
+      document.body.appendChild(caixa);
+    });
     // Validação dos comentários: envia a valência escolhida em cada comentário da amostra
     function enviarValencias() {
       var lista = document.getElementById('lista-comentarios');
@@ -193,6 +204,11 @@ estilos <- tags$head(
     .interruptor input:checked + span { background: #087443; }
     .interruptor input:checked + span:before { transform: translateX(18px); }
     #contador-final { font-weight: 700; }
+
+    #aviso-desconectado { position: fixed; inset: 0; z-index: 100001; display: flex; align-items: center; justify-content: center; }
+    #aviso-desconectado > div { background: #fff; border-radius: 14px; padding: 22px 26px; max-width: 460px;
+                                box-shadow: 0 20px 50px rgba(16, 24, 40, .25); font-size: .92rem; }
+    #aviso-desconectado p { color: var(--texto2); margin: 8px 0 14px; }
 
     /* ---------- comentários ---------- */
     #lista-comentarios { max-height: 640px; overflow: auto; border: 1px solid var(--linha); border-radius: 10px; }
@@ -626,11 +642,30 @@ server <- function(input, output, session) {
   }
   atualizar_listas()
 
+  # Todos os avisos passam por aqui: texto fora do UTF-8 derrubaria a sessão
+  showNotification <- function(ui, ...) {
+    if (is.character(ui)) ui <- texto_utf8(ui)
+    tryCatch(shiny::showNotification(ui, ...),
+             error = function(e) message("Falha ao mostrar um aviso: ", texto_utf8(conditionMessage(e))))
+  }
+
   notificar_erro <- function(prefixo) {
     function(e) {
-      showNotification(paste(prefixo, conditionMessage(e)), type = "error", duration = NULL)
+      # req() usa um "erro silencioso" para dizer "ainda não"; esse não é um erro de verdade
+      if (inherits(e, "shiny.silent.error")) stop(e)
+      message("Erro: ", prefixo, " ", texto_utf8(conditionMessage(e)))   # vai para o registro
+      tryCatch(showNotification(texto_utf8(paste(prefixo, conditionMessage(e))), type = "error", duration = NULL),
+               error = function(e2) NULL)
       NULL
     }
+  }
+
+  # Erro inesperado: fica gravado no registro do programa (Ajuda → Registro do programa)
+  if (exists("onUnhandledError", asNamespace("shiny"))) {
+    shiny::onUnhandledError(function(e) {
+      message("ERRO INESPERADO: ", texto_utf8(conditionMessage(e)))
+      try(message("  em: ", paste(deparse(conditionCall(e)), collapse = " ")), silent = TRUE)
+    })
   }
 
   # =======================================================
@@ -1801,7 +1836,8 @@ server <- function(input, output, session) {
     versao_com()
     d <- tryCatch(aplicar_validacao(d), error = notificar_erro("Erro ao ler a base:"))
     req(d)
-    juntar_valencia(d, so_validados = identical(input$rel_comentarios, "validados"))
+    tryCatch(juntar_valencia(d, so_validados = identical(input$rel_comentarios, "validados")),
+             error = function(e) { notificar_erro("Erro ao ler os comentários (o relatório segue sem eles):")(e); d })
   })
 
   # Postagens ainda não validadas na base escolhida
@@ -1853,10 +1889,11 @@ server <- function(input, output, session) {
     updateTextAreaInput(session, "texto_rel", value = texto)
   }
   observe({
-    p <- periodo_sel()
+    p <- tryCatch(periodo_sel(), error = notificar_erro("Erro ao preparar o período do relatório:"))
+    req(p)
     if (identical(p$id, isolate(ultimo_periodo()))) return()
     ultimo_periodo(p$id)
-    isolate(carregar_texto_periodo())
+    isolate(tryCatch(carregar_texto_periodo(), error = notificar_erro("Erro ao montar o texto do período:")))
   })
   observeEvent(input$rascunho, carregar_texto_periodo(forcar_rascunho = TRUE))
 

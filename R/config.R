@@ -3,6 +3,20 @@
 # Edite aqui o que muda de uma rodada para outra.
 # =========================================================
 
+# Garante texto em UTF-8. Textos em outra codificação (ex.: CSV salvo pelo Excel
+# no Windows) são convertidos de Latin-1; o que não der para converter vira "?".
+# Texto inválido enviado à tela derruba a sessão do app, por isso a limpeza.
+texto_utf8 <- function(x) {
+  if (!is.character(x)) return(x)
+  x <- enc2utf8(x)
+  ruim <- !is.na(x) & !validUTF8(x)
+  if (any(ruim)) {
+    x[ruim] <- iconv(x[ruim], "latin1", "UTF-8")
+    x[ruim] <- iconv(x[ruim], "UTF-8", "UTF-8", sub = "?")
+  }
+  x
+}
+
 # Modelo usado no OpenRouter
 MODELO_PADRAO <- "openai/gpt-5.6-luna"
 # Como o modelo aparece escrito no texto de metodologia do relatório

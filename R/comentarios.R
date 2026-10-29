@@ -48,7 +48,8 @@ ler_comentarios <- function(shortCode) {
   arq <- arquivo_comentarios(shortCode)
   if (!file.exists(arq)) return(comentarios_vazio())
   read_csv(arq, col_types = cols(.default = col_character()), show_col_types = FALSE) %>%
-    mutate(curtidas = suppressWarnings(as.numeric(curtidas)))
+    mutate(across(where(is.character), texto_utf8),
+           curtidas = suppressWarnings(as.numeric(curtidas)))
 }
 
 # Quantos comentários estão salvos para cada postagem
@@ -87,7 +88,7 @@ ler_arquivo_apify <- function(arquivo, nome = basename(arquivo)) {
   } else {
     d <- read_csv(arquivo, col_types = cols(.default = col_character()), show_col_types = FALSE)
   }
-  normalizar_comentarios_apify(d)
+  normalizar_comentarios_apify(d %>% mutate(across(where(is.character), texto_utf8)))
 }
 
 # Grava cada postagem no seu arquivo, juntando com o que já estava salvo
@@ -245,8 +246,12 @@ montar_prompt_valencia <- function(post, comentarios) {
 # Resposta {"c1": "positivo", ...} -> vetor de valências (NA para o que faltar)
 ler_valencias <- function(resposta, n) {
   json <- str_extract(resposta %||% "", "\\{[\\s\\S]*\\}")
-  lista <- if (is.na(json)) NULL else tryCatch(fromJSON(json), error = function(e) NULL)
-  map_chr(seq_len(n), \(i) normalizar_valencia(lista[[paste0("c", i)]] %||% NA_character_))
+  lista <- if (is.na(json)) NULL else tryCatch(fromJSON(json, simplifyVector = FALSE), error = function(e) NULL)
+  if (!is.list(lista) || is.null(names(lista))) lista <- list()
+  map_chr(seq_len(n), \(i) {
+    v <- lista[[paste0("c", i)]]
+    if (is.null(v) || length(v) == 0) NA_character_ else normalizar_valencia(as.character(unlist(v))[1])
+  })
 }
 
 # Classifica os comentários ainda sem valência de uma postagem
