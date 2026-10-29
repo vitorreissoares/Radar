@@ -60,7 +60,13 @@ ler_base <- function(arquivos, candidatos) {
       comentarios = commentsCount,
       formato = type
     ) %>%
+    # Visualizações: só os vídeos têm (videoViewCount ou videoPlayCount, conforme a coleta)
+    mutate(visualizacoes = coalesce(coluna_numerica(., "videoViewCount"), coluna_numerica(., "videoPlayCount"))) %>%
     mutate(across(c(likes, comentarios), as.numeric))
+}
+
+coluna_numerica <- function(d, nome) {
+  if (nome %in% names(d)) suppressWarnings(as.numeric(d[[nome]])) else rep(NA_real_, nrow(d))
 }
 
 juntar_urls_imagens <- function(dados) {

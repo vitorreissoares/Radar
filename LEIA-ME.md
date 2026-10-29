@@ -15,7 +15,22 @@ Baixe o instalador do seu sistema (Windows, Mac ou Linux) na página **Releases*
 
 - **Chave da IA:** cada pessoa informa a **própria chave do OpenRouter** no painel **Chave da IA** da aba 1. Ela fica guardada só no computador de quem a informou.
 - **Seus dados:** rodadas, validações, mídias, relatórios e a chave ficam em **Documentos/Radar**. Para abrir essa pasta, use o menu **Arquivo → Abrir pasta de dados**. Instalar uma versão nova não apaga nada.
-- **Fotos dos candidatos e logo:** ficam em `Documentos/Radar/assets/img_cand/`. Também dá para trocar uma foto pelo app, na aba 4.
+- **Fotos dos candidatos e logo:** ficam em `Documentos/Radar/assets/img_cand/`. Também dá para trocar as fotos e o logo pelo app, na aba 4 (painel **Candidatos**).
+
+### Onde fica cada coisa (dentro de Documentos/Radar)
+
+| O que | Pasta |
+|---|---|
+| Imagens das postagens (e capas dos vídeos) | `midia/postagens/` (`SHORTCODE.jpg`; carrosséis: `SHORTCODE_1.jpg`, `SHORTCODE_2.jpg`…) |
+| Vídeos | `midia/videos/` (`SHORTCODE.mp4`) |
+| Áudios extraídos dos vídeos | `midia/audios/` (`SHORTCODE.mp3`) |
+| Comentários | `midia/comentarios/` (`SHORTCODE.csv`) |
+| Fotos dos candidatos | `assets/img_cand/` (o nome de cada arquivo está na tabela de candidatos, ex.: `lula.jpg`) |
+| Logo do relatório | `assets/img_cand/logo.png` (ou `logo.jpg`, `logo.svg`, `logo.webp`) |
+| Rodadas, validações e relatório gerado | `saidas/` |
+| Chaves e configurações | `config/` |
+
+Para abrir a pasta, use o menu **Arquivo → Abrir pasta de dados**.
 
 ## Rodar pelo R, sem instalar (só na primeira vez)
 
@@ -27,7 +42,7 @@ Baixe o instalador do seu sistema (Windows, Mac ou Linux) na página **Releases*
 2. Informe a **chave do OpenRouter** na aba 1, no painel **Chave da IA** da barra lateral (ele abre sozinho enquanto não houver chave): cole a chave e clique em **Salvar chave**. Ela fica guardada só nesta pasta, em `config/chave_openrouter.txt`.
    - Para **compartilhar a pasta** com outra pessoa, clique antes em **Apagar chave**. A chave é removida da pasta e também do `.Renviron` do computador, se estiver lá.
    - A pessoa que receber a pasta informa a própria chave no mesmo quadro.
-3. Coloque as fotos dos candidatos e o logo (`politica-logo.jpg`) em `assets/img_cand/`. O relatório busca as imagens nessa pasta. Também dá para trocar a foto de um candidato pelo app, na aba 4 (painel **Candidatos**).
+3. Coloque as fotos dos candidatos e o logo (`logo.png` ou `logo.jpg`) em `assets/img_cand/`. O relatório busca as imagens nessa pasta. Também dá para trocar a foto de um candidato pelo app, na aba 4 (painel **Candidatos**).
 
 ### Abrir o app
 
@@ -159,7 +174,11 @@ Em **Validar**, cada postagem mostra uma **amostra fixa** de comentários (30 po
 
 ### Índice de valência
 
-Para cada postagem, categoria ou período: **(positivos + 0,5 × neutros) ÷ total de comentários**. Vai de **0** (todos negativos) a **1** (todos positivos). Nas médias, cada comentário pesa igual (média ponderada pelo número de comentários).
+Cada comentário vale **1** (positivo), **0,5** (neutro) ou **0** (negativo). O índice de uma postagem, categoria ou período é a média desses valores: **(positivos + 0,5 × neutros) ÷ total de comentários**, de **0** (todos negativos) a **1** (todos positivos). Cada comentário pesa igual.
+
+- **Índice geral:** usa todos os comentários do período, com cada postagem uma vez só. Ele não é a média dos índices das categorias: como uma postagem pode estar em mais de uma categoria, essa média contaria os mesmos comentários duas vezes.
+- **Intervalo de confiança de 95% (IC 95%):** mostra a margem de incerteza do índice. Como os comentários de uma mesma postagem tendem a ter o mesmo tom, o cálculo usa o erro-padrão robusto por postagem (para o estimador de razão) e a distribuição t com (número de postagens − 1) graus de liberdade. Com poucas postagens, o intervalo fica mais largo, como deve ser. Em simulações, o intervalo contém o valor verdadeiro em 90% a 95% das vezes, de 3 a 50 postagens; tratar os comentários como independentes acertaria só cerca de 35%.
+- Intervalos que se sobrepõem indicam que a diferença entre dois grupos pode ser casual.
 
 ## 4 · Relatório
 
@@ -174,12 +193,15 @@ O relatório é **um só**. No topo dele, quem lê escolhe um dos botões:
 
 As datas saem da própria base validada; não há escolha de datas no relatório. Os gráficos, os rankings e as considerações finais mudam junto com o botão.
 
-Seções sobre os comentários:
+Algumas seções:
 
 | Seção | O que mostra |
 |---|---|
-| **09 · Comentários: positivos, neutros e negativos** | Proporção de cada valência por categoria e subcategoria, e uma tabela com os comentários de cada postagem (percentuais e índice) |
-| **10 · Índice de valência** | Gráfico de linha com a evolução do índice da Autenticidade, da Competência e da Humanização ao longo do tempo, e um **radar** com a proporção de comentários positivos e negativos de todo o período (por subcategoria da Liderança ou por categoria). Quanto maior a área verde, melhor o desempenho; quanto maior a vermelha, pior. |
+| **08 · Top 10** | As 10 postagens com mais curtidas, mais comentários e mais visualizações (só os vídeos têm visualizações) |
+| **09 · Evolução do índice de valência** | Linha do tempo do índice da Autenticidade, da Competência, da Humanização e do índice geral (tracejado) |
+| **10 · Desempenho nos comentários** | **Radar** circular com a proporção de comentários positivos (verde) e negativos (vermelho) do período, por subcategoria da Liderança ou por categoria, com o índice de cada uma e o **índice geral**, todos com IC 95%. Quanto maior a área verde, melhor o desempenho; quanto maior a vermelha, pior. |
+
+Cada variável tem sempre a mesma cor em todas as seções: Liderança (anil), Partido (verde-azulado), Políticas (laranja), Autenticidade (rosa), Competência (dourado), Humanização (azul-claro); comentários positivos em verde, neutros em cinza e negativos em vermelho; e cada candidato com a sua cor.
 
 Na barra lateral da aba 4, em **Comentários**, escolha se entram **todos** (os validados e, os demais, com a classificação da IA) ou **só os validados**.
 

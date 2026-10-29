@@ -610,7 +610,13 @@ ui <- page_navbar(
                 actionButton("adicionar_candidato", "Adicionar candidato", icon = icon("plus"),
                              class = "btn-sm btn-light"))
           ),
-          p(class = "dica", "As fotos ficam em ", code("assets/img_cand/"), ".")
+          layout_columns(
+            col_widths = c(6, 6),
+            fileInput("logo_arquivo", "Logo do relatório (.png, .jpg ou .svg)", accept = c(".png", ".jpg", ".jpeg", ".svg", ".webp"),
+                      buttonLabel = "Escolher", placeholder = "Nenhum logo novo"),
+            uiOutput("logo_atual")
+          ),
+          p(class = "dica", "As fotos e o logo ficam em ", code("assets/img_cand/"), " (o logo com o nome ", code("logo"), ").")
         ),
         accordion_panel(
           "Sobre a pesquisa", value = "sobre", icon = icon("circle-info"),
@@ -2047,6 +2053,24 @@ server <- function(input, output, session) {
     salvar_candidatos_info(info)
     candidatos_info(info)
     showNotification(paste("Foto de", nome, "atualizada."), type = "message")
+  })
+
+  versao_logo <- reactiveVal(0)
+  output$logo_atual <- renderUI({
+    versao_logo()
+    arq <- arquivo_logo()
+    if (!file.exists(arq)) return(p(class = "dica pt-4", "Nenhum logo ainda: o relatório fica sem imagem no cabeçalho."))
+    div(class = "dica pt-4", icon("image"), " Logo atual: ", code(basename(arq)))
+  })
+  observeEvent(input$logo_arquivo, {
+    ext <- tolower(tools::file_ext(input$logo_arquivo$name))
+    if (ext == "jpeg") ext <- "jpg"
+    dir.create(PASTA_FOTOS, showWarnings = FALSE, recursive = TRUE)
+    antigos <- list.files(PASTA_FOTOS, pattern = "^logo\\.(png|jpe?g|webp|svg)$", full.names = TRUE, ignore.case = TRUE)
+    file.remove(antigos)
+    file.copy(input$logo_arquivo$datapath, file.path(PASTA_FOTOS, paste0("logo.", ext)), overwrite = TRUE)
+    versao_logo(versao_logo() + 1)
+    showNotification("Logo atualizado. Ele aparece no relatório na próxima vez que você gerar.", type = "message")
   })
 
   observeEvent(input$adicionar_candidato, {

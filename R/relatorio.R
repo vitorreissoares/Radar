@@ -10,11 +10,13 @@
 # só postagens já validadas, nomes completos dos candidatos e datas como Date
 aplicar_validacao <- function(dados) {
   dados %>%
+    garantir_coluna("visualizacoes") %>%
     filter(validada) %>%
     mutate(
       candidato = nome_completo(candidato),
       likes = as.numeric(likes),
       comentarios = as.numeric(comentarios),
+      visualizacoes = suppressWarnings(as.numeric(visualizacoes)),
       data = as.Date(data),
       semana = calcular_semana(data)
     )
@@ -224,6 +226,32 @@ indice_valencia <- function(pos, neu, neg) {
   ifelse(total > 0, (pos + 0.5 * neu) / total, NA_real_)
 }
 
+# Índice de um conjunto de postagens, com intervalo de confiança de 95%.
+# - Cada comentário vale 1 (positivo), 0,5 (neutro) ou 0 (negativo); o índice é a média
+#   desses valores sobre todos os comentários (estimador de razão: soma ÷ total).
+# - Comentários da mesma postagem não são independentes. O erro-padrão é o robusto por
+#   postagem (linearização de Taylor do estimador de razão); se ele ficar menor que o
+#   erro-padrão simples (comentários independentes), usa-se o simples, por cautela.
+# - O intervalo usa a distribuição t com (postagens - 1) graus de liberdade, a correção
+#   usual quando há poucos grupos (postagens).
+# - Para o índice geral, cada postagem entra uma vez só, mesmo que esteja em várias
+#   categorias: assim nenhum comentário é contado duas vezes.
+indice_ic <- function(pos, neu, neg) {
+  t <- pos + neu + neg
+  ok <- !is.na(t) & t > 0
+  pos <- pos[ok]; neu <- neu[ok]; t <- t[ok]
+  n <- sum(t); m <- length(t)
+  if (n == 0) return(list(indice = NA_real_, inf = NA_real_, sup = NA_real_, n = 0, m = 0))
+  y <- pos + 0.5 * neu
+  r <- sum(y) / n
+  ep_simples <- sqrt(max(0, (sum(pos) + 0.25 * sum(neu)) / n - r^2) / n)
+  ep_robusto <- if (m >= 2) sqrt(m / (m - 1) * sum((y - r * t)^2)) / n else 0
+  ep <- max(ep_simples, ep_robusto)
+  # Com poucas postagens, usa a distribuição t com (postagens - 1) graus de liberdade
+  z <- if (m >= 2) qt(0.975, df = m - 1) else 1.96
+  list(indice = r, inf = max(0, r - z * ep), sup = min(1, r + z * ep), n = n, m = m)
+}
+
 # d precisa das colunas com_pos, com_neu, com_neg (comentários de cada postagem)
 paragrafo_comentarios <- function(d) {
   if (!all(c("com_pos", "com_neu", "com_neg") %in% names(d))) return(NULL)
@@ -231,11 +259,12 @@ paragrafo_comentarios <- function(d) {
   if (nrow(d) == 0) return(NULL)
   dec <- function(x) format(round(x, 2), nsmall = 2, decimal.mark = ",")
   tot <- c(pos = sum(d$com_pos), neu = sum(d$com_neu), neg = sum(d$com_neg))
+  geral <- indice_ic(d$com_pos, d$com_neu, d$com_neg)
   geral <- sprintf(
-    "Nos comentários analisados (%s, de %s), %s são positivos, %s neutros e %s negativos, o que resulta num índice de valência de %s (0 = todos negativos; 1 = todos positivos).",
+    "Nos comentários analisados (%s, de %s), %s são positivos, %s neutros e %s negativos, o que resulta num índice geral de valência de %s (intervalo de confiança de 95%%: %s a %s; 0 = todos negativos, 1 = todos positivos).",
     num(sum(tot)), qtd(nrow(d), "postagem", "postagens"), pct(tot[["pos"]] / sum(tot) * 100),
     pct(tot[["neu"]] / sum(tot) * 100), pct(tot[["neg"]] / sum(tot) * 100),
-    dec(indice_valencia(tot[["pos"]], tot[["neu"]], tot[["neg"]])))
+    dec(geral$indice), dec(geral$inf), dec(geral$sup))
   por_chave <- map(CHAVES, \(k) {
     x <- d[d[[paste0("final_", k)]] %in% 1, ]
     if (nrow(x) == 0) return(NULL)
@@ -433,15 +462,22 @@ html_sobre <- function(quadros, proporcao, modelo_rotulo) {
 # Fotos do relatório: ficam em assets/img_cand (o relatório aponta para lá).
 PASTA_FOTOS <- "assets/img_cand"
 
+# Logo do relatório: assets/img_cand/logo.png (ou .jpg, .jpeg, .webp, .svg);
+# na falta dele, o nome antigo politica-logo.jpg
+arquivo_logo <- function() {
+  achados <- list.files(PASTA_FOTOS, pattern = "^logo\\.(png|jpe?g|webp|svg)$", ignore.case = TRUE)
+  paste0("assets/img_cand/", if (length(achados)) achados[1] else "politica-logo.jpg")
+}
+
 # Versão "arquivo único" do relatório: troca "assets/img_cand/arquivo.jpg" pela
 # própria imagem, para o HTML funcionar sozinho (usado no botão de download)
 embutir_imagens <- function(html) {
-  arquivos <- unique(str_match_all(html, "assets/img_cand/([^\"'()<>]+?\\.(?i:jpe?g|png|webp))")[[1]][, 2])
+  arquivos <- unique(str_match_all(html, "assets/img_cand/([^\"'()<>]+?\\.(?i:jpe?g|png|webp|svg))")[[1]][, 2])
   for (a in arquivos) {
     caminho <- file.path(PASTA_FOTOS, URLdecode(a))
     if (!file.exists(caminho)) next
     ext <- tolower(tools::file_ext(a))
-    tipo <- if (ext == "png") "image/png" else if (ext == "webp") "image/webp" else "image/jpeg"
+    tipo <- switch(ext, png = "image/png", webp = "image/webp", svg = "image/svg+xml", "image/jpeg")
     uri <- paste0("data:", tipo, ";base64,",
                   base64_enc(readBin(caminho, "raw", file.info(caminho)$size)) %>% str_remove_all("\n"))
     html <- str_replace_all(html, fixed(paste0("assets/img_cand/", a)), uri)
@@ -452,9 +488,12 @@ embutir_imagens <- function(html) {
 # Categorias, cores e subcategorias para os gráficos do relatório
 esquema_js <- function() {
   list(categorias = map(CATEGORIAS, \(cat) list(
-    nome = cat, cor = unname(CORES_CATEGORIAS[[cat]]),
-    subcategorias = I(SUBCATEGORIAS_TAB$rotulo[SUBCATEGORIAS_TAB$categoria == cat & SUBCATEGORIAS_TAB$subcategoria])
-  )))
+         nome = cat, cor = unname(CORES_CATEGORIAS[[cat]]),
+         subcategorias = I(SUBCATEGORIAS_TAB$rotulo[SUBCATEGORIAS_TAB$categoria == cat & SUBCATEGORIAS_TAB$subcategoria])
+       )),
+       coresSubcategorias = as.list(CORES_SUBCATEGORIAS),
+       coresValencia = as.list(CORES_VALENCIA),
+       corIndiceGeral = COR_INDICE_GERAL)
 }
 
 # Comentários de cada postagem: {shortCode: [positivos, neutros, negativos]}
@@ -466,13 +505,19 @@ valencia_js <- function(d) {
 }
 
 # Colunas do monitoramento.csv usado pelos relatórios
-COLUNAS_RELATORIO <- c("candidato", "url", "caption", "likes", "shortCode", "comentarios",
+COLUNAS_RELATORIO <- c("candidato", "url", "caption", "likes", "shortCode", "comentarios", "visualizacoes",
                        "data", "semana", "categoria", "subcategoria", "formato")
 
 # Uma linha por postagem x subcategoria final (uma postagem pode aparecer em várias linhas;
 # os gráficos do relatório contam cada postagem uma vez por categoria)
 csv_relatorio <- function(d) {
-  para_longo(d) %>%
+  longo <- para_longo(d)
+  # Postagens sem nenhuma categoria entram com uma linha sem categoria: contam nos totais,
+  # nos rankings, nos formatos e nos comentários, mas não nos gráficos de categorias
+  sem_categoria <- d %>% filter(!shortCode %in% longo$shortCode) %>%
+    mutate(categoria = "", subcategoria = "")
+  bind_rows(longo, sem_categoria) %>%
+    arrange(data, candidato) %>%
     mutate(data = as.character(data)) %>%
     select(any_of(COLUNAS_RELATORIO)) %>%
     format_csv(na = "")
@@ -510,6 +555,7 @@ gerar_relatorio <- function(d, pasta = PASTA_RELATORIO, periodo_inicial = NULL,
 
   html <- template %>%
     str_replace(fixed("__PERIODO__"), \(m) inicial$rotulo) %>%
+    str_replace(fixed("__LOGO__"), \(m) arquivo_logo()) %>%
     str_replace(fixed("__CARDS_CANDIDATOS__"), \(m) html_cards(candidatos)) %>%
     str_replace(fixed("__SOBRE_A_PESQUISA__"), \(m) html_sobre(sobre, proporcao, modelo_rotulo)) %>%
     str_replace(fixed("__CANDIDATE_IMAGES__"), \(m) js_imagens_candidatos()) %>%
@@ -530,7 +576,7 @@ gerar_relatorio <- function(d, pasta = PASTA_RELATORIO, periodo_inicial = NULL,
       write_csv(file.path(pasta, "dados", "comentarios_valencia.csv"), na = "")
   }
   # As fotos vão junto, na mesma estrutura do projeto (assets/img_cand)
-  fotos <- list.files(PASTA_FOTOS, pattern = "\\.(jpe?g|png|webp)$", full.names = TRUE, ignore.case = TRUE)
+  fotos <- list.files(PASTA_FOTOS, pattern = "\\.(jpe?g|png|webp|svg)$", full.names = TRUE, ignore.case = TRUE)
   unlink(file.path(pasta, "img_cand"), recursive = TRUE)   # pasta da versão anterior
   if (length(fotos)) {
     dir.create(file.path(pasta, PASTA_FOTOS), showWarnings = FALSE, recursive = TRUE)

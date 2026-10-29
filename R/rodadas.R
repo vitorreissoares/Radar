@@ -41,6 +41,12 @@ esquema_rodada <- function(id) {
   as.integer(tryCatch(ler_rodada(id)$esquema, error = function(e) NULL) %||% 1L)
 }
 
+# Acrescenta a coluna (vazia) se ela não existir
+garantir_coluna <- function(d, nome) {
+  if (!nome %in% names(d)) d[[nome]] <- NA
+  d
+}
+
 # Rodadas existentes, da mais recente para a mais antiga (pela data de início).
 # Só as do esquema atual; antigas = TRUE lista as dos esquemas anteriores.
 listar_rodadas <- function(antigas = FALSE) {
@@ -81,7 +87,9 @@ atualizar_rodada <- function(id, ...) {
 ler_classificados <- function(id) {
   read_csv(file.path(pasta_rodada(id), "base_classificada.csv"),
            col_types = cols(.default = col_character()), show_col_types = FALSE) %>%
-    mutate(likes = as.numeric(likes), comentarios = as.numeric(comentarios)) %>%
+    garantir_coluna("visualizacoes") %>%   # rodadas antigas não têm
+    mutate(likes = as.numeric(likes), comentarios = as.numeric(comentarios),
+           visualizacoes = suppressWarnings(as.numeric(visualizacoes))) %>%
     migrar_formato_antigo() %>%
     mutate(across(starts_with("ia_"), as.integer))
 }

@@ -69,8 +69,12 @@ SUBCATEGORIAS <- split(SUBCATEGORIAS_TAB$rotulo, SUBCATEGORIAS_TAB$categoria)
 # Subcategorias da Liderança (usadas nos gráficos de valência dos comentários)
 CHAVES_LIDERANCA <- SUBCATEGORIAS_TAB$chave[SUBCATEGORIAS_TAB$subcategoria]
 
-# Cores das categorias no relatório
-CORES_CATEGORIAS <- c("Liderança" = "#7c3aed", "Partido" = "#0e7490", "Políticas" = "#ea580c")
+# Cores fixas de cada variável: as mesmas no app e em todas as seções do relatório.
+# Verde e vermelho ficam reservados para comentários positivos e negativos.
+CORES_CATEGORIAS <- c("Liderança" = "#3730a3", "Partido" = "#0d9488", "Políticas" = "#ea580c")
+CORES_SUBCATEGORIAS <- c("Autenticidade" = "#db2777", "Competência" = "#ca8a04", "Humanização" = "#0ea5e9")
+CORES_VALENCIA <- c(positivo = "#16a34a", neutro = "#94a3b8", negativo = "#dc2626")
+COR_INDICE_GERAL <- "#111827"
 
 # Versão do esquema de categorias. Rodadas de esquemas anteriores (Programático e
 # Personalista) ficam guardadas em saidas/rodadas, mas não entram no app nem no relatório.
@@ -98,7 +102,7 @@ PROMPTS <- list(
 
 # Ordem das colunas principais da base classificada/validada
 COLUNAS_SAIDA <- c(
-  "candidato", "url", "caption", "transcricao", "likes", "shortCode", "comentarios",
+  "candidato", "url", "caption", "transcricao", "likes", "shortCode", "comentarios", "visualizacoes",
   "data", "semana", "formato"
 )
 

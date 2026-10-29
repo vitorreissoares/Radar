@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Programa Político e Personalismo nas Mídias Sociais | Política nas Redes</title>
+  <title>Radar da Liderança Política | Vitor Reis Soares</title>
 
 <meta
 name="description"
@@ -512,7 +512,7 @@ content="Monitoramento das estratégias de comunicação política dos candidato
 
     .engagement-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 16px;
     }
 
@@ -1225,14 +1225,24 @@ content="Monitoramento das estratégias de comunicação política dos candidato
     .radar-modo { border: 0; background: transparent; color: var(--muted); font-weight: 700; font-size: .76rem;
                   padding: 6px 14px; border-radius: 999px; cursor: pointer; }
     .radar-modo.ativo { background: var(--primary); color: #fff; }
-    .radar-grade { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; align-items: center; }
-    .radar-wrap { height: 400px; }
+    .radar-grade { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 20px; align-items: center; }
+    .radar-wrap { height: 440px; }
+    .radar-lado { display: flex; flex-direction: column; gap: 12px; }
+    .radar-geral { border-radius: 14px; padding: 14px 16px; background: #111827; color: #fff; display: grid; gap: 2px; }
+    .radar-geral strong { font-size: 2rem; line-height: 1.1; }
+    .radar-geral .radar-geral-rotulo { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; opacity: .75; font-weight: 700; }
+    .radar-geral .valencia-sub { color: rgba(255,255,255,.7); }
+    .radar-indice { font-weight: 800; }
+    .radar-metodo { margin-top: 14px; font-size: .82rem; color: var(--muted); }
+    .radar-metodo summary { cursor: pointer; font-weight: 700; color: var(--text); }
+    .radar-metodo p { margin: 8px 0 0; line-height: 1.55; }
     .radar-tabela { display: flex; flex-direction: column; gap: 10px; font-size: .82rem; }
     .radar-item { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; display: grid;
                   grid-template-columns: 12px 1fr auto; gap: 2px 8px; align-items: center; }
     .radar-item .valencia-sub { grid-column: 2 / 4; margin: 0; }
     .radar-cor { width: 10px; height: 10px; border-radius: 50%; }
     @media (max-width: 760px) { .radar-grade { grid-template-columns: 1fr; } }
+    @media (max-width: 980px) { .engagement-grid { grid-template-columns: 1fr; } }
 .periodo-switch { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
 .periodo-modos { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; background: #fff; padding: 3px; }
 .periodo-modo { border: 0; background: transparent; color: var(--muted); font-weight: 700; font-size: .78rem;
@@ -1330,16 +1340,16 @@ content="Monitoramento das estratégias de comunicação política dos candidato
 
   <div class="project-photo">
     <img
-      src="assets/img_cand/politica-logo.jpg"
-      alt="Logo do projeto Política nas Redes"
+      src="__LOGO__"
+      alt="Logo do Radar da Liderança Política"
     >
   </div>
 
   <div>
-    <p class="eyebrow">Política nas Redes · 2026</p>
+    <p class="eyebrow">Vitor Reis Soares</p>
 
     <h1>
-      Programa Político e Personalismo nas Mídias Sociais
+      Radar da Liderança Política
     </h1>
 
     <p class="project-description">
@@ -1858,7 +1868,7 @@ __SOBRE_A_PESQUISA__
 
     <span class="section-title">
       <span class="result-number">08</span>
-      Top 10: Curtidas e Comentários
+      Top 10: Curtidas, Comentários e Visualizações
     </span>
 
     <i class="fas fa-chevron-down section-icon"></i>
@@ -1927,6 +1937,12 @@ __SOBRE_A_PESQUISA__
 
       </div>
 
+      <div class="engagement-card">
+        <h3><i class="fas fa-eye"></i> Mais visualizadas</h3>
+        <p class="chart-note">As 10 postagens com mais visualizações na base (só os vídeos têm visualizações).</p>
+        <ol class="engagement-list" id="topViewsList"></ol>
+      </div>
+
     </div>
 
   </div>
@@ -1934,90 +1950,84 @@ __SOBRE_A_PESQUISA__
 
 
 <!-- ===================================================
-     RESULTADO 09 — VALÊNCIA DOS COMENTÁRIOS
-     =================================================== -->
-<section class="project-section">
-  <div class="section-head" data-target="resultadoValencia" tabindex="0" role="button" aria-expanded="false">
-    <span class="section-title">
-      <span class="result-number">09</span>
-      Comentários: positivos, neutros e negativos
-    </span>
-    <i class="fas fa-chevron-down section-icon"></i>
-  </div>
-  <div class="section-content" id="resultadoValencia">
-    <div class="chart-card wide">
-      <h3 class="chart-title">Valência dos comentários por categoria</h3>
-      <p class="chart-note">
-        Proporção de comentários positivos, neutros e negativos nas postagens de cada categoria e subcategoria.
-        Os comentários foram classificados por IA e validados por pesquisadores, considerando ironias e sarcasmos.
-        Sem candidatos selecionados, todos entram na conta.
-      </p>
-      <div class="candidate-filter-bar">
-        <span class="filter-label"><i class="fas fa-filter"></i> Selecionar candidatos:</span>
-        <div id="valenciaCandidateFilterButtons" class="filter-buttons"></div>
-      </div>
-      <div class="chart-wrap valencia-wrap">
-        <canvas id="valenciaCategoriasBar"></canvas>
-      </div>
-    </div>
-    <div class="chart-card wide">
-      <h3 class="chart-title">Comentários de cada postagem</h3>
-      <p class="chart-note">
-        As 20 postagens com mais comentários analisados no período. Índice: de 0 (todos os comentários negativos)
-        a 1 (todos positivos); os neutros contam como 0,5.
-      </p>
-      <div class="valencia-tabela-wrap">
-        <table class="valencia-tabela">
-          <thead><tr><th>Postagem</th><th>Categorias</th><th class="num">Comentários</th>
-            <th>Positivos · neutros · negativos</th><th class="num">Índice</th></tr></thead>
-          <tbody id="valenciaTabela"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===================================================
-     RESULTADO 10 — ÍNDICE DE VALÊNCIA
+     RESULTADO 09 — EVOLUÇÃO DO ÍNDICE DE VALÊNCIA
      =================================================== -->
 <section class="project-section">
   <div class="section-head" data-target="resultadoIndice" tabindex="0" role="button" aria-expanded="false">
     <span class="section-title">
-      <span class="result-number">10</span>
-      Índice de valência: evolução e desempenho
+      <span class="result-number">09</span>
+      Evolução do índice de valência dos comentários
     </span>
     <i class="fas fa-chevron-down section-icon"></i>
   </div>
   <div class="section-content" id="resultadoIndice">
-    <div class="candidate-filter-bar">
-      <span class="filter-label"><i class="fas fa-filter"></i> Selecionar candidatos:</span>
-      <div id="indiceCandidateFilterButtons" class="filter-buttons"></div>
-    </div>
     <div class="chart-card wide">
-      <h3 class="chart-title">Evolução do índice de valência — subcategorias da Liderança</h3>
+      <h3 class="chart-title">Índice de valência ao longo do tempo — subcategorias da Liderança e índice geral</h3>
       <p class="chart-note">
-        Índice de 0 (todos os comentários negativos) a 1 (todos positivos), calculado <span id="indiceValenciaUnidade">por período</span>
-        com a proporção ponderada pelo número de comentários: (positivos + 0,5 × neutros) ÷ total.
-        Sem candidatos selecionados, todos entram na conta.
+        Cada comentário vale 1 (positivo), 0,5 (neutro) ou 0 (negativo), e o índice é a média desses valores,
+        de 0 (todos negativos) a 1 (todos positivos), calculada <span id="indiceValenciaUnidade">por período</span>.
+        A linha tracejada é o índice geral. Sem candidatos selecionados, todos entram na conta.
       </p>
+      <div class="candidate-filter-bar">
+        <span class="filter-label"><i class="fas fa-filter"></i> Selecionar candidatos:</span>
+        <div id="indiceCandidateFilterButtons" class="filter-buttons"></div>
+      </div>
       <div class="chart-wrap">
         <canvas id="indiceValenciaLinha"></canvas>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ===================================================
+     RESULTADO 10 — DESEMPENHO NOS COMENTÁRIOS (RADAR)
+     =================================================== -->
+<section class="project-section">
+  <div class="section-head" data-target="resultadoRadar" tabindex="0" role="button" aria-expanded="false">
+    <span class="section-title">
+      <span class="result-number">10</span>
+      Desempenho nos comentários
+    </span>
+    <i class="fas fa-chevron-down section-icon"></i>
+  </div>
+  <div class="section-content" id="resultadoRadar">
     <div class="chart-card wide">
-      <h3 class="chart-title">Desempenho no período: comentários positivos e negativos</h3>
+      <h3 class="chart-title">Comentários positivos e negativos no período</h3>
       <p class="chart-note">
-        Média ponderada de todo o período selecionado. Quanto maior a área verde (positivos), melhor o desempenho
-        nas mídias sociais; quanto maior a área vermelha (negativos), pior.
+        Proporção de comentários positivos (verde) e negativos (vermelho) em todo o período selecionado.
+        Quanto maior a área verde, melhor o desempenho nas mídias sociais; quanto maior a vermelha, pior.
+        Sem candidatos selecionados, todos entram na conta.
       </p>
+      <div class="candidate-filter-bar">
+        <span class="filter-label"><i class="fas fa-filter"></i> Selecionar candidatos:</span>
+        <div id="radarCandidateFilterButtons" class="filter-buttons"></div>
+      </div>
       <div class="radar-modos" role="group" aria-label="O que comparar">
         <button type="button" class="radar-modo ativo" data-modo="subcategorias">Subcategorias da Liderança</button>
         <button type="button" class="radar-modo" data-modo="categorias">Categorias</button>
       </div>
       <div class="radar-grade">
         <div class="chart-wrap radar-wrap"><canvas id="radarValencia"></canvas></div>
-        <div id="radarValenciaTabela" class="radar-tabela"></div>
+        <div class="radar-lado">
+          <div id="radarIndiceGeral" class="radar-geral"></div>
+          <div id="radarValenciaTabela" class="radar-tabela"></div>
+        </div>
       </div>
+      <details class="radar-metodo">
+        <summary>Como o índice é calculado</summary>
+        <p>
+          Cada comentário vale 1 (positivo), 0,5 (neutro) ou 0 (negativo), e o índice é a média desses valores sobre
+          todos os comentários do grupo (cada comentário pesa igual). No <strong>índice geral</strong>, cada postagem entra
+          uma vez só, mesmo quando pertence a mais de uma categoria; por isso ele não é a média dos índices das categorias,
+          que contaria os mesmos comentários mais de uma vez.
+        </p>
+        <p>
+          O <strong>intervalo de confiança de 95%</strong> considera que os comentários de uma mesma postagem não são
+          independentes (erro-padrão robusto por postagem, para o estimador de razão) e usa a distribuição t com
+          (número de postagens − 1) graus de liberdade, o que o deixa mais largo quando há poucas postagens.
+          Intervalos que se sobrepõem indicam que a diferença entre os grupos pode ser casual.
+        </p>
+      </details>
     </div>
   </div>
 </section>
@@ -2128,10 +2138,10 @@ __CONSIDERACOES__
 
 
 <strong>
-  Programa Político e Personalismo nas Mídias Sociais
+  Radar da Liderança Política
 </strong>
 
-· Política nas Redes ·
+· Vitor Reis Soares ·
 
 Grupo de trabalho formado por Vitor Reis, Malu Alden, Malu Paschoal, Natália Lucciola, Natalia Paiva, Shamira Rossi, Eduardo Barbabela, Eduarda e Pollyanna Brêtas
 
@@ -2265,8 +2275,8 @@ __DADOS__
           new Set(),
 
         engajamento: new Set(),
-        valencia: new Set(),
-        indice: new Set()
+        indice: new Set(),
+        radar: new Set()
 
       },
 
@@ -3289,14 +3299,19 @@ __DADOS__
     /* Comentários de cada postagem: { shortCode: [positivos, neutros, negativos] } */
     const VALENCIA = window.VALENCIA || {};
 
-    const CORES_VALENCIA = { positivo: "#16a34a", neutro: "#94a3b8", negativo: "#dc2626" };
+    const CORES_VALENCIA = ESQUEMA.coresValencia || { positivo: "#16a34a", neutro: "#94a3b8", negativo: "#dc2626" };
+    const CORES_INDICE_GERAL = ESQUEMA.corIndiceGeral || "#111827";
 
     function corCategoria(nome) {
       const cat = ESQUEMA.categorias.find(c => c.nome === nome);
       return cat ? cat.cor : "#64748b";
     }
 
+    /* Cada subcategoria tem sempre a mesma cor, em todas as seções */
     function corSubcategoria(nome) {
+      const cores = ESQUEMA.coresSubcategorias || {};
+      const achada = Object.keys(cores).find(k => normalizarTexto(k) === normalizarTexto(nome));
+      if (achada) return cores[achada];
       const todas = ESQUEMA.categorias.flatMap(c => c.subcategorias);
       const i = Math.max(0, todas.indexOf(nome));
       return CONFIG.subcategoryPalette[i % CONFIG.subcategoryPalette.length];
@@ -3393,96 +3408,6 @@ __DADOS__
                           { pos: 0, neu: 0, neg: 0, n: 0 });
     }
 
-    /* 09 — Proporção de comentários positivos, neutros e negativos por categoria */
-    function criarGraficoValenciaCategorias() {
-      const canvas = document.getElementById("valenciaCategoriasBar");
-      if (!canvas) return;
-      destruirChart("valenciaCategoriasBar");
-      const posts = postagensComValencia(STATE.candidatosSelecionados.valencia);
-      if (!posts.length) {
-        mostrarEstadoVazio(canvas, "Não há comentários classificados para as postagens deste período.");
-        renderizarTabelaValencia([]);
-        return;
-      }
-      restaurarCanvas(canvas);
-      const grupos = gruposValencia(false)
-        .map(g => ({ ...g, soma: somarValencia(posts.filter(g.testa)) }))
-        .filter(g => g.soma.n > 0);
-      const rotulos = grupos.map(g => g.nivel === "subcategoria" ? `   ${g.nome}` : g.nome);
-      const serie = (campo, nome, cor) => ({
-        label: nome, backgroundColor: cor, borderWidth: 0, borderRadius: 3, maxBarThickness: 26,
-        data: grupos.map(g => {
-          const t = g.soma.pos + g.soma.neu + g.soma.neg;
-          return t ? (g.soma[campo] / t) * 100 : 0;
-        })
-      });
-      STATE.charts.valenciaCategoriasBar = new Chart(canvas, {
-        type: "bar",
-        data: {
-          labels: rotulos,
-          datasets: [
-            serie("pos", "Positivos", CORES_VALENCIA.positivo),
-            serie("neu", "Neutros", CORES_VALENCIA.neutro),
-            serie("neg", "Negativos", CORES_VALENCIA.negativo)
-          ]
-        },
-        options: {
-          indexAxis: "y", responsive: true, maintainAspectRatio: false,
-          interaction: { mode: "index", intersect: false },
-          plugins: {
-            legend: { position: "bottom" },
-            tooltip: {
-              callbacks: {
-                title: itens => {
-                  const g = grupos[itens[0].dataIndex];
-                  const t = g.soma.pos + g.soma.neu + g.soma.neg;
-                  return `${g.nome} · ${g.soma.n} postagens · ${t.toLocaleString("pt-BR")} comentários · índice ${formatarIndice(indiceValencia(g.soma.pos, g.soma.neu, g.soma.neg))}`;
-                },
-                label: ctx => `${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
-              }
-            }
-          },
-          scales: {
-            x: { stacked: true, max: 100, ticks: { callback: v => `${v}%` }, title: { display: true, text: "Percentual dos comentários" } },
-            y: { stacked: true, ticks: { autoSkip: false, font: ctx => ({ weight: grupos[ctx.index] && grupos[ctx.index].nivel === "categoria" ? "700" : "400" }) } }
-          }
-        }
-      });
-      renderizarTabelaValencia(posts);
-    }
-
-    /* Tabela: comentários de cada postagem (as mais comentadas primeiro) */
-    function renderizarTabelaValencia(posts) {
-      const corpo = document.getElementById("valenciaTabela");
-      if (!corpo) return;
-      corpo.innerHTML = "";
-      if (!posts.length) {
-        corpo.innerHTML = '<tr><td colspan="6" class="chart-empty">Sem comentários classificados no período.</td></tr>';
-        return;
-      }
-      [...posts]
-        .sort((a, b) => (b.pos + b.neu + b.neg) - (a.pos + a.neu + a.neg))
-        .slice(0, 20)
-        .forEach(p => {
-          const t = p.pos + p.neu + p.neg;
-          const pc = x => (x / t) * 100;
-          const categorias = [...p.cats].map(c => {
-            const subs = (ESQUEMA.categorias.find(x => x.nome === c) || { subcategorias: [] }).subcategorias.filter(s => p.subs.has(s));
-            return subs.length ? `${c} (${subs.join(", ")})` : c;
-          }).join(" · ") || "Sem categoria";
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td><strong>${p.candidato}</strong><span class="valencia-sub">${formatarData(p.data)}${p.url ? ` · <a href="${p.url}" target="_blank" rel="noopener noreferrer">ver</a>` : ""}</span></td>
-            <td>${categorias}</td>
-            <td class="num">${t.toLocaleString("pt-BR")}</td>
-            <td><div class="valencia-barra" title="Positivos ${pc(p.pos).toFixed(0)}% · Neutros ${pc(p.neu).toFixed(0)}% · Negativos ${pc(p.neg).toFixed(0)}%">
-              <span style="width:${pc(p.pos)}%;background:${CORES_VALENCIA.positivo}"></span><span style="width:${pc(p.neu)}%;background:${CORES_VALENCIA.neutro}"></span><span style="width:${pc(p.neg)}%;background:${CORES_VALENCIA.negativo}"></span>
-            </div><span class="valencia-sub">${pc(p.pos).toFixed(0)}% · ${pc(p.neu).toFixed(0)}% · ${pc(p.neg).toFixed(0)}%</span></td>
-            <td class="num"><strong>${formatarIndice(indiceValencia(p.pos, p.neu, p.neg))}</strong></td>`;
-          corpo.appendChild(tr);
-        });
-    }
-
     /* Agrupa datas em dias, semanas ou meses, conforme o tamanho do período */
     function unidadeTempo(datas) {
       if (!datas.length) return "day";
@@ -3503,7 +3428,7 @@ __DADOS__
       return unidade === "week" ? `sem. ${dia}` : dia;
     }
 
-    /* 10 — Evolução do índice de valência das subcategorias da Liderança */
+    /* 09 — Evolução do índice de valência das subcategorias da Liderança e do índice geral */
     function criarGraficoIndiceTempo() {
       const canvas = document.getElementById("indiceValenciaLinha");
       if (!canvas) return;
@@ -3511,7 +3436,7 @@ __DADOS__
       const posts = postagensComValencia(STATE.candidatosSelecionados.indice)
         .map(p => ({ ...p, quando: parseData(p.data) })).filter(p => p.quando);
       const grupos = gruposValencia(true);
-      if (!posts.length || !grupos.length) {
+      if (!posts.length) {
         mostrarEstadoVazio(canvas, "Não há comentários classificados para as postagens deste período.");
         return;
       }
@@ -3527,18 +3452,15 @@ __DADOS__
       }
       const nota = document.getElementById("indiceValenciaUnidade");
       if (nota) nota.textContent = { day: "por dia", week: "por semana", month: "por mês" }[unidade];
-      const datasets = grupos.map(g => {
-        const pontos = chaves.map(k => {
-          const doPeriodo = posts.filter(p => g.testa(p) && inicioDoPeriodo(p.quando, unidade).getTime() === k);
-          const s = somarValencia(doPeriodo);
-          return { y: indiceValencia(s.pos, s.neu, s.neg), n: s.pos + s.neu + s.neg, posts: s.n };
-        });
-        return {
-          label: g.nome, data: pontos.map(p => p.y), extra: pontos,
-          borderColor: g.cor, backgroundColor: g.cor, pointRadius: 3.5, pointHoverRadius: 6,
-          borderWidth: 2.2, tension: 0.25, spanGaps: true
-        };
-      });
+      const serie = (nome, cor, testa, extra = {}) => {
+        const pontos = chaves.map(k => estatisticaIndice(posts.filter(p => testa(p) && inicioDoPeriodo(p.quando, unidade).getTime() === k)));
+        return { label: nome, data: pontos.map(e => e.indice), extra: pontos, borderColor: cor, backgroundColor: cor,
+                 pointRadius: 3.5, pointHoverRadius: 6, borderWidth: 2.2, tension: 0.25, spanGaps: true, ...extra };
+      };
+      const datasets = [
+        serie("Índice geral", CORES_INDICE_GERAL, () => true, { borderDash: [6, 4], borderWidth: 2.6, order: 0 }),
+        ...grupos.map(g => serie(g.nome, g.cor, g.testa))
+      ];
       STATE.charts.indiceValenciaLinha = new Chart(canvas, {
         type: "line",
         data: { labels: chaves.map(k => rotuloTempo(new Date(k), unidade)), datasets },
@@ -3546,13 +3468,13 @@ __DADOS__
           responsive: true, maintainAspectRatio: false,
           interaction: { mode: "index", intersect: false },
           plugins: {
-            legend: { position: "bottom" },
+            legend: { position: "bottom", labels: { usePointStyle: true, pointStyle: "line" } },
             tooltip: {
               callbacks: {
                 label: ctx => {
                   const e = ctx.dataset.extra[ctx.dataIndex];
-                  return ctx.raw === null ? `${ctx.dataset.label}: sem comentários` :
-                    `${ctx.dataset.label}: ${formatarIndice(ctx.raw)} (${e.n.toLocaleString("pt-BR")} comentários em ${e.posts} postagens)`;
+                  return e.indice === null ? `${ctx.dataset.label}: sem comentários` :
+                    `${ctx.dataset.label}: ${formatarIndice(e.indice)} (${textoIntervalo(e)} · ${e.n.toLocaleString("pt-BR")} comentários, ${e.m} postagens)`;
                 }
               }
             }
@@ -3566,37 +3488,76 @@ __DADOS__
       });
     }
 
-    /* 10 — Radar: positivos e negativos (média ponderada do período) */
+
+    /* Índice com intervalo de confiança de 95% (o mesmo cálculo do app em R).
+       Cada comentário vale 1 (positivo), 0,5 (neutro) ou 0 (negativo); o índice é a média
+       sobre todos os comentários. O erro-padrão é robusto por postagem (comentários da mesma
+       postagem não são independentes) e o intervalo usa t com (postagens − 1) graus de liberdade. */
+    function quantilT(gl) {
+      const tabela = [12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179, 2.160, 2.145,
+                      2.131, 2.120, 2.110, 2.101, 2.093, 2.086, 2.080, 2.074, 2.069, 2.064, 2.060, 2.056, 2.052, 2.048, 2.045, 2.042];
+      if (gl < 1) return 1.96;
+      return gl <= 30 ? tabela[gl - 1] : 1.96 + 2.37 / gl;
+    }
+
+    function estatisticaIndice(posts) {
+      const validos = posts.filter(p => p.pos + p.neu + p.neg > 0);
+      const m = validos.length;
+      const n = validos.reduce((s, p) => s + p.pos + p.neu + p.neg, 0);
+      if (!n) return { indice: null, inf: null, sup: null, n: 0, m: 0, pos: 0, neu: 0, neg: 0 };
+      const soma = campo => validos.reduce((s, p) => s + p[campo], 0);
+      const pos = soma("pos"), neu = soma("neu"), neg = soma("neg");
+      const r = (pos + 0.5 * neu) / n;
+      const epSimples = Math.sqrt(Math.max(0, (pos + 0.25 * neu) / n - r * r) / n);
+      let epRobusto = 0;
+      if (m >= 2) {
+        const residuos = validos.reduce((s, p) => {
+          const t = p.pos + p.neu + p.neg, y = p.pos + 0.5 * p.neu;
+          return s + (y - r * t) ** 2;
+        }, 0);
+        epRobusto = Math.sqrt(m / (m - 1) * residuos) / n;
+      }
+      const ep = Math.max(epSimples, epRobusto);
+      const z = m >= 2 ? quantilT(m - 1) : 1.96;
+      return { indice: r, inf: Math.max(0, r - z * ep), sup: Math.min(1, r + z * ep), n, m, pos, neu, neg };
+    }
+
+    function textoIntervalo(e) {
+      return e.indice === null ? "" : `IC 95%: ${formatarIndice(e.inf)} a ${formatarIndice(e.sup)}`;
+    }
+
+    /* 10 — Radar: positivos e negativos do período, com o índice de cada eixo e o geral */
     function criarGraficoRadarValencia() {
       const canvas = document.getElementById("radarValencia");
       if (!canvas) return;
       destruirChart("radarValencia");
-      const posts = postagensComValencia(STATE.candidatosSelecionados.indice);
+      const posts = postagensComValencia(STATE.candidatosSelecionados.radar);
       const modo = STATE.radarModo || "subcategorias";
       document.querySelectorAll(".radar-modo").forEach(b => b.classList.toggle("ativo", b.dataset.modo === modo));
       const grupos = gruposValencia(modo === "subcategorias")
         .filter(g => modo === "subcategorias" ? true : g.nivel === "categoria")
-        .map(g => ({ ...g, soma: somarValencia(posts.filter(g.testa)) }));
+        .map(g => ({ ...g, est: estatisticaIndice(posts.filter(g.testa)) }));
       const tabela = document.getElementById("radarValenciaTabela");
-      if (!posts.length || !grupos.some(g => g.soma.n)) {
+      const geralEl = document.getElementById("radarIndiceGeral");
+      if (!posts.length || !grupos.some(g => g.est.n)) {
         mostrarEstadoVazio(canvas, "Não há comentários classificados para as postagens deste período.");
         if (tabela) tabela.innerHTML = "";
+        if (geralEl) geralEl.innerHTML = "";
         return;
       }
       restaurarCanvas(canvas);
-      const pct = (g, campo) => {
-        const t = g.soma.pos + g.soma.neu + g.soma.neg;
-        return t ? (g.soma[campo] / t) * 100 : 0;
-      };
+      const pct = (e, campo) => e.n ? (e[campo] / e.n) * 100 : 0;
       STATE.charts.radarValencia = new Chart(canvas, {
         type: "radar",
         data: {
           labels: grupos.map(g => g.nome),
           datasets: [
-            { label: "Positivos (%)", data: grupos.map(g => pct(g, "pos")), borderColor: CORES_VALENCIA.positivo,
-              backgroundColor: hexParaRgba(CORES_VALENCIA.positivo, 0.18), pointBackgroundColor: CORES_VALENCIA.positivo, borderWidth: 2 },
-            { label: "Negativos (%)", data: grupos.map(g => pct(g, "neg")), borderColor: CORES_VALENCIA.negativo,
-              backgroundColor: hexParaRgba(CORES_VALENCIA.negativo, 0.14), pointBackgroundColor: CORES_VALENCIA.negativo, borderWidth: 2 }
+            { label: "Positivos (%)", data: grupos.map(g => pct(g.est, "pos")), borderColor: CORES_VALENCIA.positivo,
+              backgroundColor: hexParaRgba(CORES_VALENCIA.positivo, 0.18), pointBackgroundColor: CORES_VALENCIA.positivo,
+              borderWidth: 2.4, tension: 0.35, pointRadius: 4 },
+            { label: "Negativos (%)", data: grupos.map(g => pct(g.est, "neg")), borderColor: CORES_VALENCIA.negativo,
+              backgroundColor: hexParaRgba(CORES_VALENCIA.negativo, 0.14), pointBackgroundColor: CORES_VALENCIA.negativo,
+              borderWidth: 2.4, tension: 0.35, pointRadius: 4 }
           ]
         },
         options: {
@@ -3605,25 +3566,38 @@ __DADOS__
             legend: { position: "bottom" },
             tooltip: { callbacks: { label: ctx => `${ctx.dataset.label.replace(" (%)", "")}: ${Number(ctx.raw).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%` } }
           },
-          scales: { r: { min: 0, max: 100, ticks: { stepSize: 25, callback: v => `${v}%`, backdropColor: "transparent" },
-                         pointLabels: { font: { size: 12, weight: "600" } } } }
+          scales: {
+            r: {
+              min: 0, max: 100,
+              grid: { circular: true, color: "rgba(100, 116, 139, .18)" },
+              angleLines: { color: "rgba(100, 116, 139, .18)" },
+              ticks: { stepSize: 25, callback: v => `${v}%`, backdropColor: "transparent", color: "#94a3b8" },
+              pointLabels: { font: { size: 13, weight: "700" }, color: ctx => grupos[ctx.index] ? grupos[ctx.index].cor : "#334155" }
+            }
+          }
         }
       });
+      // Índice geral: cada postagem uma vez só (sem contar comentários duas vezes)
+      const geral = estatisticaIndice(posts);
+      if (geralEl) {
+        geralEl.innerHTML = `<span class="radar-geral-rotulo">Índice geral</span>
+          <strong>${formatarIndice(geral.indice)}</strong>
+          <span>${textoIntervalo(geral)}</span>
+          <span class="valencia-sub">${geral.n.toLocaleString("pt-BR")} comentários · ${geral.m} postagens</span>`;
+      }
       if (tabela) {
-        tabela.innerHTML = grupos.map(g => {
-          const t = g.soma.pos + g.soma.neu + g.soma.neg;
-          return `<div class="radar-item"><span class="radar-cor" style="background:${g.cor}"></span><strong>${g.nome}</strong>
-            <span>índice ${formatarIndice(indiceValencia(g.soma.pos, g.soma.neu, g.soma.neg))}</span>
-            <span class="valencia-sub">${t.toLocaleString("pt-BR")} comentários · ${g.soma.n} postagens</span></div>`;
-        }).join("");
+        tabela.innerHTML = grupos.map(g => `<div class="radar-item"><span class="radar-cor" style="background:${g.cor}"></span>
+            <strong>${g.nome}</strong><span class="radar-indice">${formatarIndice(g.est.indice)}</span>
+            <span class="valencia-sub">${textoIntervalo(g.est)} · ${g.est.n.toLocaleString("pt-BR")} comentários · ${g.est.m} postagens</span></div>`).join("");
       }
     }
 
+
     function criarSecaoValencia() {
-      criarGraficoValenciaCategorias();
       criarGraficoIndiceTempo();
       criarGraficoRadarValencia();
     }
+
 
     function criarGraficoApelos() {
       const canvas = document.getElementById("graficoApelosTempo");
@@ -3636,21 +3610,20 @@ __DADOS__
       }
       restaurarCanvas(canvas);
       const base = dadosPorCategoria();
-      const alfas = [1, 0.62, 0.34, 0.2];
+      // Cada categoria tem sempre a mesma cor; cada candidato é uma pilha (barra) por data
       const datasets = [];
       selecionados.forEach(candidato => {
         const dadosCandidato = base.filter(item => normalizarCandidato(item.candidato) === candidato);
-        const cor = getCandidateColor(candidato, "strong");
-        ESQUEMA.categorias.forEach((cat, i) => {
+        ESQUEMA.categorias.forEach(cat => {
           datasets.push({
-            label: `${candidato} — ${cat.nome}`,
+            label: cat.nome,
             candidateName: candidato,
             tipoConteudo: cat.nome,
+            stack: candidato,
             data: STATE.datas.map(data => dadosCandidato.filter(item =>
               item.data === data && categoriaTipo(item.categoria) === cat.nome).length),
-            backgroundColor: hexParaRgba(cor, alfas[i % alfas.length]),
-            borderColor: cor,
-            borderWidth: 1,
+            backgroundColor: cat.cor,
+            borderWidth: 0,
             borderRadius: 2
           });
         });
@@ -3665,9 +3638,11 @@ __DADOS__
             legend: {
               display: true, position: "bottom",
               labels: { usePointStyle: true, pointStyle: "rectRounded", boxWidth: 9, boxHeight: 9, padding: 10,
-                        font: { size: 9.5, weight: "600" } }
+                        font: { size: 9.5, weight: "600" },
+                        // uma entrada por categoria (os candidatos repetem as mesmas cores)
+                        filter: (item, dados) => dados.datasets.findIndex(d => d.label === item.text) === item.datasetIndex }
             },
-            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString("pt-BR")}` } }
+            tooltip: { callbacks: { label: ctx => `${ctx.dataset.candidateName} — ${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString("pt-BR")}` } }
           },
           scales: {
             x: { stacked: true },
@@ -3738,14 +3713,11 @@ __DADOS__
             "color-legend-types";
 
 
-          // Um tom da cor do candidato para cada categoria (o mesmo do gráfico 01)
-          ESQUEMA.categorias.forEach((cat, i) => {
-            const amostra = document.createElement("span");
-            amostra.className = "color-legend-swatch";
-            amostra.style.background = hexParaRgba(getCandidateColor(candidato, "strong"), [1, 0.62, 0.34, 0.2][i % 4]);
-            amostra.title = cat.nome;
-            tipos.appendChild(amostra);
-          });
+          const amostra = document.createElement("span");
+          amostra.className = "color-legend-swatch";
+          amostra.style.background = getCandidateColor(candidato, "strong");
+          amostra.title = candidato;
+          tipos.appendChild(amostra);
 
 
           wrapper.appendChild(
@@ -4048,15 +4020,7 @@ __DADOS__
           indice
         ) => {
 
-          mapaCoresCategorias[
-            normalizarTexto(
-              categoria
-            )
-          ] =
-            paletaCategorias[
-              indice %
-              paletaCategorias.length
-            ];
+          mapaCoresCategorias[normalizarTexto(categoria)] = corSubcategoria(categoria);
 
         }
       );
@@ -4264,15 +4228,7 @@ __DADOS__
                             indice
                           ) => {
 
-                            mapaCores[
-                              normalizarTexto(
-                                subcategoria
-                              )
-                            ] =
-                              paletaCategorias[
-                                indice %
-                                paletaCategorias.length
-                              ];
+                            mapaCores[normalizarTexto(subcategoria)] = corSubcategoria(subcategoria);
 
                           }
                         );
@@ -4473,16 +4429,8 @@ __DADOS__
             "curtidas"
         },
 
-        {
-          elementoId:
-            "topCommentsList",
-
-          campo:
-            "comentarios",
-
-          rotulo:
-            "comentários"
-        }
+        { elementoId: "topCommentsList", campo: "comentarios", rotulo: "comentários" },
+        { elementoId: "topViewsList", campo: "visualizacoes", rotulo: "visualizações" }
 
       ];
 
@@ -4514,7 +4462,7 @@ __DADOS__
 
           const dadosBase =
             selecionados.length
-              ? STATE.dados.filter(
+              ? dadosPorPostagem().filter(
                   item =>
                     selecionados.includes(
                       normalizarCandidato(
@@ -4522,7 +4470,7 @@ __DADOS__
                       )
                     )
                 )
-              : [...STATE.dados];
+              : [...dadosPorPostagem()];
 
           const dadosOrdenados =
             dadosBase
@@ -4679,8 +4627,7 @@ __DADOS__
                 "engagement-meta";
 
 
-              meta.textContent =
-                `${item.categoria || "Sem categoria"} · ${formatarData(item.data)}`;
+              meta.textContent = `${item.categoria || "Sem categoria"} · ${formatarData(item.data)}`;
 
 
               const subcategoria =
@@ -4693,10 +4640,7 @@ __DADOS__
                 "engagement-subcategory";
 
 
-              subcategoria.textContent =
-                item.subcategoria
-                  ? `Subcategoria: ${item.subcategoria}`
-                  : "Subcategoria: não informada";
+              subcategoria.textContent = item.subcategoria ? `Liderança: ${item.subcategoria}` : "";
 
 
               main.appendChild(
@@ -4768,7 +4712,7 @@ __DADOS__
 
 
               valor.innerHTML =
-                `${parseNumero(item[configuracao.campo]).toLocaleString("pt-BR")}<span>${configuracao.campo === "likes" ? "curtidas" : "comentários"}</span>`;
+                `${parseNumero(item[configuracao.campo]).toLocaleString("pt-BR")}<span>${configuracao.rotulo}</span>`;
 
 
               li.appendChild(
@@ -4851,7 +4795,7 @@ __DADOS__
       const formatos =
         [
           ...new Set(
-            STATE.dados
+            dadosPorPostagem()
               .map(
                 item =>
                   String(
@@ -4883,7 +4827,7 @@ __DADOS__
           candidato => {
 
             const dadosCandidato =
-              STATE.dados.filter(
+              dadosPorPostagem().filter(
                 item =>
                   normalizarCandidato(
                     item.candidato
@@ -5271,6 +5215,8 @@ __DADOS__
               "comentarios"
             ),
 
+          visualizacoes: cabecalho.indexOf("visualizacoes"),
+
           formato:
             cabecalho.indexOf(
               "formato"
@@ -5364,6 +5310,8 @@ __DADOS__
                         ]
                       )
                     : 0,
+
+                visualizacoes: indices.visualizacoes !== -1 ? parseNumero(linha[indices.visualizacoes]) : 0,
 
                 formato:
                   indices.formato !== -1
@@ -5619,11 +5567,10 @@ __DADOS__
 
       });
 
-      criarFiltroCandidatos({ containerId: "valenciaCandidateFilterButtons",
-                              estado: STATE.candidatosSelecionados.valencia, onChange: criarGraficoValenciaCategorias });
       criarFiltroCandidatos({ containerId: "indiceCandidateFilterButtons",
-                              estado: STATE.candidatosSelecionados.indice,
-                              onChange: () => { criarGraficoIndiceTempo(); criarGraficoRadarValencia(); } });
+                              estado: STATE.candidatosSelecionados.indice, onChange: criarGraficoIndiceTempo });
+      criarFiltroCandidatos({ containerId: "radarCandidateFilterButtons",
+                              estado: STATE.candidatosSelecionados.radar, onChange: criarGraficoRadarValencia });
       document.querySelectorAll(".radar-modo").forEach(botao => {
         botao.onclick = () => { STATE.radarModo = botao.dataset.modo; criarGraficoRadarValencia(); };
       });
