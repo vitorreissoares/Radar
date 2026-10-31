@@ -98,7 +98,7 @@ MODOS_RELATORIO <- c(semana = "Semana", mes = "Mês", ano = "Ano", tudo = "Tudo"
 TITULO_MODO <- c(semana = "Última semana", mes = "Último mês", ano = "Último ano", tudo = "Todo o período")
 
 # Início e fim de cada botão, a partir das datas da base
-janela_relatorio <- function(datas, modo) {
+janela_relatorio <- function(datas, modo, idioma = "pt") {
   datas <- as.Date(datas)
   datas <- datas[!is.na(datas)]
   if (!length(datas)) return(NULL)
@@ -109,9 +109,10 @@ janela_relatorio <- function(datas, modo) {
                    ano = fim %m-% years(1) + 1,
                    tudo = min(datas))
   inicio <- max(inicio, min(datas))  # não começa antes do primeiro dado
+  titulos <- TITULO_MODO_IDIOMA[[idioma]] %||% TITULO_MODO
   list(modo = modo, inicio = inicio, fim = fim,
-       texto_periodo = periodo_extenso(inicio, fim),
-       rotulo = paste0(TITULO_MODO[[modo]], ": ", periodo_extenso(inicio, fim)))
+       texto_periodo = periodo_extenso(inicio, fim, idioma),
+       rotulo = paste0(titulos[[modo]], ": ", periodo_extenso(inicio, fim, idioma)))
 }
 
 # Texto salvo para estas datas (id ou NULL): primeiro o do mesmo botão,
@@ -125,16 +126,16 @@ id_salvo <- function(salvos, modo, inicio, fim) {
 
 # Texto automático (só números, sem os lembretes entre [colchetes]) para os
 # períodos que não têm texto salvo
-analise_automatica <- function(d, rotulo) {
+analise_automatica <- function(d, rotulo, idioma = "pt") {
   if (nrow(d) == 0) return("")
-  gerar_rascunho(d, rotulo) %>%
+  gerar_rascunho(d, rotulo, idioma) %>%
     str_remove_all("\\s*\\[[^\\]]*\\]") %>%
     html_paragrafos()
 }
 
 # d: base validada (uma linha por postagem) com tudo o que entra no relatório.
 # Devolve list(semana, mes, ano, tudo), um período por botão (NULL se não há dados)
-periodos_relatorio <- function(d) {
+periodos_relatorio <- function(d, idioma = "pt") {
   d <- d %>% mutate(data = as.Date(data))
   salvos <- ler_periodos()
   html_de <- function(id) {
@@ -142,11 +143,11 @@ periodos_relatorio <- function(d) {
     if (length(h) && !is.na(h[1]) && nzchar(h[1])) h[1] else NULL
   }
   map(set_names(names(MODOS_RELATORIO)), \(modo) {
-    j <- janela_relatorio(d$data, modo)
+    j <- janela_relatorio(d$data, modo, idioma)
     if (is.null(j)) return(NULL)
     sub <- d %>% filter(data >= j$inicio, data <= j$fim)
     list(id = id_periodo(modo, j$inicio, j$fim), rotulo = j$rotulo,
          inicio = as.character(j$inicio), fim = as.character(j$fim),
-         analise = html_de(id_salvo(salvos, modo, j$inicio, j$fim)) %||% analise_automatica(sub, j$texto_periodo))
+         analise = html_de(id_salvo(salvos, modo, j$inicio, j$fim)) %||% analise_automatica(sub, j$texto_periodo, idioma))
   })
 }

@@ -7,7 +7,7 @@ if (!exists("PASTA_APP")) PASTA_APP <- normalizePath(Sys.getenv("RADAR_APP", get
 arquivo_app <- function(...) file.path(PASTA_APP, ...)
 
 for (arquivo in c("R/config.R", "R/categorizacao.R", "R/rodadas.R", "R/validacao_remota.R",
-                  "R/relatorio.R", "R/periodos.R", "R/historico.R", "R/comentarios.R")) {
+                  "R/relatorio.R", "R/textos.R", "R/periodos.R", "R/historico.R", "R/comentarios.R")) {
   source(arquivo_app(arquivo), encoding = "UTF-8", local = environment())
 }
 

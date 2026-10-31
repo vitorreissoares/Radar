@@ -60,8 +60,9 @@ ler_base <- function(arquivos, candidatos) {
       comentarios = commentsCount,
       formato = type
     ) %>%
-    # Visualizações: só os vídeos têm (videoViewCount ou videoPlayCount, conforme a coleta)
-    mutate(visualizacoes = coalesce(coluna_numerica(., "videoViewCount"), coluna_numerica(., "videoPlayCount"))) %>%
+    # Visualizações: só os vídeos têm. videoPlayCount (reproduções) é o número que o
+    # Instagram mostra; videoViewCount fica só para coletas que não trazem o primeiro
+    mutate(visualizacoes = coalesce(coluna_numerica(., "videoPlayCount"), coluna_numerica(., "videoViewCount"))) %>%
     mutate(across(c(likes, comentarios), as.numeric))
 }
 
@@ -581,6 +582,7 @@ rodar_categorizacao <- function(arquivos, candidatos, data_inicio, data_fim,
   )
 
   pasta <- criar_rodada(classificados, data_inicio, data_fim, proporcao, modelo)
+  salvar_comentarios(comentarios_da_planilha(dados))   # versão demo dos comentários
   message("Pronto! Rodada salva em ", pasta)
   invisible(pasta)
 }

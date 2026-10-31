@@ -487,7 +487,7 @@ ui <- page_navbar(
               uiOutput("painel_chave_apify"),
               numericInput("com_limite", "Comentários por postagem (máximo)", COMENTARIOS_POR_POSTAGEM_PADRAO,
                            min = 1, max = 5000, step = 10),
-              checkboxInput("com_so_novas", "Só postagens ainda sem comentários salvos", TRUE),
+              checkboxInput("com_so_novas", "Só postagens ainda sem comentários do Apify", TRUE),
               numericInput("com_preco", "Preço do Apify (US$ por 1.000 comentários)", APIFY_PRECO_MIL,
                            min = 0, step = 0.1),
               uiOutput("com_estimativa"),
@@ -543,7 +543,14 @@ ui <- page_navbar(
       sidebar = sidebar(
         width = 300,
         accordion(
-          id = "acc_rel", multiple = TRUE, open = c("base", "periodo"),
+          id = "acc_rel", multiple = TRUE, open = c("base", "periodo", "idioma"),
+          accordion_panel(
+            "Idioma do relatório", value = "idioma", icon = icon("language"),
+            radioButtons("rel_idioma", NULL, inline = TRUE,
+                         choices = set_names(names(IDIOMAS), IDIOMAS),
+                         selected = "pt"),
+            p(class = "dica mb-0", "Textos, gráficos e rascunho saem no idioma escolhido.")
+          ),
           accordion_panel(
             "Base validada", value = "base", icon = icon("database"),
             radioButtons("base_modo", NULL,
@@ -610,23 +617,19 @@ ui <- page_navbar(
                 actionButton("adicionar_candidato", "Adicionar candidato", icon = icon("plus"),
                              class = "btn-sm btn-light"))
           ),
-          layout_columns(
-            col_widths = c(6, 6),
-            fileInput("logo_arquivo", "Logo do relatório (.png, .jpg ou .svg)", accept = c(".png", ".jpg", ".jpeg", ".svg", ".webp"),
-                      buttonLabel = "Escolher", placeholder = "Nenhum logo novo"),
-            uiOutput("logo_atual")
-          ),
-          p(class = "dica", "As fotos e o logo ficam em ", code("assets/img_cand/"), " (o logo com o nome ", code("logo"), ").")
+          p(class = "dica", "As fotos ficam em ", code("assets/img_cand/"), ".")
         ),
         accordion_panel(
           "Sobre a pesquisa", value = "sobre", icon = icon("circle-info"),
+          uiOutput("campos_relatorio"),
+          tags$hr(),
           p(class = "dica",
             "Os 7 quadros da seção “Sobre a pesquisa”. {proporcao} e {modelo} são preenchidos ",
             "automaticamente. Parágrafos são separados por uma linha em branco; links podem ser ",
             "escritos como <a href=\"...\">texto</a>."),
           textInput("modelo_rotulo", "Modelo citado na metodologia ({modelo})", MODELO_ROTULO),
           uiOutput("quadros_sobre"),
-          actionButton("salvar_sobre", "Salvar textos", icon = icon("floppy-disk"), class = "btn-sm btn-outline-primary")
+          actionButton("salvar_sobre", "Salvar cabeçalho, rodapé e textos", icon = icon("floppy-disk"), class = "btn-sm btn-outline-primary")
         )
       )
     )
@@ -717,6 +720,19 @@ server <- function(input, output, session) {
 
     dados <- tryCatch(ler_xlsx(arq$datapath), error = notificar_erro("Não foi possível ler o arquivo:"))
     req(dados)
+    # Postagens já categorizadas em rodadas anteriores ganham as visualizações e os
+    # comentários que vêm nesta planilha
+    tryCatch({
+      b <- ler_base(arq$datapath, candidato)
+      n_vis <- atualizar_visualizacoes(b)
+      ja <- unlist(map(listar_rodadas(), \(id) ler_classificados(id)$shortCode))
+      n_com <- sum(salvar_comentarios(comentarios_da_planilha(b %>% filter(shortCode %in% ja)))$novos)
+      if (n_vis + n_com > 0) {
+        showNotification(sprintf("Postagens já categorizadas: %d com visualizações atualizadas e %d comentários novos da planilha.",
+                                 n_vis, n_com), type = "message", duration = 8)
+        versao_val(versao_val() + 1)
+      }
+    }, error = notificar_erro("Não foi possível atualizar as postagens já categorizadas:"))
     arquivos(bind_rows(arquivos(), tibble(nome = arq$name, caminho = arq$datapath,
                                           candidato = candidato, postagens = nrow(dados))))
     arquivo_pendente(NULL)
@@ -943,6 +959,9 @@ server <- function(input, output, session) {
 
     id <- basename(criar_rodada(resultado, input$periodo[1], input$periodo[2],
                                 input$proporcao / 100, input$modelo))
+    # Versão demo dos comentários: os primeiros de cada postagem, que já vêm na planilha
+    tryCatch(salvar_comentarios(comentarios_da_planilha(dados)),
+             error = notificar_erro("Não foi possível guardar os comentários da planilha:"))
     ultima_rodada(list(id = id, dados = resultado))
     atualizar_listas(id)
     showNotification("Categorização concluída!", type = "message")
@@ -1551,7 +1570,7 @@ server <- function(input, output, session) {
   # ---- Coleta -----------------------------------------------
   posts_para_coletar <- reactive({
     p <- posts_com() %>% filter(!is.na(url), url != "")
-    if (isTRUE(input$com_so_novas)) p <- p %>% filter(com_salvos == 0)
+    if (isTRUE(input$com_so_novas)) p <- p %>% filter(com_apify == 0)
     p
   })
 
@@ -1662,10 +1681,19 @@ server <- function(input, output, session) {
                        div(class = "etapa", icon("robot"), tags$b("2"), "Classifique com IA"),
                        div(class = "etapa", icon("user-check"), tags$b("3"), "Valide"))))
     }
+    so_planilha <- sum(p$com_apify) == 0
     tagList(
+      if (so_planilha)
+        div(class = "alert alert-info small d-flex gap-2 align-items-start",
+            icon("flask"),
+            div(tags$b("Versão demo: "),
+                "estes são os primeiros comentários de cada postagem, que já vieram na planilha do Instagram (sem custo). ",
+                HTML("Dá para classificar, validar e gerar o relatório com eles. Para uma análise completa, colete mais ",
+                     "comentários pelo Apify no painel <b>Coletar comentários</b>."))),
       indicadores(
         indicador("Postagens com comentários", sprintf("%d de %d", sum(p$com_salvos > 0), nrow(p)), NULL, "images"),
-        indicador("Comentários salvos", num(sum(p$com_salvos)), NULL, "comments"),
+        indicador("Comentários salvos", num(sum(p$com_salvos)),
+                  sprintf("%s da planilha (demo) · %s do Apify", num(sum(p$com_planilha)), num(sum(p$com_apify))), "comments"),
         indicador("Classificados pela IA", num(sum(p$com_classificados)),
                   if (sum(p$com_salvos) > sum(p$com_classificados)) sprintf("%s aguardando", num(sum(p$com_salvos) - sum(p$com_classificados))) else "todos",
                   "robot", "destaque"),
@@ -1855,11 +1883,13 @@ server <- function(input, output, session) {
   })
 
   # Período escolhido: um dos botões do relatório, com as datas tiradas da base
+  idioma_rel <- reactive(input$rel_idioma %||% "pt")
+
   periodo_sel <- reactive({
     d <- base_rel()
     req(nrow(d) > 0)
     modo <- req(input$periodo_tipo)
-    j <- janela_relatorio(d$data, modo)
+    j <- janela_relatorio(d$data, modo, idioma_rel())
     list(tipo = modo, inicio = j$inicio, fim = j$fim, id = id_periodo(modo, j$inicio, j$fim),
          rotulo = j$rotulo, frase = j$texto_periodo)
   })
@@ -1869,7 +1899,7 @@ server <- function(input, output, session) {
     d <- base_rel()
     if (nrow(d) == 0) return(list())
     map(set_names(names(MODOS_RELATORIO)), \(m) {
-      j <- janela_relatorio(d$data, m)
+      j <- janela_relatorio(d$data, m, idioma_rel())
       list(inicio = as.character(j$inicio), fim = as.character(j$fim))
     })
   })
@@ -1889,7 +1919,7 @@ server <- function(input, output, session) {
   carregar_texto_periodo <- function(forcar_rascunho = FALSE) {
     p <- periodo_sel()
     d <- d_periodo()
-    rascunho <- if (nrow(d) > 0) gerar_rascunho(d, p$frase) else ""
+    rascunho <- if (nrow(d) > 0) gerar_rascunho(d, p$frase, idioma_rel()) else ""
     salvo <- id_salvo(ler_periodos(), p$tipo, p$inicio, p$fim)
     texto <- if (forcar_rascunho || is.null(salvo)) rascunho else texto_salvo(salvo) %||% rascunho
     updateTextAreaInput(session, "texto_rel", value = texto)
@@ -1897,9 +1927,13 @@ server <- function(input, output, session) {
   observe({
     p <- tryCatch(periodo_sel(), error = notificar_erro("Erro ao preparar o período do relatório:"))
     req(p)
-    if (identical(p$id, isolate(ultimo_periodo()))) return()
-    ultimo_periodo(p$id)
-    isolate(tryCatch(carregar_texto_periodo(), error = notificar_erro("Erro ao montar o texto do período:")))
+    chave <- paste(p$id, idioma_rel())
+    anterior <- isolate(ultimo_periodo())
+    if (identical(chave, anterior)) return()
+    ultimo_periodo(chave)
+    # Mesmo período, outro idioma: refaz o rascunho no idioma novo
+    mudou_idioma <- nzchar(anterior) && identical(sub(" [a-z]+$", "", anterior), p$id)
+    isolate(tryCatch(carregar_texto_periodo(forcar_rascunho = mudou_idioma), error = notificar_erro("Erro ao montar o texto do período:")))
   })
   observeEvent(input$rascunho, carregar_texto_periodo(forcar_rascunho = TRUE))
 
@@ -1908,7 +1942,7 @@ server <- function(input, output, session) {
     req(nrow(d) > 0)
     texto <- tryCatch(
       withProgress(message = "A IA está redigindo as considerações finais…", value = 0.3, {
-        redigir_com_ia(d, input$texto_rel, MODELO_PADRAO)
+        redigir_com_ia(d, input$texto_rel, MODELO_PADRAO, idioma_rel())
       }),
       error = notificar_erro("Não foi possível redigir com IA:")
     )
@@ -2055,22 +2089,90 @@ server <- function(input, output, session) {
     showNotification(paste("Foto de", nome, "atualizada."), type = "message")
   })
 
+  # ---- Título, subtítulo, autoria e rodapé do relatório ----
   versao_logo <- reactiveVal(0)
+  # Idioma dos campos de texto na tela (título, subtítulo, rodapé e "Sobre a pesquisa")
+  idioma_campos <- reactiveVal(NULL)
+  observeEvent(input$rel_idioma, {
+    # Ao abrir: começa no idioma salvo
+    if (is.null(idioma_campos())) {
+      salvo <- ler_config_relatorio()$idioma %||% "pt"
+      idioma_campos(salvo)
+      if (!identical(input$rel_idioma, salvo)) updateRadioButtons(session, "rel_idioma", selected = salvo)
+      return()
+    }
+    if (identical(input$rel_idioma, idioma_campos())) return()
+    # Guarda o que está na tela no idioma anterior antes de trocar
+    tryCatch({
+      salvar_config_relatorio(config_relatorio_atual())
+      salvar_sobre(sobre_atual(), idioma_campos())
+    }, error = notificar_erro("Erro ao guardar os textos:"))
+    idioma_campos(input$rel_idioma)
+  })
+
+  output$campos_relatorio <- renderUI({
+    idi <- req(idioma_campos())
+    cfg <- textos_no_idioma(ler_config_relatorio(), idi)
+    em <- if (idi == "pt") "" else paste0(" (", IDIOMAS[[idi]], ")")
+    tagList(
+      if (idi != "pt") div(class = "alert alert-info py-2 small", icon("language"), " ",
+                           "Editando os textos em ", strong(IDIOMAS[[idi]]),
+                           ". Título, subtítulo, texto do rodapé e “Sobre a pesquisa” são guardados separadamente para cada idioma."),
+      div(class = "titulo-lateral", "Cabeçalho do relatório"),
+      textInput("rel_titulo", paste0("Título", em), cfg$titulo, width = "100%"),
+      textInput("rel_subtitulo", paste0("Subtítulo (opcional)", em), cfg$subtitulo, width = "100%"),
+      textInput("rel_autoria", "Assinatura acima do título (opcional)", cfg$autoria, width = "100%"),
+      div(class = "titulo-lateral mt-3", "Rodapé"),
+      layout_columns(
+        col_widths = c(6, 6),
+        textInput("rel_rodape_nome", "Nome", cfg$rodape_nome, width = "100%"),
+        div(fileInput("logo_arquivo", "Foto (vira assets/img_cand/politica-logo)", accept = c(".png", ".jpg", ".jpeg", ".svg", ".webp"),
+                      buttonLabel = "Escolher", placeholder = "Nenhuma foto nova"),
+            uiOutput("logo_atual"))
+      ),
+      layout_columns(
+        col_widths = c(4, 4, 4),
+        !!!imap(LINKS_RODAPE, \(nome, chave) textInput(paste0("rel_link_", chave), paste("Link do", nome),
+                                                       cfg$links[[chave]] %||% "", placeholder = "https://...", width = "100%"))
+      ),
+      textAreaInput("rel_rodape_texto", paste0("Texto do rodapé (opcional)", em), cfg$rodape_texto, rows = 2, width = "100%"),
+      p(class = "dica", "Os links preenchidos aparecem como ícones no rodapé; os vazios não aparecem.")
+    )
+  })
+  outputOptions(output, "campos_relatorio", suspendWhenHidden = FALSE)
+
+  # Campos da tela; se um ainda não existir, mantém o valor salvo
+  config_relatorio_atual <- function() {
+    cfg <- ler_config_relatorio()
+    valor <- function(id, atual) input[[id]] %||% atual
+    idi <- isolate(idioma_campos()) %||% "pt"
+    no_idioma <- textos_no_idioma(cfg, idi)
+    cfg <- guardar_textos_idioma(cfg, list(
+      titulo = valor("rel_titulo", no_idioma$titulo),
+      subtitulo = valor("rel_subtitulo", no_idioma$subtitulo),
+      rodape_texto = valor("rel_rodape_texto", no_idioma$rodape_texto)), idi)
+    cfg$autoria <- valor("rel_autoria", cfg$autoria)
+    cfg$rodape_nome <- valor("rel_rodape_nome", cfg$rodape_nome)
+    for (chave in names(LINKS_RODAPE)) cfg$links[[chave]] <- valor(paste0("rel_link_", chave), cfg$links[[chave]])
+    cfg$idioma <- input$rel_idioma %||% cfg$idioma
+    cfg
+  }
+
   output$logo_atual <- renderUI({
     versao_logo()
     arq <- arquivo_logo()
-    if (!file.exists(arq)) return(p(class = "dica pt-4", "Nenhum logo ainda: o relatório fica sem imagem no cabeçalho."))
-    div(class = "dica pt-4", icon("image"), " Logo atual: ", code(basename(arq)))
+    if (!file.exists(arq)) return(p(class = "dica", "Nenhuma foto ainda: o rodapé fica sem imagem."))
+    div(class = "dica", icon("image"), " Foto atual: ", code(basename(arq)))
   })
   observeEvent(input$logo_arquivo, {
     ext <- tolower(tools::file_ext(input$logo_arquivo$name))
     if (ext == "jpeg") ext <- "jpg"
     dir.create(PASTA_FOTOS, showWarnings = FALSE, recursive = TRUE)
-    antigos <- list.files(PASTA_FOTOS, pattern = "^logo\\.(png|jpe?g|webp|svg)$", full.names = TRUE, ignore.case = TRUE)
+    antigos <- list.files(PASTA_FOTOS, pattern = "^(politica-logo|logo)\\.(png|jpe?g|webp|svg)$", full.names = TRUE, ignore.case = TRUE)
     file.remove(antigos)
-    file.copy(input$logo_arquivo$datapath, file.path(PASTA_FOTOS, paste0("logo.", ext)), overwrite = TRUE)
+    file.copy(input$logo_arquivo$datapath, file.path(PASTA_FOTOS, paste0("politica-logo.", ext)), overwrite = TRUE)
     versao_logo(versao_logo() + 1)
-    showNotification("Logo atualizado. Ele aparece no relatório na próxima vez que você gerar.", type = "message")
+    showNotification("Foto do rodapé atualizada. Ela aparece no relatório na próxima vez que você gerar.", type = "message")
   })
 
   observeEvent(input$adicionar_candidato, {
@@ -2082,7 +2184,7 @@ server <- function(input, output, session) {
 
   # ---- Sobre a pesquisa ----------------------------------
   output$quadros_sobre <- renderUI({
-    quadros <- ler_sobre()
+    quadros <- ler_sobre(req(idioma_campos()))
     do.call(layout_columns, c(
       list(col_widths = 6),
       imap(quadros, \(q, i) {
@@ -2098,13 +2200,14 @@ server <- function(input, output, session) {
 
   # Textos da tela; se um campo ainda não existir, mantém o texto salvo
   sobre_atual <- function() {
-    salvos <- ler_sobre()
+    salvos <- ler_sobre(isolate(idioma_campos()) %||% "pt")
     imap(salvos, \(q, i) list(titulo = input[[paste0("sobre_titulo_", i)]] %||% q$titulo,
                               texto = input[[paste0("sobre_texto_", i)]] %||% q$texto))
   }
 
   observeEvent(input$salvar_sobre, {
-    salvar_sobre(sobre_atual())
+    salvar_sobre(sobre_atual(), idioma_campos() %||% "pt")
+    salvar_config_relatorio(config_relatorio_atual())
     showNotification("Textos do “Sobre a pesquisa” salvos.", type = "message")
   })
 
@@ -2125,14 +2228,16 @@ server <- function(input, output, session) {
       salvar_texto_atual()
     }
     sobre <- sobre_atual()
-    salvar_sobre(sobre)
+    salvar_sobre(sobre, idioma_campos() %||% "pt")
+    config_rel <- config_relatorio_atual()
+    salvar_config_relatorio(config_rel)
     # % de postagens analisadas: o da rodada mais recente (não histórica)
     recentes <- keep(rodadas(), \(id) !isTRUE(ler_rodada(id)$historico))
     proporcao <- if (length(recentes)) ler_rodada(recentes[1])$proporcao %||% PROPORCAO_TOP_PADRAO else PROPORCAO_TOP_PADRAO
     ok <- tryCatch({
       withProgress(message = "Gerando o relatório…", value = 0.5,
                    gerar_relatorio(d, periodo_inicial = periodo_sel()$tipo, proporcao = proporcao,
-                                   modelo_rotulo = input$modelo_rotulo, sobre = sobre))
+                                   modelo_rotulo = input$modelo_rotulo, sobre = sobre, config = config_rel))
       TRUE
     }, error = notificar_erro("Erro ao gerar o relatório:"))
     req(ok)

@@ -26,11 +26,14 @@ COMENTARIOS_POR_POSTAGEM_PADRAO <- 50
 VALENCIAS <- c(positivo = "Positivo", neutro = "Neutro", negativo = "Negativo")
 COMENTARIOS_POR_LOTE <- 40   # comentários enviados à IA de uma vez
 
-COLUNAS_COMENTARIOS <- c("comentario_id", "shortCode", "texto", "curtidas", "usuario", "data", "url_comentario")
+# origem: "planilha" (os primeiros comentários que já vêm na planilha do Instagram,
+# a versão demo) ou "apify" (coletados depois, pelo Apify)
+COLUNAS_COMENTARIOS <- c("comentario_id", "shortCode", "texto", "curtidas", "usuario", "data", "url_comentario", "origem")
 
 comentarios_vazio <- function() {
   tibble(comentario_id = character(), shortCode = character(), texto = character(),
-         curtidas = numeric(), usuario = character(), data = character(), url_comentario = character())
+         curtidas = numeric(), usuario = character(), data = character(), url_comentario = character(),
+         origem = character())
 }
 
 # ---------------------------------------------------------
@@ -48,6 +51,8 @@ ler_comentarios <- function(shortCode) {
   arq <- arquivo_comentarios(shortCode)
   if (!file.exists(arq)) return(comentarios_vazio())
   read_csv(arq, col_types = cols(.default = col_character()), show_col_types = FALSE) %>%
+    garantir_coluna("origem") %>%
+    mutate(origem = coalesce(origem, "apify")) %>%   # arquivos antigos: tudo veio do Apify
     mutate(across(where(is.character), texto_utf8),
            curtidas = suppressWarnings(as.numeric(curtidas)))
 }
@@ -76,9 +81,36 @@ normalizar_comentarios_apify <- function(d) {
     curtidas = suppressWarnings(as.numeric(coluna(d, c("likesCount", "likes")))),
     usuario = coluna(d, c("ownerUsername", "owner/username", "owner.username", "username")),
     data = coluna(d, c("timestamp", "createdAt", "date")),
-    url_comentario = url_com
+    url_comentario = url_com,
+    origem = "apify"
   ) %>%
     filter(!is.na(shortCode), !is.na(comentario_id), !is.na(texto), str_trim(texto) != "")
+}
+
+# Comentários que já vêm na planilha do Instagram (colunas latestComments/N/text,
+# latestComments/N/ownerUsername...): os primeiros de cada postagem, sem custo.
+# dados: a base lida por ler_base (uma linha por postagem, colunas como texto)
+comentarios_da_planilha <- function(dados) {
+  cols <- grep("^latestComments/[0-9]+/text$", names(dados), value = TRUE)
+  if (length(cols) == 0 || nrow(dados) == 0) return(comentarios_vazio())
+  indices <- unique(str_match(cols, "^latestComments/([0-9]+)/")[, 2])
+  campo <- function(i, nomes) {
+    for (n in paste0("latestComments/", i, "/", nomes)) if (n %in% names(dados)) return(as.character(dados[[n]]))
+    rep(NA_character_, nrow(dados))
+  }
+  map(indices, \(i) tibble(
+    shortCode = dados$shortCode,
+    comentario_id = coalesce(campo(i, "id"), paste0(dados$shortCode, "_planilha_", i)),
+    texto = campo(i, "text"),
+    curtidas = suppressWarnings(as.numeric(campo(i, "likesCount"))),
+    usuario = campo(i, c("ownerUsername", "owner/username")),
+    data = campo(i, "timestamp"),
+    url_comentario = NA_character_,
+    origem = "planilha"
+  )) %>%
+    bind_rows() %>%
+    mutate(texto = texto_utf8(texto), usuario = texto_utf8(usuario)) %>%
+    filter(!is.na(shortCode), !is.na(texto), str_trim(texto) != "")
 }
 
 ler_arquivo_apify <- function(arquivo, nome = basename(arquivo)) {
@@ -101,6 +133,7 @@ salvar_comentarios <- function(d) {
     split(.$shortCode) %>%
     imap(\(novos, sc) {
       antigos <- ler_comentarios(sc) %>% mutate(curtidas = as.character(curtidas))
+      novos <- novos %>% garantir_coluna("origem") %>% mutate(origem = coalesce(origem, "apify"))
       tudo <- bind_rows(antigos, novos) %>% distinct(comentario_id, .keep_all = TRUE) %>%
         select(all_of(COLUNAS_COMENTARIOS))
       write_csv(tudo, arquivo_comentarios(sc), na = "")
@@ -326,7 +359,8 @@ valencia_por_postagem <- function(shortCodes, so_validados = FALSE) {
   if (so_validados) b <- b %>% mutate(valencia = valencia_final)
   b %>%
     group_by(shortCode) %>%
-    summarise(com_salvos = n(), com_classificados = sum(!is.na(valencia_ia)), com_validados = sum(validado),
+    summarise(com_salvos = n(), com_apify = sum(origem %in% "apify"), com_planilha = sum(origem %in% "planilha"),
+              com_classificados = sum(!is.na(valencia_ia)), com_validados = sum(validado),
               com_pos = sum(valencia %in% "positivo"), com_neu = sum(valencia %in% "neutro"),
               com_neg = sum(valencia %in% "negativo"), .groups = "drop")
 }

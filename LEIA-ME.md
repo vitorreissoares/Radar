@@ -15,7 +15,7 @@ Baixe o instalador do seu sistema (Windows, Mac ou Linux) na página **Releases*
 
 - **Chave da IA:** cada pessoa informa a **própria chave do OpenRouter** no painel **Chave da IA** da aba 1. Ela fica guardada só no computador de quem a informou.
 - **Seus dados:** rodadas, validações, mídias, relatórios e a chave ficam em **Documentos/Radar**. Para abrir essa pasta, use o menu **Arquivo → Abrir pasta de dados**. Instalar uma versão nova não apaga nada.
-- **Fotos dos candidatos e logo:** ficam em `Documentos/Radar/assets/img_cand/`. Também dá para trocar as fotos e o logo pelo app, na aba 4 (painel **Candidatos**).
+- **Fotos dos candidatos e sua foto do rodapé:** ficam em `Documentos/Radar/assets/img_cand/`. Dá para trocar as fotos dos candidatos pelo app, na aba 4 (painel **Candidatos**), e a sua foto no painel **Sobre a pesquisa**.
 
 ### Onde fica cada coisa (dentro de Documentos/Radar)
 
@@ -26,7 +26,7 @@ Baixe o instalador do seu sistema (Windows, Mac ou Linux) na página **Releases*
 | Áudios extraídos dos vídeos | `midia/audios/` (`SHORTCODE.mp3`) |
 | Comentários | `midia/comentarios/` (`SHORTCODE.csv`) |
 | Fotos dos candidatos | `assets/img_cand/` (o nome de cada arquivo está na tabela de candidatos, ex.: `lula.jpg`) |
-| Logo do relatório | `assets/img_cand/logo.png` (ou `logo.jpg`, `logo.svg`, `logo.webp`) |
+| Sua foto no rodapé do relatório | `assets/img_cand/politica-logo.jpg` (ou `.png`, `.svg`, `.webp`); dá para trocar pelo app (aba 4 → Sobre a pesquisa) |
 | Rodadas, validações e relatório gerado | `saidas/` |
 | Chaves e configurações | `config/` |
 
@@ -42,7 +42,7 @@ Para abrir a pasta, use o menu **Arquivo → Abrir pasta de dados**.
 2. Informe a **chave do OpenRouter** na aba 1, no painel **Chave da IA** da barra lateral (ele abre sozinho enquanto não houver chave): cole a chave e clique em **Salvar chave**. Ela fica guardada só nesta pasta, em `config/chave_openrouter.txt`.
    - Para **compartilhar a pasta** com outra pessoa, clique antes em **Apagar chave**. A chave é removida da pasta e também do `.Renviron` do computador, se estiver lá.
    - A pessoa que receber a pasta informa a própria chave no mesmo quadro.
-3. Coloque as fotos dos candidatos e o logo (`logo.png` ou `logo.jpg`) em `assets/img_cand/`. O relatório busca as imagens nessa pasta. Também dá para trocar a foto de um candidato pelo app, na aba 4 (painel **Candidatos**).
+3. Coloque as fotos dos candidatos e a sua foto do rodapé (`politica-logo.jpg` ou `.png`) em `assets/img_cand/`. O relatório busca as imagens nessa pasta. Também dá para trocar a foto de um candidato pelo app, na aba 4 (painel **Candidatos**).
 
 ### Abrir o app
 
@@ -93,6 +93,10 @@ O registro de cada download fica em `midia/log_downloads.csv`.
 > **Baixe as postagens logo depois da coleta.** Os links de imagem e vídeo do Instagram expiram em poucos dias.
 
 Se a categorização parar no meio (por falta de internet ou limite da API), basta clicar de novo. O que já foi feito fica em `saidas/cache_classificacoes_multimodal.csv` e não é cobrado outra vez.
+
+**Visualizações:** vêm da coluna `videoPlayCount` da planilha (se ela faltar, de `videoViewCount`). Ao adicionar um arquivo novo na aba 1, as visualizações das postagens que já estão em rodadas antigas também são atualizadas.
+
+**Comentários da planilha:** as colunas `latestComments/1/text` a `latestComments/10/text` (os primeiros comentários de cada postagem) são guardadas automaticamente em `midia/comentarios/`. Elas formam a **versão demo** da aba 3 (veja abaixo).
 
 **Sugestão da IA:** as subcategorias marcadas por **pelo menos metade das fontes** que a postagem tem. É o que já aparece ligado na validação.
 
@@ -155,12 +159,16 @@ Para cada rodada, a aba reúne os comentários das postagens, a classificação 
 
 ### 1. Coletar
 
-Os comentários de cada postagem ficam em `midia/comentarios/SHORTCODE.csv` (uma linha por comentário: id, texto, curtidas, usuário, data e link). Há dois jeitos:
+Os comentários de cada postagem ficam em `midia/comentarios/SHORTCODE.csv` (uma linha por comentário: id, texto, curtidas, usuário, data, link e origem).
+
+**Versão demo (sem custo):** os primeiros comentários de cada postagem, que já vêm na planilha do Instagram (`latestComments`), entram sozinhos ao categorizar. Antes de pagar pelo Apify, dá para classificar, validar e gerar o relatório só com eles. Um aviso na aba 3 indica quando os comentários são só os da planilha.
+
+Para a análise completa, há dois jeitos de coletar mais:
 
 - **Pelo Apify, direto do app:** informe a sua chave do Apify (em [console.apify.com → Settings → Integrations](https://console.apify.com/settings/integrations)) e escolha **quantos comentários por postagem** coletar.
   - O app mostra antes o **máximo de comentários e o custo máximo estimado** (pelo preço por 1.000 comentários informado; confira o valor atual do *Instagram Comments Scraper* no Apify).
   - Esse limite vai junto com a coleta: o Apify não coleta nem cobra além dele.
-  - Deixe marcado **Só postagens ainda sem comentários salvos** para não pagar duas vezes.
+  - Deixe marcado **Só postagens ainda sem comentários do Apify** para não pagar duas vezes (os da planilha não contam).
   - A chave fica só nesta pasta (`config/chave_apify.txt`) e pode ser apagada pelo app.
 - **Arquivo baixado do Apify:** rode o *Instagram Comments Scraper* no site do Apify com os links das postagens, baixe o resultado em CSV ou JSON e escolha o arquivo no app. Os comentários são separados por postagem automaticamente.
 
@@ -205,6 +213,23 @@ Cada variável tem sempre a mesma cor em todas as seções: Liderança (anil), P
 
 Na barra lateral da aba 4, em **Comentários**, escolha se entram **todos** (os validados e, os demais, com a classificação da IA) ou **só os validados**.
 
+### Idioma do relatório
+
+No painel **Idioma do relatório** (aba 4), escolha **Português**, **English** ou **Español**. No idioma escolhido saem:
+- os títulos, botões, gráficos, legendas e notas do relatório;
+- os nomes das categorias e subcategorias;
+- o rascunho das considerações finais e o texto redigido pela IA.
+
+O **título**, o **subtítulo**, o **texto do rodapé** e os quadros do **Sobre a pesquisa** são escritos por você, por isso são guardados **separadamente para cada idioma**. Ao trocar o idioma, os campos mostram a versão daquele idioma (na primeira vez, partem do texto em português, para você traduzir). Textos de considerações finais já salvos não são traduzidos: com outro idioma, clique em **Rascunho** e salve o texto novo.
+
+### Cabeçalho e rodapé
+
+Em **Sobre a pesquisa** (aba 4):
+- **Cabeçalho:** título, subtítulo (opcional) e a assinatura acima do título.
+- **Rodapé:** nome, foto (vira `assets/img_cand/politica-logo`), links do **Google Acadêmico**, **Lattes**, **ORCID**, **GitHub** e **LinkedIn** e um texto opcional. Os links preenchidos viram ícones; os vazios não aparecem.
+
+Clique em **Salvar cabeçalho, rodapé e textos** (ou só gere o relatório, que também salva).
+
 **Passo a passo na aba 4:**
 
 1. **Base validada:** **Tudo junto** (todas as rodadas e todos os arquivos) ou **Uma rodada**. Também dá para importar um CSV já validado.
@@ -236,7 +261,8 @@ As rodadas categorizadas com o esquema anterior (Conteúdo programático e Conte
 | Instruções da valência dos comentários | `prompts/valencia_comentarios.txt` |
 | Ator e preço de referência do Apify | `R/comentarios.R` (`APIFY_ATOR`, `APIFY_PRECO_MIL`) |
 | Instruções por fonte | `prompts/legenda.txt`, `prompts/imagem.txt`, `prompts/transcricao.txt`, `prompts/transcrever_audio.txt` |
-| Candidatos e textos do "Sobre a pesquisa" | Pelo app (aba 4) ou `config/` |
+| Candidatos e textos do "Sobre a pesquisa" | Pelo app (aba 4) ou `config/` (`sobre_a_pesquisa.json`; em inglês e espanhol, `sobre_a_pesquisa_en.json` e `sobre_a_pesquisa_es.json`) |
+| Título, subtítulo, rodapé, links e idioma | Pelo app (aba 4) ou `config/relatorio.json` |
 | Análises salvas (textos de cada período) | Pelo app (aba 4) ou `config/periodos.json` |
 | Visual do relatório | `templates/relatorio_template.html` |
 | Validador compartilhado | `apps_script/` (depois de mudar, publique uma nova versão no Apps Script) |

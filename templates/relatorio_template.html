@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Radar da Liderança Política | Vitor Reis Soares</title>
+  <title>__TITULO_PAGINA__</title>
 
 <meta
 name="description"
@@ -104,7 +104,7 @@ content="Monitoramento das estratégias de comunicação política dos candidato
       margin: auto;
 
       display: grid;
-      grid-template-columns: 150px 1fr auto;
+      grid-template-columns: 1fr;
       gap: 28px;
 
       align-items: center;
@@ -149,6 +149,28 @@ content="Monitoramento das estratégias de comunicação política dos candidato
       font-size: clamp(1.55rem, 4vw, 2.45rem);
       line-height: 1.12;
     }
+
+    .project-subtitle {
+      max-width: 760px;
+      margin: -4px 0 10px;
+      color: #475467;
+      font-size: 1.05rem;
+      line-height: 1.45;
+    }
+
+    .project-subtitle:empty { display: none; }
+
+    /* Rodapé: foto, nome, links e texto */
+    .rodape { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; text-align: left; }
+    .rodape-foto { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); }
+    .rodape-info { display: flex; flex-direction: column; gap: 6px; }
+    .rodape-nome { color: #17232c; font-size: .92rem; }
+    .rodape-links { display: flex; gap: 8px; }
+    .rodape-link { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+                   background: #f1f4f8; color: #344054; font-size: 1rem; text-decoration: none; transition: background .2s, color .2s; }
+    .rodape-link:hover { background: var(--primary); color: #fff; }
+    .icone-lattes { font-weight: 800; font-size: .9rem; font-family: Georgia, serif; }
+    .rodape-texto { margin: 0; max-width: 620px; color: #859099; font-size: .72rem; line-height: 1.5; }
 
     .project-description {
       max-width: 760px;
@@ -1016,6 +1038,11 @@ content="Monitoramento das estratégias de comunicação política dos candidato
       text-align: center;
     }
 
+    #donutGrid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    #donutGrid .chart-card { min-height: 0; padding: 12px 10px; }
+    #donutGrid .chart-wrap { height: 215px; }
+    @media (max-width: 600px) { #donutGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } #donutGrid .chart-wrap { height: 180px; } }
+
     /*
       A imagem agora é desenhada diretamente
       no centro do doughnut pelo plugin do Chart.js.
@@ -1338,19 +1365,12 @@ content="Monitoramento das estratégias de comunicação política dos candidato
     <div class="header-inner">
 
 
-  <div class="project-photo">
-    <img
-      src="__LOGO__"
-      alt="Logo do Radar da Liderança Política"
-    >
-  </div>
-
   <div>
-    <p class="eyebrow">Vitor Reis Soares</p>
+    <p class="eyebrow">__AUTORIA__</p>
 
-    <h1>
-      Radar da Liderança Política
-    </h1>
+    <h1>__TITULO__</h1>
+
+    <p class="project-subtitle">__SUBTITULO__</p>
 
     <p class="project-description">
       <strong id="periodoTexto">__PERIODO__.</strong>
@@ -1963,7 +1983,7 @@ __SOBRE_A_PESQUISA__
   <div class="section-content" id="resultadoIndice">
     <div class="chart-card wide">
       <h3 class="chart-title">Índice de valência ao longo do tempo — subcategorias da Liderança e índice geral</h3>
-      <p class="chart-note">
+      <p class="chart-note" data-i18n-html="nota_linha">
         Cada comentário vale 1 (positivo), 0,5 (neutro) ou 0 (negativo), e o índice é a média desses valores,
         de 0 (todos negativos) a 1 (todos positivos), calculada <span id="indiceValenciaUnidade">por período</span>.
         A linha tracejada é o índice geral. Sem candidatos selecionados, todos entram na conta.
@@ -2013,7 +2033,7 @@ __SOBRE_A_PESQUISA__
           <div id="radarValenciaTabela" class="radar-tabela"></div>
         </div>
       </div>
-      <details class="radar-metodo">
+      <details class="radar-metodo" data-i18n-html="metodo_indice">
         <summary>Como o índice é calculado</summary>
         <p>
           Cada comentário vale 1 (positivo), 0,5 (neutro) ou 0 (negativo), e o índice é a média desses valores sobre
@@ -2137,13 +2157,7 @@ __CONSIDERACOES__
   <footer class="footer">
 
 
-<strong>
-  Radar da Liderança Política
-</strong>
-
-· Vitor Reis Soares ·
-
-Grupo de trabalho formado por Vitor Reis, Malu Alden, Malu Paschoal, Natália Lucciola, Natalia Paiva, Shamira Rossi, Eduardo Barbabela, Eduarda e Pollyanna Brêtas
+__RODAPE__
 
 
   </footer>
@@ -2158,6 +2172,216 @@ __DADOS__
     /* =========================================================
        CONFIGURAÇÃO CENTRAL
        ========================================================= */
+
+
+    /* =========================================================
+       IDIOMA DO RELATÓRIO (pt, en ou es)
+       Os textos fixos são traduzidos ao abrir a página; os dos gráficos
+       passam por t(). O português é o texto original (chave do dicionário).
+       ========================================================= */
+
+    const IDIOMA = window.IDIOMA || "pt";
+    const LOCALE = { pt: "pt-BR", en: "en-US", es: "es-ES" }[IDIOMA] || "pt-BR";
+
+    const TRADUCOES = {
+      en: {
+        "Sobre a Pesquisa": "About the research",
+        "Candidaturas acompanhadas": "Candidates monitored",
+        "Carregando dados...": "Loading data...",
+        "Fonte dos dados:": "Data source:",
+        "Perfis oficiais dos candidatos no Instagram.": "Candidates' official Instagram profiles.",
+        "Semana": "Week", "Mês": "Month", "Ano": "Year", "Tudo": "All",
+        "Liderança, Partido e Políticas": "Leadership, Party and Policies",
+        "Distribuição das categorias": "Distribution of categories",
+        "Selecione um ou mais candidatos para visualizar a distribuição das postagens de Liderança, Partido e Políticas no período. Uma postagem pode estar em mais de uma categoria.":
+          "Select one or more candidates to see the distribution of Leadership, Party and Policies posts in the period. A post may belong to more than one category.",
+        "Selecionar candidatos:": "Select candidates:",
+        "Categorias por candidato": "Categories by candidate",
+        "Subcategorias por candidato": "Subcategories by candidate",
+        "Distribuição das subcategorias": "Distribution of subcategories",
+        "Selecione os candidatos que deseja comparar. A Liderança é analisada em Autenticidade, Competência e Humanização.":
+          "Select the candidates you want to compare. Leadership is analyzed in terms of Authenticity, Competence and Humanization.",
+        "Curtidas por categoria": "Likes by category",
+        "Quantidade de curtidas por categoria": "Number of likes by category",
+        "Cada ponto representa a quantidade de curtidas da postagem.": "Each dot shows a post's number of likes.",
+        "Comentários por categoria": "Comments by category",
+        "Quantidade de comentários por categoria": "Number of comments by category",
+        "Cada ponto representa a quantidade de comentários da postagem.": "Each dot shows a post's number of comments.",
+        "Curtidas por subcategoria": "Likes by subcategory",
+        "Quantidade de curtidas por subcategoria ao longo do período.": "Number of likes by subcategory over the period.",
+        "Comentários por subcategoria": "Comments by subcategory",
+        "Quantidade de comentários por subcategoria ao longo do período.": "Number of comments by subcategory over the period.",
+        "Top 10: Curtidas, Comentários e Visualizações": "Top 10: Likes, Comments and Views",
+        "Filtrar por candidato:": "Filter by candidate:",
+        "Sem seleção, o ranking mostra todos os candidatos. Marque uma ou mais para comparar apenas os candidatos escolhidos.":
+          "With no selection, the ranking shows all candidates. Select one or more to compare only those candidates.",
+        "Mais curtidas": "Most liked",
+        "As 10 postagens com maior número de curtidas na base.": "The 10 posts with the most likes.",
+        "Mais comentadas": "Most commented",
+        "As 10 postagens com maior número de comentários na base.": "The 10 posts with the most comments.",
+        "Mais visualizadas": "Most viewed",
+        "As 10 postagens com mais visualizações na base (só os vídeos têm visualizações).": "The 10 posts with the most views (only videos have views).",
+        "Evolução do índice de valência dos comentários": "Evolution of the comment valence index",
+        "Índice de valência ao longo do tempo — subcategorias da Liderança e índice geral": "Valence index over time — Leadership subcategories and overall index",
+        "Desempenho nos comentários": "Performance in comments",
+        "Comentários positivos e negativos no período": "Positive and negative comments in the period",
+        "Proporção de comentários positivos (verde) e negativos (vermelho) em todo o período selecionado. Quanto maior a área verde, melhor o desempenho nas mídias sociais; quanto maior a vermelha, pior. Sem candidatos selecionados, todos entram na conta.":
+          "Share of positive (green) and negative (red) comments over the whole selected period. The larger the green area, the better the social media performance; the larger the red area, the worse. With no candidates selected, all are included.",
+        "Subcategorias da Liderança": "Leadership subcategories",
+        "Categorias": "Categories",
+        "Como o índice é calculado": "How the index is calculated",
+        "Formatos das postagens": "Post formats",
+        "Formatos mais adotados": "Most used formats",
+        "Distribuição dos formatos das postagens conforme a classificação da base.": "Distribution of post formats.",
+        "Considerações Finais": "Final remarks",
+        "Candidato anterior": "Previous candidate", "Próximo candidato": "Next candidate",
+        "Carrossel de candidatos": "Candidates carousel", "Navegação do carrossel": "Carousel navigation",
+        "Escolha do período": "Period selection", "Tipo de período": "Period type", "O que comparar": "What to compare",
+        "Tudo o que foi analisado": "Everything analyzed", "Último ano analisado": "Last year analyzed",
+        "Último mês analisado": "Last month analyzed", "Últimos 7 dias analisados": "Last 7 days analyzed",
+        "nota_linha": 'Each comment counts as 1 (positive), 0.5 (neutral) or 0 (negative), and the index is the average of these values, from 0 (all negative) to 1 (all positive), computed <span id="indiceValenciaUnidade">per period</span>. The dashed line is the overall index. With no candidates selected, all are included.',
+        "metodo_indice": '<summary>How the index is calculated</summary><p>Each comment counts as 1 (positive), 0.5 (neutral) or 0 (negative), and the index is the average of these values over all comments in the group (each comment weighs the same). In the <strong>overall index</strong>, each post counts only once, even when it belongs to more than one category; that is why it is not the average of the category indices, which would count the same comments more than once.</p><p>The <strong>95% confidence interval</strong> takes into account that comments on the same post are not independent (post-level robust standard error for the ratio estimator) and uses the t distribution with (number of posts − 1) degrees of freedom, which makes it wider when there are few posts. Overlapping intervals indicate that the difference between groups may be due to chance.</p>',
+        // gráficos e mensagens
+        "publicações carregadas": "posts loaded", "candidato encontrado": "candidate found", "candidatos encontrados": "candidates found",
+        "comentários": "comments", "postagens": "posts", "curtidas": "likes", "visualizações": "views",
+        "sem comentários": "no comments", "Sem categoria": "No category",
+        "Subcategorias de {cat}": "{cat} subcategories",
+        "Percentual das postagens de {cat} de cada candidato em que a subcategoria aparece.": "Share of each candidate's {cat} posts in which the subcategory appears.",
+        "Percentual das postagens de {cat}": "Share of {cat} posts",
+        "Sem considerações para este período.": "No remarks for this period.",
+        "Índice geral": "Overall index",
+        "Nenhuma publicação validada neste período.": "No validated posts in this period.",
+        "Não há comentários classificados para as postagens deste período.": "There are no classified comments for the posts in this period.",
+        "Não há dados de {rotulo} disponíveis.": "No {rotulo} data available.",
+        "Número de comentários": "Number of comments", "Número de curtidas": "Number of likes",
+        "Percentual de postagens": "Share of posts", "Publicação": "Post", "Quantidade de postagens": "Number of posts",
+        "Selecione candidatos": "Select candidates", "selecionado": "selected", "selecionados": "selected",
+        "Selecione um ou mais candidatos acima.": "Select one or more candidates above.",
+        "Ver postagem": "View post", "Selecionar": "Select",
+        "por dia": "per day", "por semana": "per week", "por mês": "per month", "sem.": "wk.",
+        "Índice de valência (0 a 1)": "Valence index (0 to 1)",
+        "Candidato": "Candidate", "Categoria": "Category", "Subcategoria": "Subcategory", "Data": "Date",
+        "Positivos (%)": "Positive (%)", "Negativos (%)": "Negative (%)",
+        "IC 95%: {a} a {b}": "95% CI: {a} to {b}",
+        "A coluna de formato não possui dados.": "The format column has no data.",
+        "A coluna de subcategoria não possui dados.": "The subcategory column has no data."
+      },
+      es: {
+        "Sobre a Pesquisa": "Sobre la investigación",
+        "Candidaturas acompanhadas": "Candidaturas monitoreadas",
+        "Carregando dados...": "Cargando datos...",
+        "Fonte dos dados:": "Fuente de los datos:",
+        "Perfis oficiais dos candidatos no Instagram.": "Perfiles oficiales de los candidatos en Instagram.",
+        "Semana": "Semana", "Mês": "Mes", "Ano": "Año", "Tudo": "Todo",
+        "Liderança, Partido e Políticas": "Liderazgo, Partido y Políticas",
+        "Distribuição das categorias": "Distribución de las categorías",
+        "Selecione um ou mais candidatos para visualizar a distribuição das postagens de Liderança, Partido e Políticas no período. Uma postagem pode estar em mais de uma categoria.":
+          "Seleccione uno o más candidatos para ver la distribución de las publicaciones de Liderazgo, Partido y Políticas en el período. Una publicación puede pertenecer a más de una categoría.",
+        "Selecionar candidatos:": "Seleccionar candidatos:",
+        "Categorias por candidato": "Categorías por candidato",
+        "Subcategorias por candidato": "Subcategorías por candidato",
+        "Distribuição das subcategorias": "Distribución de las subcategorías",
+        "Selecione os candidatos que deseja comparar. A Liderança é analisada em Autenticidade, Competência e Humanização.":
+          "Seleccione los candidatos que desea comparar. El Liderazgo se analiza en Autenticidad, Competencia y Humanización.",
+        "Curtidas por categoria": "Me gusta por categoría",
+        "Quantidade de curtidas por categoria": "Cantidad de me gusta por categoría",
+        "Cada ponto representa a quantidade de curtidas da postagem.": "Cada punto representa la cantidad de me gusta de la publicación.",
+        "Comentários por categoria": "Comentarios por categoría",
+        "Quantidade de comentários por categoria": "Cantidad de comentarios por categoría",
+        "Cada ponto representa a quantidade de comentários da postagem.": "Cada punto representa la cantidad de comentarios de la publicación.",
+        "Curtidas por subcategoria": "Me gusta por subcategoría",
+        "Quantidade de curtidas por subcategoria ao longo do período.": "Cantidad de me gusta por subcategoría a lo largo del período.",
+        "Comentários por subcategoria": "Comentarios por subcategoría",
+        "Quantidade de comentários por subcategoria ao longo do período.": "Cantidad de comentarios por subcategoría a lo largo del período.",
+        "Top 10: Curtidas, Comentários e Visualizações": "Top 10: Me gusta, Comentarios y Visualizaciones",
+        "Filtrar por candidato:": "Filtrar por candidato:",
+        "Sem seleção, o ranking mostra todos os candidatos. Marque uma ou mais para comparar apenas os candidatos escolhidos.":
+          "Sin selección, el ranking muestra a todos los candidatos. Marque uno o más para comparar solo los candidatos elegidos.",
+        "Mais curtidas": "Más gustadas",
+        "As 10 postagens com maior número de curtidas na base.": "Las 10 publicaciones con más me gusta.",
+        "Mais comentadas": "Más comentadas",
+        "As 10 postagens com maior número de comentários na base.": "Las 10 publicaciones con más comentarios.",
+        "Mais visualizadas": "Más vistas",
+        "As 10 postagens com mais visualizações na base (só os vídeos têm visualizações).": "Las 10 publicaciones con más visualizaciones (solo los videos tienen visualizaciones).",
+        "Evolução do índice de valência dos comentários": "Evolución del índice de valencia de los comentarios",
+        "Índice de valência ao longo do tempo — subcategorias da Liderança e índice geral": "Índice de valencia a lo largo del tiempo — subcategorías del Liderazgo e índice general",
+        "Desempenho nos comentários": "Desempeño en los comentarios",
+        "Comentários positivos e negativos no período": "Comentarios positivos y negativos en el período",
+        "Proporção de comentários positivos (verde) e negativos (vermelho) em todo o período selecionado. Quanto maior a área verde, melhor o desempenho nas mídias sociais; quanto maior a vermelha, pior. Sem candidatos selecionados, todos entram na conta.":
+          "Proporción de comentarios positivos (verde) y negativos (rojo) en todo el período seleccionado. Cuanto mayor el área verde, mejor el desempeño en las redes sociales; cuanto mayor la roja, peor. Sin candidatos seleccionados, se incluyen todos.",
+        "Subcategorias da Liderança": "Subcategorías del Liderazgo",
+        "Categorias": "Categorías",
+        "Como o índice é calculado": "Cómo se calcula el índice",
+        "Formatos das postagens": "Formatos de las publicaciones",
+        "Formatos mais adotados": "Formatos más utilizados",
+        "Distribuição dos formatos das postagens conforme a classificação da base.": "Distribución de los formatos de las publicaciones.",
+        "Considerações Finais": "Consideraciones finales",
+        "Candidato anterior": "Candidato anterior", "Próximo candidato": "Siguiente candidato",
+        "Carrossel de candidatos": "Carrusel de candidatos", "Navegação do carrossel": "Navegación del carrusel",
+        "Escolha do período": "Selección del período", "Tipo de período": "Tipo de período", "O que comparar": "Qué comparar",
+        "Tudo o que foi analisado": "Todo lo analizado", "Último ano analisado": "Último año analizado",
+        "Último mês analisado": "Último mes analizado", "Últimos 7 dias analisados": "Últimos 7 días analizados",
+        "nota_linha": 'Cada comentario vale 1 (positivo), 0,5 (neutro) o 0 (negativo), y el índice es el promedio de esos valores, de 0 (todos negativos) a 1 (todos positivos), calculado <span id="indiceValenciaUnidade">por período</span>. La línea discontinua es el índice general. Sin candidatos seleccionados, se incluyen todos.',
+        "metodo_indice": '<summary>Cómo se calcula el índice</summary><p>Cada comentario vale 1 (positivo), 0,5 (neutro) o 0 (negativo), y el índice es el promedio de esos valores sobre todos los comentarios del grupo (cada comentario pesa lo mismo). En el <strong>índice general</strong>, cada publicación cuenta una sola vez, aunque pertenezca a más de una categoría; por eso no es el promedio de los índices de las categorías, que contaría los mismos comentarios más de una vez.</p><p>El <strong>intervalo de confianza del 95 %</strong> considera que los comentarios de una misma publicación no son independientes (error estándar robusto por publicación, para el estimador de razón) y usa la distribución t con (número de publicaciones − 1) grados de libertad, lo que lo hace más amplio cuando hay pocas publicaciones. Intervalos que se superponen indican que la diferencia entre los grupos puede ser casual.</p>',
+        "publicações carregadas": "publicaciones cargadas", "candidato encontrado": "candidato encontrado", "candidatos encontrados": "candidatos encontrados",
+        "comentários": "comentarios", "postagens": "publicaciones", "curtidas": "me gusta", "visualizações": "visualizaciones",
+        "sem comentários": "sin comentarios", "Sem categoria": "Sin categoría",
+        "Subcategorias de {cat}": "Subcategorías de {cat}",
+        "Percentual das postagens de {cat} de cada candidato em que a subcategoria aparece.": "Porcentaje de las publicaciones de {cat} de cada candidato en las que aparece la subcategoría.",
+        "Percentual das postagens de {cat}": "Porcentaje de las publicaciones de {cat}",
+        "Sem considerações para este período.": "Sin consideraciones para este período.",
+        "Índice geral": "Índice general",
+        "Nenhuma publicação validada neste período.": "Ninguna publicación validada en este período.",
+        "Não há comentários classificados para as postagens deste período.": "No hay comentarios clasificados para las publicaciones de este período.",
+        "Não há dados de {rotulo} disponíveis.": "No hay datos de {rotulo} disponibles.",
+        "Número de comentários": "Número de comentarios", "Número de curtidas": "Número de me gusta",
+        "Percentual de postagens": "Porcentaje de publicaciones", "Publicação": "Publicación", "Quantidade de postagens": "Cantidad de publicaciones",
+        "Selecione candidatos": "Seleccione candidatos", "selecionado": "seleccionado", "selecionados": "seleccionados",
+        "Selecione um ou mais candidatos acima.": "Seleccione uno o más candidatos arriba.",
+        "Ver postagem": "Ver publicación", "Selecionar": "Seleccionar",
+        "por dia": "por día", "por semana": "por semana", "por mês": "por mes", "sem.": "sem.",
+        "Índice de valência (0 a 1)": "Índice de valencia (0 a 1)",
+        "Candidato": "Candidato", "Categoria": "Categoría", "Subcategoria": "Subcategoría", "Data": "Fecha",
+        "Positivos (%)": "Positivos (%)", "Negativos (%)": "Negativos (%)",
+        "IC 95%: {a} a {b}": "IC 95 %: {a} a {b}",
+        "A coluna de formato não possui dados.": "La columna de formato no tiene datos.",
+        "A coluna de subcategoria não possui dados.": "La columna de subcategoría no tiene datos."
+      }
+    };
+
+    // Tradução de um texto (o português é a própria chave); tf troca {variáveis}
+    function t(texto) {
+      const dic = TRADUCOES[IDIOMA];
+      return (dic && dic[texto]) || texto;
+    }
+    function tf(texto, valores) {
+      return t(texto).replace(/\{(\w+)\}/g, (_, k) => (valores[k] ?? ""));
+    }
+
+    // Traduz os textos fixos da página (o conteúdo escrito pelo pesquisador não é traduzido)
+    function traduzirPagina() {
+      if (IDIOMA === "pt" || !TRADUCOES[IDIOMA]) return;
+      const dic = TRADUCOES[IDIOMA];
+      document.querySelectorAll("[data-i18n-html]").forEach(el => {
+        const chave = el.getAttribute("data-i18n-html");
+        if (dic[chave]) el.innerHTML = dic[chave];
+      });
+      const pular = el => el.closest(".sem-traducao, script, style, #consideracoesFinais, #sobrePesquisaCards, .footer, .header h1, .project-subtitle, .eyebrow");
+      const andar = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      const nos = [];
+      while (andar.nextNode()) nos.push(andar.currentNode);
+      nos.forEach(no => {
+        const texto = no.nodeValue.replace(/\s+/g, " ").trim();
+        if (!texto || !dic[texto] || pular(no.parentElement)) return;
+        no.nodeValue = no.nodeValue.replace(no.nodeValue.trim(), dic[texto]);
+      });
+      document.querySelectorAll("[title], [aria-label], [placeholder]").forEach(el => {
+        ["title", "aria-label", "placeholder"].forEach(attr => {
+          const v = el.getAttribute(attr);
+          if (v && dic[v.trim()]) el.setAttribute(attr, dic[v.trim()]);
+        });
+      });
+    }
 
     const CONFIG = {
 
@@ -2972,7 +3196,7 @@ __DADOS__
 
 
       return data.toLocaleDateString(
-        "pt-BR"
+        LOCALE
       );
 
     }
@@ -3147,7 +3371,7 @@ __DADOS__
 
           botao.setAttribute(
             "aria-label",
-            `Selecionar ${candidato}`
+            `${t("Selecionar")} ${candidato}`
           );
 
           botao.setAttribute(
@@ -3272,8 +3496,8 @@ __DADOS__
 
         contador.textContent =
           total
-            ? `${total} selecionado${total > 1 ? "s" : ""}`
-            : "Selecione candidatos";
+            ? `${total} ${t(total > 1 ? "selecionados" : "selecionado")}`
+            : t("Selecione candidatos");
       }
 
     }
@@ -3356,6 +3580,29 @@ __DADOS__
 
     /* ---------- Valência dos comentários ---------- */
 
+    /* Pontos do mesmo dia ficam lado a lado (deslocados um pouco para a esquerda e a
+       direita), em vez de um em cima do outro. A data mostrada no tooltip não muda. */
+    function espalharPontos(series) {
+      const porDia = new Map();
+      series.flat().forEach(ponto => {
+        if (!(ponto.x instanceof Date)) return;
+        const dia = new Date(ponto.x.getFullYear(), ponto.x.getMonth(), ponto.x.getDate()).getTime();
+        if (!porDia.has(dia)) porDia.set(dia, []);
+        porDia.get(dia).push(ponto);
+      });
+      const UM_DIA = 86400000;
+      porDia.forEach((pontos, dia) => {
+        const k = pontos.length;
+        if (k < 2) { pontos[0].x = new Date(dia + UM_DIA / 2); return; }
+        const largura = Math.min(0.8, 0.12 * (k - 1));          // até 80% do dia
+        pontos.sort((a, b) => a.y - b.y);
+        pontos.forEach((ponto, j) => {
+          const desloc = (j / (k - 1) - 0.5) * largura;          // de -largura/2 a +largura/2
+          ponto.x = new Date(dia + UM_DIA / 2 + desloc * UM_DIA);
+        });
+      });
+    }
+
     function codigoPostagem(item) {
       const m = String(item.url || "").match(/\/(?:p|reel|reels|tv)\/([A-Za-z0-9_-]+)/);
       return m ? m[1] : "";
@@ -3368,7 +3615,7 @@ __DADOS__
 
     function formatarIndice(valor) {
       return valor === null || valor === undefined ? "—" :
-        valor.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        valor.toLocaleString(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     /* Uma linha por postagem do período com comentários classificados
@@ -3423,9 +3670,9 @@ __DADOS__
     }
 
     function rotuloTempo(data, unidade) {
-      if (unidade === "month") return data.toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
-      const dia = data.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-      return unidade === "week" ? `sem. ${dia}` : dia;
+      if (unidade === "month") return data.toLocaleDateString(LOCALE, { month: "short", year: "numeric" });
+      const dia = data.toLocaleDateString(LOCALE, { day: "2-digit", month: "2-digit" });
+      return unidade === "week" ? `${t("sem.")} ${dia}` : dia;
     }
 
     /* 09 — Evolução do índice de valência das subcategorias da Liderança e do índice geral */
@@ -3437,7 +3684,7 @@ __DADOS__
         .map(p => ({ ...p, quando: parseData(p.data) })).filter(p => p.quando);
       const grupos = gruposValencia(true);
       if (!posts.length) {
-        mostrarEstadoVazio(canvas, "Não há comentários classificados para as postagens deste período.");
+        mostrarEstadoVazio(canvas, t("Não há comentários classificados para as postagens deste período."));
         return;
       }
       restaurarCanvas(canvas);
@@ -3451,7 +3698,7 @@ __DADOS__
         if (unidade === "month") d.setMonth(d.getMonth() + 1); else d.setDate(d.getDate() + (unidade === "week" ? 7 : 1));
       }
       const nota = document.getElementById("indiceValenciaUnidade");
-      if (nota) nota.textContent = { day: "por dia", week: "por semana", month: "por mês" }[unidade];
+      if (nota) nota.textContent = t({ day: "por dia", week: "por semana", month: "por mês" }[unidade]);
       const serie = (nome, cor, testa, extra = {}) => {
         const pontos = chaves.map(k => estatisticaIndice(posts.filter(p => testa(p) && inicioDoPeriodo(p.quando, unidade).getTime() === k)));
         return { label: nome, data: pontos.map(e => e.indice), extra: pontos, borderColor: cor, backgroundColor: cor,
@@ -3473,15 +3720,15 @@ __DADOS__
               callbacks: {
                 label: ctx => {
                   const e = ctx.dataset.extra[ctx.dataIndex];
-                  return e.indice === null ? `${ctx.dataset.label}: sem comentários` :
-                    `${ctx.dataset.label}: ${formatarIndice(e.indice)} (${textoIntervalo(e)} · ${e.n.toLocaleString("pt-BR")} comentários, ${e.m} postagens)`;
+                  return e.indice === null ? `${ctx.dataset.label}: ${t("sem comentários")}` :
+                    `${ctx.dataset.label}: ${formatarIndice(e.indice)} (${textoIntervalo(e)} · ${e.n.toLocaleString(LOCALE)} ${t("comentários")}, ${e.m} ${t("postagens")})`;
                 }
               }
             }
           },
           scales: {
             y: { min: 0, max: 1, ticks: { stepSize: 0.25, callback: v => formatarIndice(v) },
-                 title: { display: true, text: "Índice de valência (0 a 1)" } },
+                 title: { display: true, text: t("Índice de valência (0 a 1)") } },
             x: { title: { display: false } }
           }
         }
@@ -3523,7 +3770,7 @@ __DADOS__
     }
 
     function textoIntervalo(e) {
-      return e.indice === null ? "" : `IC 95%: ${formatarIndice(e.inf)} a ${formatarIndice(e.sup)}`;
+      return e.indice === null ? "" : tf("IC 95%: {a} a {b}", { a: formatarIndice(e.inf), b: formatarIndice(e.sup) });
     }
 
     /* 10 — Radar: positivos e negativos do período, com o índice de cada eixo e o geral */
@@ -3540,7 +3787,7 @@ __DADOS__
       const tabela = document.getElementById("radarValenciaTabela");
       const geralEl = document.getElementById("radarIndiceGeral");
       if (!posts.length || !grupos.some(g => g.est.n)) {
-        mostrarEstadoVazio(canvas, "Não há comentários classificados para as postagens deste período.");
+        mostrarEstadoVazio(canvas, t("Não há comentários classificados para as postagens deste período."));
         if (tabela) tabela.innerHTML = "";
         if (geralEl) geralEl.innerHTML = "";
         return;
@@ -3552,10 +3799,10 @@ __DADOS__
         data: {
           labels: grupos.map(g => g.nome),
           datasets: [
-            { label: "Positivos (%)", data: grupos.map(g => pct(g.est, "pos")), borderColor: CORES_VALENCIA.positivo,
+            { label: t("Positivos (%)"), data: grupos.map(g => pct(g.est, "pos")), borderColor: CORES_VALENCIA.positivo,
               backgroundColor: hexParaRgba(CORES_VALENCIA.positivo, 0.18), pointBackgroundColor: CORES_VALENCIA.positivo,
               borderWidth: 2.4, tension: 0.35, pointRadius: 4 },
-            { label: "Negativos (%)", data: grupos.map(g => pct(g.est, "neg")), borderColor: CORES_VALENCIA.negativo,
+            { label: t("Negativos (%)"), data: grupos.map(g => pct(g.est, "neg")), borderColor: CORES_VALENCIA.negativo,
               backgroundColor: hexParaRgba(CORES_VALENCIA.negativo, 0.14), pointBackgroundColor: CORES_VALENCIA.negativo,
               borderWidth: 2.4, tension: 0.35, pointRadius: 4 }
           ]
@@ -3564,7 +3811,7 @@ __DADOS__
           responsive: true, maintainAspectRatio: false,
           plugins: {
             legend: { position: "bottom" },
-            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label.replace(" (%)", "")}: ${Number(ctx.raw).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%` } }
+            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label.replace(" (%)", "")}: ${Number(ctx.raw).toLocaleString(LOCALE, { maximumFractionDigits: 1 })}%` } }
           },
           scales: {
             r: {
@@ -3580,15 +3827,15 @@ __DADOS__
       // Índice geral: cada postagem uma vez só (sem contar comentários duas vezes)
       const geral = estatisticaIndice(posts);
       if (geralEl) {
-        geralEl.innerHTML = `<span class="radar-geral-rotulo">Índice geral</span>
+        geralEl.innerHTML = `<span class="radar-geral-rotulo">${t("Índice geral")}</span>
           <strong>${formatarIndice(geral.indice)}</strong>
           <span>${textoIntervalo(geral)}</span>
-          <span class="valencia-sub">${geral.n.toLocaleString("pt-BR")} comentários · ${geral.m} postagens</span>`;
+          <span class="valencia-sub">${geral.n.toLocaleString(LOCALE)} ${t("comentários")} · ${geral.m} ${t("postagens")}</span>`;
       }
       if (tabela) {
         tabela.innerHTML = grupos.map(g => `<div class="radar-item"><span class="radar-cor" style="background:${g.cor}"></span>
             <strong>${g.nome}</strong><span class="radar-indice">${formatarIndice(g.est.indice)}</span>
-            <span class="valencia-sub">${textoIntervalo(g.est)} · ${g.est.n.toLocaleString("pt-BR")} comentários · ${g.est.m} postagens</span></div>`).join("");
+            <span class="valencia-sub">${textoIntervalo(g.est)} · ${g.est.n.toLocaleString(LOCALE)} ${t("comentários")} · ${g.est.m} ${t("postagens")}</span></div>`).join("");
       }
     }
 
@@ -3605,7 +3852,7 @@ __DADOS__
       destruirChart("graficoApelosTempo");
       const selecionados = [...STATE.candidatosSelecionados.apelos];
       if (!selecionados.length) {
-        mostrarEstadoVazio(canvas, "Selecione um ou mais candidatos acima.");
+        mostrarEstadoVazio(canvas, t("Selecione um ou mais candidatos acima."));
         return;
       }
       restaurarCanvas(canvas);
@@ -3642,13 +3889,13 @@ __DADOS__
                         // uma entrada por categoria (os candidatos repetem as mesmas cores)
                         filter: (item, dados) => dados.datasets.findIndex(d => d.label === item.text) === item.datasetIndex }
             },
-            tooltip: { callbacks: { label: ctx => `${ctx.dataset.candidateName} — ${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString("pt-BR")}` } }
+            tooltip: { callbacks: { label: ctx => `${ctx.dataset.candidateName} — ${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString(LOCALE)}` } }
           },
           scales: {
             x: { stacked: true },
             y: { stacked: true, beginAtZero: true,
-                 ticks: { precision: 0, callback: v => Number(v).toLocaleString("pt-BR") },
-                 title: { display: true, text: "Quantidade de postagens" } }
+                 ticks: { precision: 0, callback: v => Number(v).toLocaleString(LOCALE) },
+                 title: { display: true, text: t("Quantidade de postagens") } }
           }
         }
       });
@@ -3785,10 +4032,10 @@ __DADOS__
             cutout: "68%",
             plugins: {
               donutCenterImage: { src: CONFIG.candidateImages[candidato] || "", _image: null, _imageError: false },
-              legend: { position: "bottom" },
+              legend: { position: "bottom", labels: { boxWidth: 10, padding: 8, font: { size: 10 } } },
               tooltip: {
                 callbacks: {
-                  label: ctx => `${ctx.label}: ${Number(ctx.raw).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
+                  label: ctx => `${ctx.label}: ${Number(ctx.raw).toLocaleString(LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
                 }
               }
             }
@@ -3817,6 +4064,7 @@ __DADOS__
         });
       });
       restaurarCanvas(canvas);
+      espalharPontos(Object.values(grupos));
       STATE.charts[chartId] = new Chart(canvas, {
         type: "scatter",
         data: {
@@ -3831,19 +4079,19 @@ __DADOS__
             legend: { position: "bottom" },
             tooltip: {
               callbacks: {
-                title: () => "Publicação",
+                title: () => t("Publicação"),
                 label: ctx => {
                   const p = ctx.raw;
-                  return [`Candidato: ${p.candidato}`, `Categoria: ${p.categoria}`,
-                          `Data: ${formatarData(p.dataOriginal)}`, `${eixoY}: ${Number(p.y).toLocaleString("pt-BR")}`];
+                  return [`${t("Candidato")}: ${p.candidato}`, `${t("Categoria")}: ${p.categoria}`,
+                          `${t("Data")}: ${formatarData(p.dataOriginal)}`, `${eixoY}: ${Number(p.y).toLocaleString(LOCALE)}`];
                 }
               }
             }
           },
           scales: {
             x: { type: "time", time: { unit: "day", tooltipFormat: "dd/MM/yyyy", displayFormats: { day: "dd/MM" } },
-                 title: { display: true, text: "Data" } },
-            y: { beginAtZero: true, ticks: { precision: 0, callback: v => Number(v).toLocaleString("pt-BR") },
+                 title: { display: true, text: t("Data") } },
+            y: { beginAtZero: true, ticks: { precision: 0, callback: v => Number(v).toLocaleString(LOCALE) },
                  title: { display: true, text: eixoY } }
           }
         }
@@ -3867,15 +4115,15 @@ __DADOS__
         if (!canvas) {
           const card = document.createElement("div");
           card.className = "subcategory-chart-card";
-          card.innerHTML = `<h3 class="chart-title">Subcategorias de ${cat.nome}</h3>
-            <p class="chart-note">Percentual das postagens de ${cat.nome.toLowerCase()} de cada candidato em que a subcategoria aparece.</p>
+          card.innerHTML = `<h3 class="chart-title">${tf("Subcategorias de {cat}", { cat: cat.nome })}</h3>
+            <p class="chart-note">${tf("Percentual das postagens de {cat} de cada candidato em que a subcategoria aparece.", { cat: cat.nome.toLowerCase() })}</p>
             <div class="subcategory-chart-wrap"><canvas id="${id}"></canvas></div>`;
           grade.appendChild(card);
           canvas = document.getElementById(id);
         }
         destruirChart(id);
         if (!selecionados.length) {
-          mostrarEstadoVazio(canvas, "Selecione um ou mais candidatos acima.");
+          mostrarEstadoVazio(canvas, t("Selecione um ou mais candidatos acima."));
           return;
         }
         restaurarCanvas(canvas);
@@ -3900,11 +4148,11 @@ __DADOS__
             interaction: { mode: "index", intersect: false },
             plugins: {
               legend: { position: "bottom" },
-              tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%` } }
+              tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${Number(ctx.raw).toLocaleString(LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%` } }
             },
             scales: {
               x: { beginAtZero: true, max: 100, ticks: { stepSize: 10, callback: v => `${v}%` },
-                   title: { display: true, text: `Percentual das postagens de ${cat.nome.toLowerCase()}` } },
+                   title: { display: true, text: tf("Percentual das postagens de {cat}", { cat: cat.nome.toLowerCase() }) } },
               y: { ticks: { autoSkip: false } }
             }
           }
@@ -3956,7 +4204,7 @@ __DADOS__
 
         mostrarEstadoVazio(
           canvas,
-          "Selecione um ou mais candidatos acima."
+          t("Selecione um ou mais candidatos acima.")
         );
 
         return;
@@ -3987,7 +4235,7 @@ __DADOS__
           (a, b) =>
             a.localeCompare(
               b,
-              "pt-BR"
+              LOCALE
             )
         );
 
@@ -3998,7 +4246,7 @@ __DADOS__
 
         mostrarEstadoVazio(
           canvas,
-          "A coluna de subcategoria não possui dados."
+          t("A coluna de subcategoria não possui dados.")
         );
 
         return;
@@ -4132,6 +4380,7 @@ __DADOS__
       );
 
 
+      espalharPontos(datasets.map(d => d.data));
       STATE.charts[chartId] =
         new Chart(
           canvas,
@@ -4193,7 +4442,7 @@ __DADOS__
                             (a, b) =>
                               String(a).localeCompare(
                                 String(b),
-                                "pt-BR"
+                                LOCALE
                               )
                           );
 
@@ -4218,7 +4467,7 @@ __DADOS__
                             (a, b) =>
                               a.localeCompare(
                                 b,
-                                "pt-BR"
+                                LOCALE
                               )
                           );
 
@@ -4294,7 +4543,7 @@ __DADOS__
 
                           `Data: ${formatarData(ponto.dataOriginal)}`,
 
-                          `${eixoY}: ${Number(ponto.y).toLocaleString("pt-BR")}`
+                          `${eixoY}: ${Number(ponto.y).toLocaleString(LOCALE)}`
 
                         ];
 
@@ -4357,7 +4606,7 @@ __DADOS__
                         Number(
                           valor
                         ).toLocaleString(
-                          "pt-BR"
+                          LOCALE
                         )
 
                   },
@@ -4426,11 +4675,11 @@ __DADOS__
             "likes",
 
           rotulo:
-            "curtidas"
+            t("curtidas")
         },
 
-        { elementoId: "topCommentsList", campo: "comentarios", rotulo: "comentários" },
-        { elementoId: "topViewsList", campo: "visualizacoes", rotulo: "visualizações" }
+        { elementoId: "topCommentsList", campo: "comentarios", rotulo: t("comentários") },
+        { elementoId: "topViewsList", campo: "visualizacoes", rotulo: t("visualizações") }
 
       ];
 
@@ -4548,7 +4797,7 @@ __DADOS__
 
 
             vazio.textContent =
-              `Não há dados de ${configuracao.rotulo} disponíveis.`;
+              tf("Não há dados de {rotulo} disponíveis.", { rotulo: t(configuracao.rotulo) });
 
 
             lista.appendChild(
@@ -4627,7 +4876,7 @@ __DADOS__
                 "engagement-meta";
 
 
-              meta.textContent = `${item.categoria || "Sem categoria"} · ${formatarData(item.data)}`;
+              meta.textContent = `${item.categoria || t("Sem categoria")} · ${formatarData(item.data)}`;
 
 
               const subcategoria =
@@ -4640,7 +4889,7 @@ __DADOS__
                 "engagement-subcategory";
 
 
-              subcategoria.textContent = item.subcategoria ? `Liderança: ${item.subcategoria}` : "";
+              subcategoria.textContent = item.subcategoria ? `${(ESQUEMA.categorias.find(c => c.subcategorias.length) || { nome: "" }).nome}: ${item.subcategoria}` : "";
 
 
               main.appendChild(
@@ -4685,7 +4934,7 @@ __DADOS__
 
 
                 link.textContent =
-                  "Ver postagem";
+                  t("Ver postagem");
 
 
                 link.setAttribute(
@@ -4712,7 +4961,7 @@ __DADOS__
 
 
               valor.innerHTML =
-                `${parseNumero(item[configuracao.campo]).toLocaleString("pt-BR")}<span>${configuracao.rotulo}</span>`;
+                `${parseNumero(item[configuracao.campo]).toLocaleString(LOCALE)}<span>${configuracao.rotulo}</span>`;
 
 
               li.appendChild(
@@ -4779,7 +5028,7 @@ __DADOS__
 
         mostrarEstadoVazio(
           canvas,
-          "Selecione um ou mais candidatos acima."
+          t("Selecione um ou mais candidatos acima.")
         );
 
         return;
@@ -4814,7 +5063,7 @@ __DADOS__
 
         mostrarEstadoVazio(
           canvas,
-          "A coluna de formato não possui dados."
+          t("A coluna de formato não possui dados.")
         );
 
         return;
@@ -4966,7 +5215,7 @@ __DADOS__
 
                     label:
                       context =>
-                        `${context.dataset.label}: ${Number(context.raw).toLocaleString("pt-BR", {
+                        `${context.dataset.label}: ${Number(context.raw).toLocaleString(LOCALE, {
                           minimumFractionDigits: 1,
                           maximumFractionDigits: 1
                         })}%`
@@ -5014,7 +5263,7 @@ __DADOS__
                       true,
 
                     text:
-                      "Percentual de postagens"
+                      t("Percentual de postagens")
 
                   }
 
@@ -5410,11 +5659,11 @@ __DADOS__
       renderizarListasEngajamento();
       criarGraficoFormatos();
       criarSecaoValencia();
-      criarGraficoDispersao("likes", "likesScatter", "likesScatter", "Número de curtidas");
-      criarGraficoDispersao("comentarios", "commentsScatter", "commentsScatter", "Número de comentários");
+      criarGraficoDispersao("likes", "likesScatter", "likesScatter", t("Número de curtidas"));
+      criarGraficoDispersao("comentarios", "commentsScatter", "commentsScatter", t("Número de comentários"));
 
       setStatus(
-        `${STATE.dados.length.toLocaleString("pt-BR")} publicações carregadas · ${STATE.candidatos.length} ${STATE.candidatos.length === 1 ? "candidato encontrado" : "candidatos encontrados"}.`,
+        `${dadosPorPostagem().length.toLocaleString(LOCALE)} ${t("publicações carregadas")} · ${STATE.candidatos.length} ${t(STATE.candidatos.length === 1 ? "candidato encontrado" : "candidatos encontrados")}.`,
         "success"
       );
     }
@@ -5437,7 +5686,7 @@ __DADOS__
       if (texto) texto.textContent = `${periodo.rotulo}.`;
       const analise = document.getElementById("consideracoesFinais");
       if (analise) analise.innerHTML = periodo.analise ||
-        '<p style="margin:0; color:var(--muted); font-size:.8rem;">Sem considerações para este período.</p>';
+        `<p style="margin:0; color:var(--muted); font-size:.8rem;">${t("Sem considerações para este período.")}</p>`;
 
       document.querySelectorAll(".periodo-modo").forEach(botao => {
         botao.disabled = !PERIODOS[botao.dataset.modo];
@@ -5445,7 +5694,7 @@ __DADOS__
       });
 
       if (!STATE.dados.length) {
-        setStatus("Nenhuma publicação validada neste período.", "error");
+        setStatus(t("Nenhuma publicação validada neste período."), "error");
         return;
       }
       renderizarPeriodo();
@@ -5743,14 +5992,14 @@ __DADOS__
         "likes",
         "likesScatter",
         "likesScatter",
-        "Número de curtidas"
+        t("Número de curtidas")
       );
 
       criarGraficoDispersao(
         "comentarios",
         "commentsScatter",
         "commentsScatter",
-        "Número de comentários"
+        t("Número de comentários")
       );
 
     }
@@ -6409,6 +6658,8 @@ __DADOS__
     document.addEventListener(
       "DOMContentLoaded",
       () => {
+
+        traduzirPagina();
 
         inicializarGavetas();
 

@@ -28,9 +28,6 @@ tem_categoria <- function(d, categoria) {
   rowSums(as.matrix(d[cols]) == 1, na.rm = TRUE) > 0
 }
 
-# Nome de uma chave no texto: "autenticidade", "partido", "políticas"
-rotulo_texto <- function(chave) str_to_lower(rotulo_de(chave))
-
 ler_candidatos_info <- function() {
   read_csv("config/candidatos.csv", col_types = cols(.default = col_character()),
            show_col_types = FALSE)
@@ -43,286 +40,10 @@ nome_completo <- function(x) {
 }
 
 # ---------------------------------------------------------
-# 2. Formatação de números e datas em português
-# ---------------------------------------------------------
-
-MESES <- c("janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho",
-           "agosto", "setembro", "outubro", "novembro", "dezembro")
-
-num <- function(x) format(round(x), big.mark = ".", decimal.mark = ",", scientific = FALSE, trim = TRUE)
-pct <- function(x) paste0(format(round(x, 1), nsmall = 1, decimal.mark = ",", trim = TRUE), "%")
-
-periodo_extenso <- function(inicio, fim) {
-  d1 <- day(inicio); m1 <- MESES[month(inicio)]
-  d2 <- day(fim);    m2 <- MESES[month(fim)]
-  if (as.Date(inicio) == as.Date(fim)) return(sprintf("%d de %s de %d", d2, m2, year(fim)))
-  if (month(inicio) == month(fim)) {
-    sprintf("%d a %d de %s de %d", d1, d2, m2, year(fim))
-  } else {
-    sprintf("%d de %s a %d de %s de %d", d1, m1, d2, m2, year(fim))
-  }
-}
-
-# c("a", "b", "c") -> "a, b e c"
-listar <- function(x) {
-  if (length(x) <= 1) return(paste(x, collapse = ""))
-  paste(paste(head(x, -1), collapse = ", "), "e", tail(x, 1))
-}
-
-# qtd(1, "postagem", "postagens") -> "1 postagem"
-qtd <- function(n, singular, plural) paste(n, if (n == 1) singular else plural)
-
-trecho <- function(legenda, n = 70) {
-  t <- str_squish(coalesce(legenda, ""))
-  t <- str_split_i(t, "(?<=[.!?])\\s", 1)
-  if (nchar(t) > n) t <- paste0(str_trunc(t, n, ellipsis = ""), "…")
-  t
-}
-
-# Nome do formato no texto: com artigo ("os vídeos") e com "de" ("dos vídeos")
-FORMATOS_TEXTO <- tribble(
-  ~formato,           ~nome,                          ~artigo, ~de,
-  "Video",            "vídeos",                       "os",    "dos",
-  "Image",            "imagens",                      "as",    "das",
-  "Sidecar",          "carrosséis",                   "os",    "dos",
-  "Produzido por IA", "conteúdos produzidos por IA",  "os",    "dos"
-)
-
-# ---------------------------------------------------------
-# 3. Rascunho automático das Considerações Finais
-#    (todos os números saem da base; trechos entre [colchetes]
-#    são lembretes para completar a análise qualitativa)
-# ---------------------------------------------------------
-
-# Nome da categoria dentro da frase ("liderança", "partido", "políticas")
-cat_texto <- function(categoria) str_to_lower(categoria)
-
-# Quantas postagens de cada categoria (uma postagem pode estar em mais de uma)
-contagem_categorias <- function(d) {
-  map_int(set_names(CATEGORIAS), \(cat) sum(tem_categoria(d, cat)))
-}
-
-# "12 de liderança, 5 de partido e 9 de políticas"
-listar_categorias <- function(n) {
-  listar(sprintf("%d de %s", n, cat_texto(names(n))))
-}
-
-# Médias de curtidas/comentários das postagens de cada categoria
-# (uma postagem com mais de uma categoria entra em todas as médias dela)
-frase_medias <- function(d) {
-  medias <- map(CATEGORIAS, \(cat) {
-    x <- d[tem_categoria(d, cat), ]
-    if (nrow(x) == 0) return(NULL)
-    tibble(categoria = cat, n = nrow(x), likes = mean(x$likes), coment = mean(x$comentarios))
-  }) %>% bind_rows()
-  if (nrow(medias) < 2) {
-    return(sprintf("As postagens registraram média de %s curtidas e %s comentários por publicação.",
-                   num(mean(d$likes)), num(mean(d$comentarios))))
-  }
-  partes <- sprintf("%s curtidas e %s comentários nas de %s", num(medias$likes), num(medias$coment),
-                    cat_texto(medias$categoria))
-  mais_l <- medias %>% slice_max(likes, n = 1, with_ties = FALSE)
-  mais_c <- medias %>% slice_max(coment, n = 1, with_ties = FALSE)
-  paste0(
-    sprintf("Em média, as postagens registraram %s.", listar(partes)),
-    if (identical(mais_l$categoria, mais_c$categoria)) {
-      sprintf(" As postagens de %s tiveram as maiores médias de curtidas e de comentários.", cat_texto(mais_l$categoria))
-    } else {
-      sprintf(" A maior média de curtidas foi das postagens de %s, e a de comentários, das de %s.",
-              cat_texto(mais_l$categoria), cat_texto(mais_c$categoria))
-    }
-  )
-}
-
-paragrafo_geral <- function(d, periodo = NULL) {
-  k <- n_distinct(d$candidato)
-  quem <- if (k == 1) paste("de", unique(d$candidato)) else sprintf("dos %d candidatos monitorados", k)
-  n <- contagem_categorias(d)
-  marcadas <- map(CATEGORIAS, \(cat) tem_categoria(d, cat)) %>% reduce(`+`)
-  partes <- c(
-    sprintf("A análise das publicações no Instagram de %s reúne %d postagens %s, analisadas a partir da legenda, das imagens e da transcrição dos vídeos.",
-            periodo %||% periodo_extenso(min(d$data), max(d$data)), nrow(d), quem),
-    sprintf("Por categoria, são %s; %s.", listar_categorias(n),
-            qtd(sum(marcadas > 1), "postagem combina mais de uma categoria", "postagens combinam mais de uma categoria")),
-    if (sum(marcadas == 0) > 0)
-      sprintf("%s em nenhuma categoria.", qtd(sum(marcadas == 0), "postagem não se encaixa", "postagens não se encaixam")),
-    paragrafo_lideranca(d),
-    frase_medias(d)
-  )
-  paste(partes, collapse = " ")
-}
-
-# Subcategorias da Liderança (Autenticidade, Competência, Humanização)
-paragrafo_lideranca <- function(d) {
-  s <- para_longo(d) %>% filter(chave %in% CHAVES_LIDERANCA) %>% count(chave, sort = TRUE)
-  if (nrow(s) == 0) return(NULL)
-  sprintf("Entre as postagens de liderança, aparecem %s.", listar(sprintf("%s (%d)", rotulo_texto(s$chave), s$n)))
-}
-
-paragrafo_candidato <- function(d, nome) {
-  dc <- d %>% filter(candidato == nome)
-  n <- contagem_categorias(dc)
-
-  abertura <- sprintf("%s publicou %s no período: %s.",
-                      nome, qtd(nrow(dc), "postagem analisada", "postagens analisadas"), listar_categorias(n))
-
-  mais_curtida <- dc %>% slice_max(likes, n = 1, with_ties = FALSE)
-  mais_comentada <- dc %>% slice_max(comentarios, n = 1, with_ties = FALSE)
-  descreve <- function(p) if (nzchar(p$subcategorias)) paste0(" (", str_to_lower(p$subcategorias), ")") else ""
-  # Postagens sem legenda (só imagem ou vídeo) são citadas pela data
-  citar <- function(p) {
-    t <- trecho(p$caption)
-    if (nzchar(t)) sprintf("a publicação “%s”", t) else sprintf("a publicação sem legenda de %s", format(as.Date(p$data), "%d/%m"))
-  }
-  destaque <- sprintf("Entre os destaques, %s%s alcançou %s curtidas e %s comentários.",
-                      citar(mais_curtida), descreve(mais_curtida),
-                      num(mais_curtida$likes), num(mais_curtida$comentarios))
-  if (mais_comentada$shortCode != mais_curtida$shortCode) {
-    destaque <- paste(destaque, sprintf("A publicação com mais comentários foi %s, com %s comentários.",
-                                        str_remove(citar(mais_comentada), "^a publicação "), num(mais_comentada$comentarios)))
-  }
-
-  paste(c(
-    abertura,
-    paragrafo_lideranca(dc),
-    sprintf("[Descreva os temas das postagens de %s.]", nome),
-    # Com um só candidato as médias já estão no parágrafo geral
-    if (n_distinct(d$candidato) > 1) frase_medias(dc),
-    destaque
-  ), collapse = " ")
-}
-
-paragrafo_comparativo <- function(d) {
-  if (n_distinct(d$candidato) < 2) return(NULL)
-  frases <- map_chr(CATEGORIAS, \(cat) {
-    prop <- d %>% mutate(tem = tem_categoria(d, cat)) %>%
-      group_by(candidato) %>% summarise(p = mean(tem) * 100, n = sum(tem), .groups = "drop") %>%
-      arrange(desc(p))
-    if (prop$n[1] == 0) return(sprintf("Nenhum candidato publicou postagens de %s.", cat_texto(cat)))
-    sprintf("%s teve a maior proporção de postagens de %s (%s).", prop$candidato[1], cat_texto(cat), pct(prop$p[1]))
-  })
-  paste("Em termos comparativos:", paste(frases, collapse = " "))
-}
-
-paragrafo_subcategorias <- function(d) {
-  longo <- para_longo(d)
-  if (nrow(longo) == 0) return(NULL)
-  n_top <- min(10, nrow(d))
-  top_l <- d %>% slice_max(likes, n = n_top, with_ties = FALSE)
-  top_c <- d %>% slice_max(comentarios, n = n_top, with_ties = FALSE)
-  dono <- top_l %>% count(candidato, sort = TRUE)
-  paste(c(
-    sprintf("Entre as %d publicações mais curtidas, há %s. Entre as %d mais comentadas, %s.",
-            n_top, listar_categorias(contagem_categorias(top_l)), n_top, listar_categorias(contagem_categorias(top_c))),
-    if (n_distinct(d$candidato) > 1)
-      sprintf("%s concentra %d das %d publicações mais curtidas.", dono$candidato[1], dono$n[1], n_top)
-  ), collapse = " ")
-}
-
-# Valência dos comentários: índice de 0 (todos negativos) a 1 (todos positivos).
-# Neutros contam como 0,5; a média é ponderada pelo número de comentários.
-indice_valencia <- function(pos, neu, neg) {
-  total <- pos + neu + neg
-  ifelse(total > 0, (pos + 0.5 * neu) / total, NA_real_)
-}
-
-# Índice de um conjunto de postagens, com intervalo de confiança de 95%.
-# - Cada comentário vale 1 (positivo), 0,5 (neutro) ou 0 (negativo); o índice é a média
-#   desses valores sobre todos os comentários (estimador de razão: soma ÷ total).
-# - Comentários da mesma postagem não são independentes. O erro-padrão é o robusto por
-#   postagem (linearização de Taylor do estimador de razão); se ele ficar menor que o
-#   erro-padrão simples (comentários independentes), usa-se o simples, por cautela.
-# - O intervalo usa a distribuição t com (postagens - 1) graus de liberdade, a correção
-#   usual quando há poucos grupos (postagens).
-# - Para o índice geral, cada postagem entra uma vez só, mesmo que esteja em várias
-#   categorias: assim nenhum comentário é contado duas vezes.
-indice_ic <- function(pos, neu, neg) {
-  t <- pos + neu + neg
-  ok <- !is.na(t) & t > 0
-  pos <- pos[ok]; neu <- neu[ok]; t <- t[ok]
-  n <- sum(t); m <- length(t)
-  if (n == 0) return(list(indice = NA_real_, inf = NA_real_, sup = NA_real_, n = 0, m = 0))
-  y <- pos + 0.5 * neu
-  r <- sum(y) / n
-  ep_simples <- sqrt(max(0, (sum(pos) + 0.25 * sum(neu)) / n - r^2) / n)
-  ep_robusto <- if (m >= 2) sqrt(m / (m - 1) * sum((y - r * t)^2)) / n else 0
-  ep <- max(ep_simples, ep_robusto)
-  # Com poucas postagens, usa a distribuição t com (postagens - 1) graus de liberdade
-  z <- if (m >= 2) qt(0.975, df = m - 1) else 1.96
-  list(indice = r, inf = max(0, r - z * ep), sup = min(1, r + z * ep), n = n, m = m)
-}
-
-# d precisa das colunas com_pos, com_neu, com_neg (comentários de cada postagem)
-paragrafo_comentarios <- function(d) {
-  if (!all(c("com_pos", "com_neu", "com_neg") %in% names(d))) return(NULL)
-  d <- d %>% filter(com_pos + com_neu + com_neg > 0)
-  if (nrow(d) == 0) return(NULL)
-  dec <- function(x) format(round(x, 2), nsmall = 2, decimal.mark = ",")
-  tot <- c(pos = sum(d$com_pos), neu = sum(d$com_neu), neg = sum(d$com_neg))
-  geral <- indice_ic(d$com_pos, d$com_neu, d$com_neg)
-  geral <- sprintf(
-    "Nos comentários analisados (%s, de %s), %s são positivos, %s neutros e %s negativos, o que resulta num índice geral de valência de %s (intervalo de confiança de 95%%: %s a %s; 0 = todos negativos, 1 = todos positivos).",
-    num(sum(tot)), qtd(nrow(d), "postagem", "postagens"), pct(tot[["pos"]] / sum(tot) * 100),
-    pct(tot[["neu"]] / sum(tot) * 100), pct(tot[["neg"]] / sum(tot) * 100),
-    dec(geral$indice), dec(geral$inf), dec(geral$sup))
-  por_chave <- map(CHAVES, \(k) {
-    x <- d[d[[paste0("final_", k)]] %in% 1, ]
-    if (nrow(x) == 0) return(NULL)
-    tibble(chave = k, indice = indice_valencia(sum(x$com_pos), sum(x$com_neu), sum(x$com_neg)))
-  }) %>% bind_rows() %>% arrange(desc(indice))
-  comp <- if (nrow(por_chave) >= 2) {
-    sprintf("Por categoria e subcategoria, o índice foi maior em %s e menor em %s.",
-            listar(sprintf("%s (%s)", rotulo_texto(por_chave$chave[1]), dec(por_chave$indice[1]))),
-            sprintf("%s (%s)", rotulo_texto(tail(por_chave$chave, 1)), dec(tail(por_chave$indice, 1))))
-  }
-  paste(c(geral, comp, "[Comente o tom dos comentários: elogios, críticas, ironias e temas recorrentes.]"), collapse = " ")
-}
-
-paragrafo_formatos <- function(d) {
-  f <- d %>%
-    group_by(formato) %>%
-    summarise(n = n(), likes = mean(likes), coment = mean(comentarios), .groups = "drop") %>%
-    left_join(FORMATOS_TEXTO, by = "formato") %>%
-    mutate(nome = coalesce(nome, formato), artigo = coalesce(artigo, "os"), de = coalesce(de, "de"))
-  princ <- f %>% slice_max(n, n = 1, with_ties = FALSE)
-  if (nrow(f) == 1) {
-    return(sprintf("Quanto aos formatos, todas as publicações foram %s.", princ$nome))
-  }
-  ordem <- function(col) {
-    o <- f %>% arrange(desc(.data[[col]]))
-    resto <- sprintf("%s (%s)", o$nome[-1], num(o[[col]][-1]))
-    sprintf("a maior média foi %s %s, com %s por publicação, seguida por %s",
-            o$de[1], o$nome[1], num(o[[col]][1]), listar(resto))
-  }
-  sprintf(
-    "Quanto aos formatos, predominaram %s %s, que representam %s do total. Em curtidas, %s. Em comentários, %s.",
-    princ$artigo, princ$nome, pct(princ$n / nrow(d) * 100), ordem("likes"), ordem("coment")
-  )
-}
-
-# periodo: texto do período (ex.: "28 de setembro a 4 de outubro de 2026");
-# se ficar vazio, usa a primeira e a última data da base
-gerar_rascunho <- function(d, periodo = NULL) {
-  ordem <- ler_candidatos_info()$nome
-  candidatos <- c(intersect(ordem, unique(d$candidato)), setdiff(unique(d$candidato), ordem))
-  c(
-    paragrafo_geral(d, periodo),
-    map_chr(candidatos, \(c) paragrafo_candidato(d, c)),
-    paragrafo_comparativo(d),
-    paragrafo_subcategorias(d),
-    paragrafo_comentarios(d),
-    paragrafo_formatos(d),
-    "[Escreva aqui a análise do estilo de linguagem de cada candidato e a conclusão do período.]"
-  ) %>%
-    discard(is.null) %>%
-    paste(collapse = "\n\n")
-}
-
-# ---------------------------------------------------------
 # 4. Redação com IA (opcional): transforma o rascunho em texto analítico
 # ---------------------------------------------------------
 
-redigir_com_ia <- function(d, rascunho, modelo = MODELO_PADRAO) {
+redigir_com_ia <- function(d, rascunho, modelo = MODELO_PADRAO, idioma = "pt") {
   postagens <- d %>%
     arrange(candidato, desc(likes)) %>%
     mutate(
@@ -338,6 +59,11 @@ redigir_com_ia <- function(d, rascunho, modelo = MODELO_PADRAO) {
   prompt <- ler_texto(arquivo_app("prompts/relatorio.txt")) %>%
     sub("{rascunho}", rascunho, x = ., fixed = TRUE) %>%
     sub("{postagens}", postagens, x = ., fixed = TRUE)
+  if (!identical(idioma, "pt")) {
+    prompt <- paste0(prompt, "\n\nIMPORTANTE: escreva o texto final em ",
+                     L(idioma, "português", "inglês (English)", "espanhol (español)"),
+                     ", mantendo todos os números do rascunho.")
+  }
 
   texto <- chamar_ia(prompt, modelo, timeout = 600)
   if (trimws(texto) == "") stop("A IA devolveu uma resposta vazia. Tente novamente.")
@@ -358,10 +84,19 @@ ARQUIVO_SOBRE_PADRAO <- "padrao/sobre_a_pesquisa.json"
 
 vazio_txt <- function(x) is.null(x) || length(x) == 0 || all(is.na(x)) || !nzchar(str_trim(paste(x, collapse = "")))
 
-ler_sobre <- function() {
+# Um arquivo por idioma: config/sobre_a_pesquisa.json (português),
+# config/sobre_a_pesquisa_en.json, config/sobre_a_pesquisa_es.json.
+# Idioma ainda sem textos próprios: parte dos textos em português.
+arquivo_sobre <- function(idioma = "pt") {
+  if (identical(idioma, "pt")) ARQUIVO_SOBRE else sub("\\.json$", paste0("_", idioma, ".json"), ARQUIVO_SOBRE)
+}
+
+ler_sobre <- function(idioma = "pt") {
+  if (!identical(idioma, "pt") && !file.exists(arquivo_sobre(idioma))) return(ler_sobre("pt"))
   padrao <- read_json(arquivo_app(ARQUIVO_SOBRE_PADRAO))
-  if (!file.exists(ARQUIVO_SOBRE)) return(padrao)
-  quadros <- tryCatch(read_json(ARQUIVO_SOBRE), error = function(e) list())
+  arquivo <- arquivo_sobre(idioma)
+  if (!file.exists(arquivo)) return(padrao)
+  quadros <- tryCatch(read_json(arquivo), error = function(e) list())
   if (length(quadros) == 0) return(padrao)
   # Quadro sem título e sem texto (ex.: apagado por engano) volta ao texto padrão
   imap(quadros, \(q, i) {
@@ -370,8 +105,8 @@ ler_sobre <- function() {
   })
 }
 
-salvar_sobre <- function(quadros) {
-  write_json(quadros, ARQUIVO_SOBRE, auto_unbox = TRUE, pretty = TRUE)
+salvar_sobre <- function(quadros, idioma = "pt") {
+  write_json(quadros, arquivo_sobre(idioma), auto_unbox = TRUE, pretty = TRUE)
 }
 
 salvar_candidatos_info <- function(info) {
@@ -397,25 +132,29 @@ completar_candidatos_info <- function(candidatos) {
 
 esc <- function(x) htmltools::htmlEscape(coalesce(x, ""))
 
-html_cards <- function(candidatos) {
+html_cards <- function(candidatos, idioma = "pt") {
   info <- ler_candidatos_info() %>% filter(nome %in% candidatos)
   sprintf('
       <article class="candidate-card" data-candidate="%1$s" tabindex="0">
         <div class="candidate-top">
-          <img class="candidate-photo" src="assets/img_cand/%2$s" alt="Foto de %1$s">
+          <img class="candidate-photo" src="assets/img_cand/%2$s" alt="%7$s %1$s">
           <div>
             <h2 class="candidate-name">%1$s</h2>
             <p class="candidate-party">%3$s</p>
           </div>
         </div>
         <div class="candidate-meta">
-          <div class="meta-box"><span>Intenção de voto</span><strong>%4$s</strong></div>
-          <div class="meta-box"><span>Seguidores IG</span><strong>%5$s</strong></div>
+          <div class="meta-box"><span>%8$s</span><strong>%4$s</strong></div>
+          <div class="meta-box"><span>%9$s</span><strong>%5$s</strong></div>
         </div>
-        <p class="candidate-info">Clique para filtrar os resultados.</p>
+        <p class="candidate-info">%6$s</p>
       </article>',
     esc(info$nome), esc(info$foto), esc(info$partido),
-    esc(info$intencao_voto), esc(info$seguidores_ig)
+    esc(info$intencao_voto), esc(info$seguidores_ig),
+    L(idioma, "Clique para filtrar os resultados.", "Click to filter the results.", "Haga clic para filtrar los resultados."),
+    L(idioma, "Foto de", "Photo of", "Foto de"),
+    L(idioma, "Intenção de voto", "Voting intention", "Intención de voto"),
+    L(idioma, "Seguidores IG", "IG followers", "Seguidores IG")
   ) %>% paste(collapse = "\n")
 }
 
@@ -462,11 +201,98 @@ html_sobre <- function(quadros, proporcao, modelo_rotulo) {
 # Fotos do relatório: ficam em assets/img_cand (o relatório aponta para lá).
 PASTA_FOTOS <- "assets/img_cand"
 
-# Logo do relatório: assets/img_cand/logo.png (ou .jpg, .jpeg, .webp, .svg);
-# na falta dele, o nome antigo politica-logo.jpg
+# Foto do rodapé: assets/img_cand/politica-logo.jpg (ou .png, .webp, .svg);
+# na falta dela, logo.* (nome usado na versão 1.2)
 arquivo_logo <- function() {
-  achados <- list.files(PASTA_FOTOS, pattern = "^logo\\.(png|jpe?g|webp|svg)$", ignore.case = TRUE)
+  achados <- c(list.files(PASTA_FOTOS, pattern = "^politica-logo\\.(png|jpe?g|webp|svg)$", ignore.case = TRUE),
+               list.files(PASTA_FOTOS, pattern = "^logo\\.(png|jpe?g|webp|svg)$", ignore.case = TRUE))
   paste0("assets/img_cand/", if (length(achados)) achados[1] else "politica-logo.jpg")
+}
+
+# ---------------------------------------------------------
+# Identidade do relatório: título, subtítulo, autoria, rodapé e idioma
+# (editáveis no app, aba 4 > Sobre a pesquisa; ficam em config/relatorio.json)
+# ---------------------------------------------------------
+
+ARQUIVO_CONFIG_RELATORIO <- "config/relatorio.json"
+
+LINKS_RODAPE <- c(scholar = "Google Acadêmico", lattes = "Lattes", orcid = "ORCID",
+                  github = "GitHub", linkedin = "LinkedIn")
+
+config_relatorio_padrao <- function() {
+  list(
+    titulo = "Radar da Liderança Política",
+    subtitulo = "",
+    autoria = "Vitor Reis Soares",
+    rodape_nome = "Vitor Reis Soares",
+    rodape_texto = "",
+    links = as.list(set_names(rep("", length(LINKS_RODAPE)), names(LINKS_RODAPE))),
+    idioma = "pt"
+  )
+}
+
+ler_config_relatorio <- function() {
+  padrao <- config_relatorio_padrao()
+  if (!file.exists(ARQUIVO_CONFIG_RELATORIO)) return(padrao)
+  salvo <- tryCatch(read_json(ARQUIVO_CONFIG_RELATORIO), error = function(e) list())
+  cfg <- modifyList(padrao, salvo)
+  cfg$links <- modifyList(padrao$links, salvo$links %||% list())
+  cfg
+}
+
+# Título, subtítulo e texto do rodapé podem ter uma versão por idioma: a de
+# português fica no topo do arquivo; as outras em por_idioma$en, por_idioma$es.
+CAMPOS_POR_IDIOMA <- c("titulo", "subtitulo", "rodape_texto")
+
+textos_no_idioma <- function(cfg, idioma = cfg$idioma %||% "pt") {
+  outro <- cfg$por_idioma[[idioma]]
+  if (identical(idioma, "pt") || is.null(outro)) return(cfg)
+  for (campo in CAMPOS_POR_IDIOMA) {
+    valor <- outro[[campo]]
+    # Título vazio em outro idioma: usa o de português
+    if (!is.null(valor) && (campo != "titulo" || !vazio_txt(valor))) cfg[[campo]] <- valor
+  }
+  cfg
+}
+
+guardar_textos_idioma <- function(cfg, valores, idioma = "pt") {
+  if (identical(idioma, "pt")) return(modifyList(cfg, valores))
+  cfg$por_idioma <- cfg$por_idioma %||% list()
+  cfg$por_idioma[[idioma]] <- modifyList(cfg$por_idioma[[idioma]] %||% list(), valores)
+  cfg
+}
+
+salvar_config_relatorio <- function(cfg) {
+  dir.create(dirname(ARQUIVO_CONFIG_RELATORIO), showWarnings = FALSE, recursive = TRUE)
+  write_json(cfg, ARQUIVO_CONFIG_RELATORIO, auto_unbox = TRUE, pretty = TRUE)
+}
+
+ICONES_LINKS <- c(scholar = '<i class="fa-brands fa-google-scholar"></i>',
+                  lattes = '<span class="icone-lattes">L</span>',
+                  orcid = '<i class="fa-brands fa-orcid"></i>',
+                  github = '<i class="fa-brands fa-github"></i>',
+                  linkedin = '<i class="fa-brands fa-linkedin"></i>')
+
+# Rodapé: foto (assets/img_cand/politica-logo.*), nome, ícones dos links e texto
+html_rodape <- function(cfg) {
+  foto <- arquivo_logo()
+  links <- cfg$links %||% list()
+  icones <- imap_chr(LINKS_RODAPE, \(nome, chave) {
+    url <- str_trim(links[[chave]] %||% "")
+    if (!nzchar(url)) return("")
+    if (!grepl("^https?://", url)) url <- paste0("https://", url)
+    sprintf('<a class="rodape-link" href="%s" target="_blank" rel="noopener noreferrer" title="%s" aria-label="%s">%s</a>',
+            esc(url), nome, nome, ICONES_LINKS[[chave]])
+  }) %>% paste(collapse = "")
+  paste0(
+    '<div class="rodape">',
+    if (file.exists(foto)) sprintf('<img class="rodape-foto" src="%s" alt="%s">', foto, esc(cfg$rodape_nome)) else "",
+    '<div class="rodape-info">',
+    if (nzchar(cfg$rodape_nome %||% "")) sprintf('<strong class="rodape-nome">%s</strong>', esc(cfg$rodape_nome)) else "",
+    if (nzchar(icones)) sprintf('<div class="rodape-links">%s</div>', icones) else "",
+    if (nzchar(cfg$rodape_texto %||% "")) sprintf('<p class="rodape-texto">%s</p>', esc(cfg$rodape_texto)) else "",
+    '</div></div>'
+  )
 }
 
 # Versão "arquivo único" do relatório: troca "assets/img_cand/arquivo.jpg" pela
@@ -486,12 +312,12 @@ embutir_imagens <- function(html) {
 }
 
 # Categorias, cores e subcategorias para os gráficos do relatório
-esquema_js <- function() {
+esquema_js <- function(idioma = "pt") {
   list(categorias = map(CATEGORIAS, \(cat) list(
-         nome = cat, cor = unname(CORES_CATEGORIAS[[cat]]),
-         subcategorias = I(SUBCATEGORIAS_TAB$rotulo[SUBCATEGORIAS_TAB$categoria == cat & SUBCATEGORIAS_TAB$subcategoria])
+         nome = traduzir_nome(cat, idioma), cor = unname(CORES_CATEGORIAS[[cat]]),
+         subcategorias = I(traduzir_nome(SUBCATEGORIAS_TAB$rotulo[SUBCATEGORIAS_TAB$categoria == cat & SUBCATEGORIAS_TAB$subcategoria], idioma))
        )),
-       coresSubcategorias = as.list(CORES_SUBCATEGORIAS),
+       coresSubcategorias = as.list(set_names(unname(CORES_SUBCATEGORIAS), traduzir_nome(names(CORES_SUBCATEGORIAS), idioma))),
        coresValencia = as.list(CORES_VALENCIA),
        corIndiceGeral = COR_INDICE_GERAL)
 }
@@ -510,7 +336,7 @@ COLUNAS_RELATORIO <- c("candidato", "url", "caption", "likes", "shortCode", "com
 
 # Uma linha por postagem x subcategoria final (uma postagem pode aparecer em várias linhas;
 # os gráficos do relatório contam cada postagem uma vez por categoria)
-csv_relatorio <- function(d) {
+csv_relatorio <- function(d, idioma = "pt") {
   longo <- para_longo(d)
   # Postagens sem nenhuma categoria entram com uma linha sem categoria: contam nos totais,
   # nos rankings, nos formatos e nos comentários, mas não nos gráficos de categorias
@@ -518,6 +344,9 @@ csv_relatorio <- function(d) {
     mutate(categoria = "", subcategoria = "")
   bind_rows(longo, sem_categoria) %>%
     arrange(data, candidato) %>%
+    # nomes no idioma do relatório (o JavaScript usa os mesmos nomes do esquema)
+    mutate(categoria = traduzir_nome(categoria, idioma), subcategoria = traduzir_nome(subcategoria, idioma),
+           formato = traduzir_nome(formato, idioma)) %>%
     mutate(data = as.character(data)) %>%
     select(any_of(COLUNAS_RELATORIO)) %>%
     format_csv(na = "")
@@ -530,19 +359,22 @@ csv_relatorio <- function(d) {
 # Devolve o caminho do index.html.
 gerar_relatorio <- function(d, pasta = PASTA_RELATORIO, periodo_inicial = NULL,
                             proporcao = PROPORCAO_TOP_PADRAO, modelo_rotulo = MODELO_ROTULO,
-                            sobre = ler_sobre()) {
+                            config = ler_config_relatorio(), sobre = ler_sobre(config$idioma %||% "pt")) {
+  config <- textos_no_idioma(config)
 
   d <- d %>% mutate(data = as.Date(data))
   template <- ler_texto(arquivo_app("templates/relatorio_template.html"))
 
-  csv <- csv_relatorio(d)
-  periodos <- periodos_relatorio(d)
+  idioma <- config$idioma %||% "pt"
+  csv <- csv_relatorio(d, idioma)
+  periodos <- periodos_relatorio(d, idioma)
   json_js <- function(x) toJSON(x, auto_unbox = TRUE, null = "null") %>% str_replace_all(fixed("</"), "<\\/")
   dados_js <- paste0(
     "    window.MONITORAMENTO_CSV = ", json_js(csv), ";\n",
     "    window.PERIODOS = ", json_js(periodos), ";\n",
     "    window.PERIODO_INICIAL = ", json_js(periodo_inicial %||% ""), ";\n",
-    "    window.ESQUEMA = ", json_js(esquema_js()), ";\n",
+    "    window.ESQUEMA = ", json_js(esquema_js(idioma)), ";\n",
+    "    window.IDIOMA = ", json_js(idioma), ";\n",
     "    window.VALENCIA = ", json_js(valencia_js(d)), ";"
   )
 
@@ -555,8 +387,13 @@ gerar_relatorio <- function(d, pasta = PASTA_RELATORIO, periodo_inicial = NULL,
 
   html <- template %>%
     str_replace(fixed("__PERIODO__"), \(m) inicial$rotulo) %>%
-    str_replace(fixed("__LOGO__"), \(m) arquivo_logo()) %>%
-    str_replace(fixed("__CARDS_CANDIDATOS__"), \(m) html_cards(candidatos)) %>%
+    str_replace(fixed("__TITULO_PAGINA__"), \(m) esc(paste(c(config$titulo, if (nzchar(config$autoria %||% "")) config$autoria), collapse = " | "))) %>%
+    str_replace(fixed("__TITULO__"), \(m) esc(config$titulo)) %>%
+    str_replace(fixed("__SUBTITULO__"), \(m) esc(config$subtitulo %||% "")) %>%
+    str_replace(fixed("__AUTORIA__"), \(m) esc(config$autoria %||% "")) %>%
+    str_replace(fixed("__RODAPE__"), \(m) html_rodape(config)) %>%
+    str_replace(fixed('<html lang="pt-BR">'), \(m) sprintf('<html lang="%s">', L(idioma, "pt-BR", "en", "es"))) %>%
+    str_replace(fixed("__CARDS_CANDIDATOS__"), \(m) html_cards(candidatos, idioma)) %>%
     str_replace(fixed("__SOBRE_A_PESQUISA__"), \(m) html_sobre(sobre, proporcao, modelo_rotulo)) %>%
     str_replace(fixed("__CANDIDATE_IMAGES__"), \(m) js_imagens_candidatos()) %>%
     str_replace(fixed("__CONSIDERACOES__"), \(m) inicial$analise %||% "") %>%

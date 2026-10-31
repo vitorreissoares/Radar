@@ -41,6 +41,25 @@ esquema_rodada <- function(id) {
   as.integer(tryCatch(ler_rodada(id)$esquema, error = function(e) NULL) %||% 1L)
 }
 
+# Atualiza as visualizações das postagens já categorizadas com as de uma planilha
+# (b, saída de ler_base). Devolve quantas postagens mudaram.
+atualizar_visualizacoes <- function(b, rodadas = listar_rodadas()) {
+  novas <- b %>% filter(!is.na(visualizacoes)) %>% distinct(shortCode, .keep_all = TRUE) %>%
+    select(shortCode, nova = visualizacoes)
+  if (nrow(novas) == 0) return(0L)
+  sum(map_int(rodadas, \(id) {
+    arq <- file.path(pasta_rodada(id), "base_classificada.csv")
+    d <- read_csv(arq, col_types = cols(.default = col_character()), show_col_types = FALSE) %>%
+      garantir_coluna("visualizacoes")
+    m <- match(d$shortCode, novas$shortCode)
+    muda <- !is.na(m) & (is.na(d$visualizacoes) | d$visualizacoes != as.character(novas$nova[m]))
+    if (!any(muda)) return(0L)
+    d$visualizacoes[muda] <- as.character(novas$nova[m[muda]])
+    write_csv(d, arq, na = "")
+    sum(muda)
+  }))
+}
+
 # Acrescenta a coluna (vazia) se ela não existir
 garantir_coluna <- function(d, nome) {
   if (!nome %in% names(d)) d[[nome]] <- NA

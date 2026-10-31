@@ -83,7 +83,7 @@ Com o R instalado, abra `app.R` no RStudio e clique em **Run App**. No Windows, 
 | Parte | Onde |
 |---|---|
 | App (R/Shiny) | `app.R`, `R/`, `prompts/`, `templates/`, `apps_script/` |
-| Textos e configurações iniciais | `config/`, `padrao/`, `assets/img_cand/` (fotos dos candidatos e logo) |
+| Textos e configurações iniciais | `config/`, `padrao/`, `assets/img_cand/` (fotos dos candidatos e foto do rodapé) |
 | Janela do programa (Electron) | `desktop/main.js`, `desktop/carregando.html` |
 | Pacotes do R que vão no instalador | `desktop/build/pacotes_r.txt` |
 | Montagem automática no GitHub | `.github/workflows/programa.yml` |
