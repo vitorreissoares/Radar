@@ -40,14 +40,14 @@ jobs:
             recursos: dist/win-unpacked/resources
             arquivos: desktop/dist/*.exe
           - nome: Mac (chip Apple)
-            os: macos-14
+            os: macos-15
             micromamba: osx-arm64
             plataforma: osx-arm64
             builder: --mac --arm64
             recursos: dist/mac-arm64/Radar.app/Contents/Resources
             arquivos: desktop/dist/*.dmg
           - nome: Mac (Intel)
-            os: macos-14
+            os: macos-15
             micromamba: osx-arm64
             plataforma: osx-64
             builder: --mac --x64
