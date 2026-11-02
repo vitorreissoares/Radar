@@ -160,17 +160,20 @@ content="Monitoramento das estratégias de comunicação política dos candidato
 
     .project-subtitle:empty { display: none; }
 
-    /* Rodapé: foto, nome, links e texto */
-    .rodape { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; text-align: left; }
-    .rodape-foto { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); }
-    .rodape-info { display: flex; flex-direction: column; gap: 6px; }
-    .rodape-nome { color: #17232c; font-size: .92rem; }
-    .rodape-links { display: flex; gap: 8px; }
-    .rodape-link { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
-                   background: #f1f4f8; color: #344054; font-size: 1rem; text-decoration: none; transition: background .2s, color .2s; }
-    .rodape-link:hover { background: var(--primary); color: #fff; }
-    .icone-lattes { font-weight: 800; font-size: .9rem; font-family: Georgia, serif; }
-    .rodape-texto { margin: 0; max-width: 620px; color: #859099; font-size: .72rem; line-height: 1.5; }
+    /* Rodapé: foto, nome, cargo, bio e redes profissionais */
+    .rodape { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; max-width: 680px; margin: 0 auto; }
+    .rodape p { margin: 0; }
+    .rodape-foto { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 3px solid #fff;
+                   box-shadow: 0 4px 14px rgba(16, 24, 40, .12); margin-bottom: 6px; }
+    .rodape-nome { color: #17232c; font-size: 1.05rem; font-weight: 700; }
+    .rodape .cargo { color: var(--primary); font-size: .86rem; font-weight: 600; }
+    .rodape .bio { color: #475467; font-size: .84rem; line-height: 1.6; margin-top: 4px; }
+    .social-icons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+    .social-icons a { width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+                      background: #f1f4f8; color: #344054; font-size: 1.05rem; text-decoration: none;
+                      transition: background .2s, color .2s, transform .2s; }
+    .social-icons a:hover, .social-icons a:focus-visible { background: var(--primary); color: #fff; transform: translateY(-2px); }
+    .rodape-texto { max-width: 620px; color: #859099; font-size: .72rem; line-height: 1.5; margin-top: 8px !important; }
 
     .project-description {
       max-width: 760px;

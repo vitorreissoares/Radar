@@ -2130,12 +2130,15 @@ server <- function(input, output, session) {
                       buttonLabel = "Escolher", placeholder = "Nenhuma foto nova"),
             uiOutput("logo_atual"))
       ),
+      textInput("rel_rodape_cargo", paste0("Cargo ou formação", em), cfg$rodape_cargo, width = "100%",
+                placeholder = "Ex.: Doutorando em Ciência Política pelo IESP-UERJ"),
+      textAreaInput("rel_rodape_bio", paste0("Minibiografia", em), cfg$rodape_bio, rows = 3, width = "100%"),
       layout_columns(
         col_widths = c(4, 4, 4),
-        !!!imap(LINKS_RODAPE, \(nome, chave) textInput(paste0("rel_link_", chave), paste("Link do", nome),
+        !!!imap(LINKS_RODAPE, \(nome, chave) textInput(paste0("rel_link_", chave), paste("Link:", nome),
                                                        cfg$links[[chave]] %||% "", placeholder = "https://...", width = "100%"))
       ),
-      textAreaInput("rel_rodape_texto", paste0("Texto do rodapé (opcional)", em), cfg$rodape_texto, rows = 2, width = "100%"),
+      textAreaInput("rel_rodape_texto", paste0("Nota final do rodapé (opcional)", em), cfg$rodape_texto, rows = 2, width = "100%"),
       p(class = "dica", "Os links preenchidos aparecem como ícones no rodapé; os vazios não aparecem.")
     )
   })
@@ -2150,6 +2153,8 @@ server <- function(input, output, session) {
     cfg <- guardar_textos_idioma(cfg, list(
       titulo = valor("rel_titulo", no_idioma$titulo),
       subtitulo = valor("rel_subtitulo", no_idioma$subtitulo),
+      rodape_cargo = valor("rel_rodape_cargo", no_idioma$rodape_cargo),
+      rodape_bio = valor("rel_rodape_bio", no_idioma$rodape_bio),
       rodape_texto = valor("rel_rodape_texto", no_idioma$rodape_texto)), idi)
     cfg$autoria <- valor("rel_autoria", cfg$autoria)
     cfg$rodape_nome <- valor("rel_rodape_nome", cfg$rodape_nome)

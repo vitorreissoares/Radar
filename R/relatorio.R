@@ -204,8 +204,9 @@ PASTA_FOTOS <- "assets/img_cand"
 # Foto do rodapé: assets/img_cand/politica-logo.jpg (ou .png, .webp, .svg);
 # na falta dela, logo.* (nome usado na versão 1.2)
 arquivo_logo <- function() {
-  achados <- c(list.files(PASTA_FOTOS, pattern = "^politica-logo\\.(png|jpe?g|webp|svg)$", ignore.case = TRUE),
-               list.files(PASTA_FOTOS, pattern = "^logo\\.(png|jpe?g|webp|svg)$", ignore.case = TRUE))
+  pastas <- unique(c(PASTA_FOTOS, arquivo_app(PASTA_FOTOS)))
+  achados <- c(list.files(pastas, pattern = "^politica-logo\\.(png|jpe?g|webp|svg)$", ignore.case = TRUE),
+               list.files(pastas, pattern = "^logo\\.(png|jpe?g|webp|svg)$", ignore.case = TRUE))
   paste0("assets/img_cand/", if (length(achados)) achados[1] else "politica-logo.jpg")
 }
 
@@ -216,8 +217,9 @@ arquivo_logo <- function() {
 
 ARQUIVO_CONFIG_RELATORIO <- "config/relatorio.json"
 
-LINKS_RODAPE <- c(scholar = "Google Acadêmico", lattes = "Lattes", orcid = "ORCID",
-                  github = "GitHub", linkedin = "LinkedIn")
+# Ordem dos ícones no rodapé
+LINKS_RODAPE <- c(lattes = "Currículo Lattes", orcid = "ORCID", linkedin = "LinkedIn",
+                  scholar = "Google Acadêmico", github = "GitHub")
 
 config_relatorio_padrao <- function() {
   list(
@@ -225,8 +227,16 @@ config_relatorio_padrao <- function() {
     subtitulo = "",
     autoria = "Vitor Reis Soares",
     rodape_nome = "Vitor Reis Soares",
+    rodape_cargo = "Doutorando em Ciência Política pelo IESP-UERJ",
+    rodape_bio = paste("Desenvolvo pesquisas nas áreas de Ciência Política e Administração Pública, sobre",
+                       "comportamento político nas mídias sociais e avaliação de políticas públicas,",
+                       "utilizando métodos de Ciência de Dados."),
     rodape_texto = "",
-    links = as.list(set_names(rep("", length(LINKS_RODAPE)), names(LINKS_RODAPE))),
+    links = list(lattes = "https://lattes.cnpq.br/6158297915560080",
+                 orcid = "https://orcid.org/0009-0003-3723-7722",
+                 linkedin = "https://linkedin.com/in/vitorreissoares",
+                 scholar = "https://scholar.google.com.br/citations?user=0BSfm-wAAAAJ&hl=pt-BR",
+                 github = "https://github.com/vitorreissoares"),
     idioma = "pt"
   )
 }
@@ -236,13 +246,17 @@ ler_config_relatorio <- function() {
   if (!file.exists(ARQUIVO_CONFIG_RELATORIO)) return(padrao)
   salvo <- tryCatch(read_json(ARQUIVO_CONFIG_RELATORIO), error = function(e) list())
   cfg <- modifyList(padrao, salvo)
-  cfg$links <- modifyList(padrao$links, salvo$links %||% list())
+  # Se nenhum link foi preenchido ainda (versão 1.3 começava com todos vazios),
+  # valem os endereços padrão; senão, um link apagado continua apagado
+  salvos <- salvo$links %||% list()
+  if (all(map_lgl(salvos, vazio_txt))) salvos <- list()
+  cfg$links <- modifyList(padrao$links, salvos)
   cfg
 }
 
 # Título, subtítulo e texto do rodapé podem ter uma versão por idioma: a de
 # português fica no topo do arquivo; as outras em por_idioma$en, por_idioma$es.
-CAMPOS_POR_IDIOMA <- c("titulo", "subtitulo", "rodape_texto")
+CAMPOS_POR_IDIOMA <- c("titulo", "subtitulo", "rodape_cargo", "rodape_bio", "rodape_texto")
 
 textos_no_idioma <- function(cfg, idioma = cfg$idioma %||% "pt") {
   outro <- cfg$por_idioma[[idioma]]
@@ -268,30 +282,33 @@ salvar_config_relatorio <- function(cfg) {
 }
 
 ICONES_LINKS <- c(scholar = '<i class="fa-brands fa-google-scholar"></i>',
-                  lattes = '<span class="icone-lattes">L</span>',
+                  lattes = '<i class="fa-solid fa-graduation-cap"></i>',
                   orcid = '<i class="fa-brands fa-orcid"></i>',
                   github = '<i class="fa-brands fa-github"></i>',
                   linkedin = '<i class="fa-brands fa-linkedin"></i>')
 
-# Rodapé: foto (assets/img_cand/politica-logo.*), nome, ícones dos links e texto
+# Rodapé: foto (assets/img_cand/politica-logo.*), nome, cargo, bio, ícones dos
+# redes profissionais e um texto opcional
 html_rodape <- function(cfg) {
   foto <- arquivo_logo()
   links <- cfg$links %||% list()
+  campo <- function(nome) str_trim(cfg[[nome]] %||% "")
   icones <- imap_chr(LINKS_RODAPE, \(nome, chave) {
     url <- str_trim(links[[chave]] %||% "")
     if (!nzchar(url)) return("")
     if (!grepl("^https?://", url)) url <- paste0("https://", url)
-    sprintf('<a class="rodape-link" href="%s" target="_blank" rel="noopener noreferrer" title="%s" aria-label="%s">%s</a>',
+    sprintf('<a href="%s" target="_blank" rel="noopener noreferrer" title="%s" aria-label="%s">%s</a>',
             esc(url), nome, nome, ICONES_LINKS[[chave]])
   }) %>% paste(collapse = "")
   paste0(
     '<div class="rodape">',
-    if (file.exists(foto)) sprintf('<img class="rodape-foto" src="%s" alt="%s">', foto, esc(cfg$rodape_nome)) else "",
-    '<div class="rodape-info">',
-    if (nzchar(cfg$rodape_nome %||% "")) sprintf('<strong class="rodape-nome">%s</strong>', esc(cfg$rodape_nome)) else "",
-    if (nzchar(icones)) sprintf('<div class="rodape-links">%s</div>', icones) else "",
-    if (nzchar(cfg$rodape_texto %||% "")) sprintf('<p class="rodape-texto">%s</p>', esc(cfg$rodape_texto)) else "",
-    '</div></div>'
+    if (file.exists(foto) || file.exists(arquivo_app(foto))) sprintf('<img class="rodape-foto" src="%s" alt="%s">', foto, esc(campo("rodape_nome"))) else "",
+    if (nzchar(campo("rodape_nome"))) sprintf('<p class="rodape-nome">%s</p>', esc(campo("rodape_nome"))) else "",
+    if (nzchar(campo("rodape_cargo"))) sprintf('<p class="cargo">%s</p>', esc(campo("rodape_cargo"))) else "",
+    if (nzchar(campo("rodape_bio"))) sprintf('<p class="bio">%s</p>', esc(campo("rodape_bio"))) else "",
+    if (nzchar(icones)) sprintf('<nav class="social-icons" aria-label="__ROTULO_REDES__">%s</nav>', icones) else "",
+    if (nzchar(campo("rodape_texto"))) sprintf('<p class="rodape-texto">%s</p>', esc(campo("rodape_texto"))) else "",
+    '</div>'
   )
 }
 
@@ -391,7 +408,7 @@ gerar_relatorio <- function(d, pasta = PASTA_RELATORIO, periodo_inicial = NULL,
     str_replace(fixed("__TITULO__"), \(m) esc(config$titulo)) %>%
     str_replace(fixed("__SUBTITULO__"), \(m) esc(config$subtitulo %||% "")) %>%
     str_replace(fixed("__AUTORIA__"), \(m) esc(config$autoria %||% "")) %>%
-    str_replace(fixed("__RODAPE__"), \(m) html_rodape(config)) %>%
+    str_replace(fixed("__RODAPE__"), \(m) str_replace_all(html_rodape(config), fixed("__ROTULO_REDES__"), L(idioma, "Redes profissionais", "Professional networks", "Redes profesionales"))) %>%
     str_replace(fixed('<html lang="pt-BR">'), \(m) sprintf('<html lang="%s">', L(idioma, "pt-BR", "en", "es"))) %>%
     str_replace(fixed("__CARDS_CANDIDATOS__"), \(m) html_cards(candidatos, idioma)) %>%
     str_replace(fixed("__SOBRE_A_PESQUISA__"), \(m) html_sobre(sobre, proporcao, modelo_rotulo)) %>%
@@ -413,12 +430,16 @@ gerar_relatorio <- function(d, pasta = PASTA_RELATORIO, periodo_inicial = NULL,
       write_csv(file.path(pasta, "dados", "comentarios_valencia.csv"), na = "")
   }
   # As fotos vão junto, na mesma estrutura do projeto (assets/img_cand)
-  fotos <- list.files(PASTA_FOTOS, pattern = "\\.(jpe?g|png|webp|svg)$", full.names = TRUE, ignore.case = TRUE)
+  # (as da pasta de dados; as que faltarem vêm das fotos que acompanham o programa)
+  padrao_fotos <- "\\.(jpe?g|png|webp|svg)$"
+  fotos <- list.files(PASTA_FOTOS, pattern = padrao_fotos, full.names = TRUE, ignore.case = TRUE)
+  do_programa <- list.files(arquivo_app(PASTA_FOTOS), pattern = padrao_fotos, full.names = TRUE, ignore.case = TRUE)
+  fotos <- c(fotos, do_programa[!basename(do_programa) %in% basename(fotos)])
   unlink(file.path(pasta, "img_cand"), recursive = TRUE)   # pasta da versão anterior
-  if (length(fotos)) {
-    dir.create(file.path(pasta, PASTA_FOTOS), showWarnings = FALSE, recursive = TRUE)
-    file.copy(fotos, file.path(pasta, PASTA_FOTOS), overwrite = TRUE)
-  }
+  dir.create(file.path(pasta, PASTA_FOTOS), showWarnings = FALSE, recursive = TRUE)
+  if (length(fotos)) file.copy(fotos, file.path(pasta, PASTA_FOTOS), overwrite = TRUE)
+  faltando <- setdiff(c(ler_candidatos_info()$foto, basename(arquivo_logo())), basename(fotos))
+  if (length(faltando)) message("Fotos não encontradas em ", PASTA_FOTOS, ": ", paste(faltando, collapse = ", "))
   invisible(arquivo)
 }
 
