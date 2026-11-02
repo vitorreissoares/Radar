@@ -392,7 +392,8 @@ gerar_relatorio <- function(d, pasta = PASTA_RELATORIO, periodo_inicial = NULL,
     "    window.PERIODO_INICIAL = ", json_js(periodo_inicial %||% ""), ";\n",
     "    window.ESQUEMA = ", json_js(esquema_js(idioma)), ";\n",
     "    window.IDIOMA = ", json_js(idioma), ";\n",
-    "    window.VALENCIA = ", json_js(valencia_js(d)), ";"
+    "    window.VALENCIA = ", json_js(valencia_js(d)), ";\n",
+    "    window.PESQUISAS = ", json_js(pesquisas_js()), ";"
   )
 
   # Texto inicial do cabeçalho e das considerações (o JavaScript troca ao mudar de período)

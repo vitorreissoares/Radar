@@ -1255,6 +1255,23 @@ content="Monitoramento das estratégias de comunicação política dos candidato
     .radar-modo { border: 0; background: transparent; color: var(--muted); font-weight: 700; font-size: .76rem;
                   padding: 6px 14px; border-radius: 999px; cursor: pointer; }
     .radar-modo.ativo { background: var(--primary); color: #fff; }
+    /* 11 — Índice × intenção de voto */
+    .pesquisas-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin-top: 6px; }
+    .pesquisa-painel { border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; background: #fff; }
+    .pesquisa-painel h4 { margin: 0 0 6px; font-size: .9rem; color: #17232c; display: flex; align-items: center; gap: 8px; }
+    .pesquisa-painel h4 .cor { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .pesquisa-painel .chart-wrap { height: 260px; }
+    .pesquisas-resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 16px 0 8px; }
+    .pesquisa-medida { border-radius: 12px; background: #f6f8fb; padding: 10px 14px; }
+    .pesquisa-medida span { display: block; color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; }
+    .pesquisa-medida strong { font-size: 1.25rem; color: #17232c; }
+    .pesquisa-medida small { display: block; color: var(--muted); font-size: .74rem; margin-top: 2px; }
+    .pesquisa-aviso { grid-column: 1 / -1; font-size: .76rem; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 8px 12px; }
+    .pesquisas-tabela { overflow-x: auto; }
+    .pesquisas-tabela table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+    .pesquisas-tabela th, .pesquisas-tabela td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+    .pesquisas-tabela th:first-child, .pesquisas-tabela td:first-child, .pesquisas-tabela th:nth-child(2), .pesquisas-tabela td:nth-child(2) { text-align: left; }
+    .pesquisas-tabela th { color: var(--muted); font-weight: 700; font-size: .7rem; text-transform: uppercase; }
     .radar-grade { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 20px; align-items: center; }
     .radar-wrap { height: 440px; }
     .radar-lado { display: flex; flex-direction: column; gap: 12px; }
@@ -2056,6 +2073,54 @@ __SOBRE_A_PESQUISA__
 </section>
 
 <!-- ===================================================
+     RESULTADO 11 — ÍNDICE DE VALÊNCIA × INTENÇÃO DE VOTO
+     =================================================== -->
+<section class="project-section" id="secaoPesquisas">
+  <div class="section-head" data-target="resultadoPesquisas" tabindex="0" role="button" aria-expanded="false">
+    <span class="section-title">
+      <span class="result-number">11</span>
+      Índice de valência e intenção de voto
+    </span>
+    <i class="fas fa-chevron-down section-icon"></i>
+  </div>
+  <div class="section-content" id="resultadoPesquisas">
+    <div class="chart-card wide">
+      <h3 class="chart-title">Comentários e pesquisas eleitorais ao longo do tempo</h3>
+      <p class="chart-note">
+        Para cada pesquisa, o índice de valência é calculado com os comentários das postagens publicadas desde a pesquisa
+        anterior. Assim, cada ponto do índice (eixo da esquerda, de 0 a 1, com a faixa do IC 95%) fica ao lado da
+        intenção de voto medida no fim do mesmo intervalo (eixo da direita, em %). Usa todo o período analisado,
+        qualquer que seja o botão escolhido no topo.
+      </p>
+      <div class="pesquisa-controles">
+        <div class="radar-modos" role="group" aria-label="Turno">
+          <button type="button" class="radar-modo pesquisa-turno ativo" data-turno="1">1º turno</button>
+          <button type="button" class="radar-modo pesquisa-turno" data-turno="2">2º turno</button>
+        </div>
+      </div>
+      <div id="pesquisasPaineis" class="pesquisas-grade"></div>
+      <div id="pesquisasResumo" class="pesquisas-resumo"></div>
+      <div id="pesquisasTabela" class="pesquisas-tabela"></div>
+      <details class="radar-metodo" data-i18n-html="metodo_pesquisas">
+        <summary>Como ler a comparação</summary>
+        <p>
+          Comparar os níveis das duas séries engana: duas linhas com tendência parecem andar juntas mesmo sem relação.
+          Por isso a medida resumo usa as <strong>variações</strong> entre pesquisas consecutivas: a correlação entre a
+          mudança do índice e a mudança da intenção de voto (em pontos percentuais) no mesmo intervalo, e entre o índice
+          de um intervalo e a mudança da intenção no intervalo seguinte (o índice antecipa as pesquisas?).
+          As variações de todos os candidatos do turno entram juntas.
+        </p>
+        <p>
+          É uma associação exploratória, não uma relação de causa: quem comenta no Instagram não representa o eleitorado,
+          e com poucos intervalos a correlação é muito instável (o intervalo de confiança mostra isso). Com menos de
+          8 intervalos, o resultado serve só como indicação.
+        </p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================
      RESULTADO 08
      =================================================== -->
 
@@ -2070,7 +2135,7 @@ __SOBRE_A_PESQUISA__
   >
 
     <span class="section-title">
-      <span class="result-number">11</span>
+      <span class="result-number">12</span>
       Formatos das postagens
     </span>
 
@@ -2135,7 +2200,7 @@ __SOBRE_A_PESQUISA__
   >
 
     <span class="section-title">
-      <span class="result-number">12</span>
+      <span class="result-number">13</span>
       Considerações Finais
     </span>
 
@@ -2267,6 +2332,28 @@ __DADOS__
         "Positivos (%)": "Positive (%)", "Negativos (%)": "Negative (%)",
         "IC 95%: {a} a {b}": "95% CI: {a} to {b}",
         "A coluna de formato não possui dados.": "The format column has no data.",
+        "Índice de valência e intenção de voto": "Valence index and voting intention",
+        "Comentários e pesquisas eleitorais ao longo do tempo": "Comments and election polls over time",
+        "Para cada pesquisa, o índice de valência é calculado com os comentários das postagens publicadas desde a pesquisa anterior. Assim, cada ponto do índice (eixo da esquerda, de 0 a 1, com a faixa do IC 95%) fica ao lado da intenção de voto medida no fim do mesmo intervalo (eixo da direita, em %). Usa todo o período analisado, qualquer que seja o botão escolhido no topo.": "For each poll, the valence index is calculated from the comments on posts published since the previous poll. Each index point (left axis, 0 to 1, with the 95% CI band) therefore sits next to the voting intention measured at the end of the same interval (right axis, in %). It uses the whole period analyzed, whichever button is selected at the top.",
+        "1º turno": "1st round",
+        "2º turno": "2nd round",
+        "Turno": "Round",
+        "IC 95% (máx.)": "95% CI (upper)",
+        "IC 95% (mín.)": "95% CI (lower)",
+        "Índice de valência": "Valence index",
+        "Intenção de voto (%)": "Voting intention (%)",
+        "Intenção de voto": "Voting intention",
+        "Variação do índice × variação da intenção": "Change in index × change in intention",
+        "Índice do intervalo × variação da intenção no seguinte": "Index in interval × change in intention in the next",
+        "1 intervalo": "1 interval", "poucos para calcular": "too few to calculate", "IC 95%": "95% CI",
+        "{n} intervalos": "{n} intervals",
+        "Poucos intervalos entre pesquisas: as correlações são muito instáveis e servem só como indicação. Elas ficam mais confiáveis à medida que novas pesquisas e comentários entram na base.": "Few intervals between polls: the correlations are very unstable and are only indicative. They become more reliable as new polls and comments are added.",
+        "Candidato": "Candidate",
+        "Intervalo": "Interval",
+        "Índice": "Index",
+        "Variação do índice": "Change in index",
+        "Variação (p.p.)": "Change (p.p.)",
+        "metodo_pesquisas": "<summary>How to read the comparison</summary><p>Comparing the levels of the two series is misleading: two trending lines seem to move together even when unrelated. That is why the summary measure uses <strong>changes</strong> between consecutive polls: the correlation between the change in the index and the change in voting intention (in percentage points) in the same interval, and between the index in one interval and the change in intention in the next (does the index anticipate the polls?). Changes for all candidates in the round are pooled.</p><p>This is an exploratory association, not a causal relationship: people who comment on Instagram do not represent the electorate, and with few intervals the correlation is very unstable (the confidence interval shows this). With fewer than 8 intervals, the result is only indicative.</p>",
         "A coluna de subcategoria não possui dados.": "The subcategory column has no data."
       },
       es: {
@@ -2348,6 +2435,28 @@ __DADOS__
         "Positivos (%)": "Positivos (%)", "Negativos (%)": "Negativos (%)",
         "IC 95%: {a} a {b}": "IC 95 %: {a} a {b}",
         "A coluna de formato não possui dados.": "La columna de formato no tiene datos.",
+        "Índice de valência e intenção de voto": "Índice de valencia e intención de voto",
+        "Comentários e pesquisas eleitorais ao longo do tempo": "Comentarios y encuestas electorales a lo largo del tiempo",
+        "Para cada pesquisa, o índice de valência é calculado com os comentários das postagens publicadas desde a pesquisa anterior. Assim, cada ponto do índice (eixo da esquerda, de 0 a 1, com a faixa do IC 95%) fica ao lado da intenção de voto medida no fim do mesmo intervalo (eixo da direita, em %). Usa todo o período analisado, qualquer que seja o botão escolhido no topo.": "Para cada encuesta, el índice de valencia se calcula con los comentarios de las publicaciones hechas desde la encuesta anterior. Así, cada punto del índice (eje izquierdo, de 0 a 1, con la banda del IC 95 %) queda junto a la intención de voto medida al final del mismo intervalo (eje derecho, en %). Usa todo el período analizado, sea cual sea el botón elegido arriba.",
+        "1º turno": "1.ª vuelta",
+        "2º turno": "2.ª vuelta",
+        "Turno": "Vuelta",
+        "IC 95% (máx.)": "IC 95 % (máx.)",
+        "IC 95% (mín.)": "IC 95 % (mín.)",
+        "Índice de valência": "Índice de valencia",
+        "Intenção de voto (%)": "Intención de voto (%)",
+        "Intenção de voto": "Intención de voto",
+        "Variação do índice × variação da intenção": "Variación del índice × variación de la intención",
+        "Índice do intervalo × variação da intenção no seguinte": "Índice del intervalo × variación de la intención en el siguiente",
+        "1 intervalo": "1 intervalo", "poucos para calcular": "pocos para calcular", "IC 95%": "IC 95 %",
+        "{n} intervalos": "{n} intervalos",
+        "Poucos intervalos entre pesquisas: as correlações são muito instáveis e servem só como indicação. Elas ficam mais confiáveis à medida que novas pesquisas e comentários entram na base.": "Pocos intervalos entre encuestas: las correlaciones son muy inestables y sirven solo como indicación. Se vuelven más confiables a medida que entran nuevas encuestas y comentarios.",
+        "Candidato": "Candidato",
+        "Intervalo": "Intervalo",
+        "Índice": "Índice",
+        "Variação do índice": "Variación del índice",
+        "Variação (p.p.)": "Variación (p.p.)",
+        "metodo_pesquisas": "<summary>Cómo leer la comparación</summary><p>Comparar los niveles de las dos series engaña: dos líneas con tendencia parecen moverse juntas aunque no tengan relación. Por eso la medida resumen usa las <strong>variaciones</strong> entre encuestas consecutivas: la correlación entre el cambio del índice y el cambio de la intención de voto (en puntos porcentuales) en el mismo intervalo, y entre el índice de un intervalo y el cambio de la intención en el siguiente (¿el índice anticipa las encuestas?). Las variaciones de todos los candidatos de la vuelta se analizan juntas.</p><p>Es una asociación exploratoria, no una relación causal: quienes comentan en Instagram no representan al electorado, y con pocos intervalos la correlación es muy inestable (el intervalo de confianza lo muestra). Con menos de 8 intervalos, el resultado es solo indicativo.</p>",
         "A coluna de subcategoria não possui dados.": "La columna de subcategoría no tiene datos."
       }
     };
@@ -3121,6 +3230,10 @@ __DADOS__
         return null;
       }
 
+      if (valor instanceof Date) {
+        return isNaN(valor.getTime()) ? null : valor;
+      }
+
 
       const texto =
         String(valor).trim();
@@ -3846,6 +3959,177 @@ __DADOS__
     function criarSecaoValencia() {
       criarGraficoIndiceTempo();
       criarGraficoRadarValencia();
+      criarSecaoPesquisas();
+    }
+
+    /* ---------- 11 — Índice de valência × intenção de voto ----------
+       window.PESQUISAS: [{ data: "AAAA-MM-DD", candidato, turno: 1|2, intencao: % }]
+       Cada pesquisa recebe o índice dos comentários das postagens publicadas desde a
+       pesquisa anterior do mesmo candidato e turno (a primeira, nos 14 dias antes dela). */
+    const PESQUISAS = (window.PESQUISAS || [])
+      .map(p => ({ ...p, quando: parseData(p.data), turno: Number(p.turno) || 1, intencao: Number(p.intencao) }))
+      .filter(p => p.quando && Number.isFinite(p.intencao));
+
+    function correlacao(xs, ys) {
+      const n = xs.length;
+      if (n < 3) return null;
+      const mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n;
+      let sxy = 0, sxx = 0, syy = 0;
+      xs.forEach((x, i) => { sxy += (x - mx) * (ys[i] - my); sxx += (x - mx) ** 2; syy += (ys[i] - my) ** 2; });
+      if (!sxx || !syy) return null;
+      const r = sxy / Math.sqrt(sxx * syy);
+      // IC 95% pela transformação de Fisher (precisa de 4 ou mais pares)
+      if (n < 4) return { r, n, inf: null, sup: null };
+      const z = Math.atanh(Math.max(-0.999999, Math.min(0.999999, r))), ep = 1 / Math.sqrt(n - 3);
+      return { r, n, inf: Math.tanh(z - 1.96 * ep), sup: Math.tanh(z + 1.96 * ep) };
+    }
+
+    function intervalosPesquisas(turno) {
+      // Todas as postagens analisadas (não só as do botão escolhido)
+      const salvo = STATE.dados;
+      STATE.dados = STATE.todos || STATE.dados;
+      const posts = postagensComValencia(null).map(p => ({ ...p, quando: parseData(p.data) })).filter(p => p.quando);
+      STATE.dados = salvo;
+      const porCandidato = new Map();
+      PESQUISAS.filter(p => p.turno === turno).forEach(p => {
+        const nome = normalizarCandidato(p.candidato);
+        if (!porCandidato.has(nome)) porCandidato.set(nome, []);
+        porCandidato.get(nome).push(p);
+      });
+      const UM_DIA = 86400000;
+      const resultado = [];
+      porCandidato.forEach((lista, nome) => {
+        lista.sort((a, b) => a.quando - b.quando);
+        const doCand = posts.filter(p => normalizarTexto(p.candidato) === normalizarTexto(nome));
+        const linhas = lista.map((p, i) => {
+          const inicio = i ? lista[i - 1].quando : new Date(p.quando.getTime() - 14 * UM_DIA);
+          const fim = new Date(p.quando.getTime() + UM_DIA - 1);   // inclui o dia da pesquisa
+          const est = estatisticaIndice(doCand.filter(x => x.quando > inicio && x.quando <= fim));
+          return { candidato: nome, inicio, quando: p.quando, intencao: p.intencao, est };
+        });
+        linhas.forEach((l, i) => {
+          const ant = linhas[i - 1];
+          l.dIntencao = ant ? l.intencao - ant.intencao : null;
+          l.dIndice = ant && ant.est.indice !== null && l.est.indice !== null ? l.est.indice - ant.est.indice : null;
+        });
+        resultado.push({ candidato: nome, linhas, temIndice: linhas.some(l => l.est.indice !== null) });
+      });
+      return resultado;
+    }
+
+    function criarSecaoPesquisas() {
+      const secao = document.getElementById("secaoPesquisas");
+      if (!secao) return;
+      if (!PESQUISAS.length) { secao.style.display = "none"; return; }
+      secao.style.display = "";
+      const turnos = [...new Set(PESQUISAS.map(p => p.turno))].sort();
+      if (!turnos.includes(STATE.pesquisaTurno)) STATE.pesquisaTurno = turnos[0];
+      document.querySelectorAll(".pesquisa-turno").forEach(b => {
+        b.style.display = turnos.includes(Number(b.dataset.turno)) ? "" : "none";
+        b.classList.toggle("ativo", Number(b.dataset.turno) === STATE.pesquisaTurno);
+        b.onclick = () => { STATE.pesquisaTurno = Number(b.dataset.turno); criarSecaoPesquisas(); };
+      });
+      const grupos = intervalosPesquisas(STATE.pesquisaTurno);
+      const paineis = document.getElementById("pesquisasPaineis");
+      Object.keys(STATE.charts).filter(k => k.startsWith("pesquisa_")).forEach(k => destruirChart(k));
+      paineis.innerHTML = grupos.map((g, i) => `
+        <div class="pesquisa-painel">
+          <h4><span class="cor" style="background:${getCandidateColor(g.candidato)}"></span>${g.candidato}</h4>
+          <div class="chart-wrap"><canvas id="pesquisa_${i}"></canvas></div>
+        </div>`).join("");
+      grupos.forEach((g, i) => {
+        const canvas = document.getElementById(`pesquisa_${i}`);
+        const cor = getCandidateColor(g.candidato);
+        const x = g.linhas.map(l => l.quando);
+        const ponto = (l, v) => ({ x: l.quando, y: v });
+        STATE.charts[`pesquisa_${i}`] = new Chart(canvas, {
+          type: "line",
+          data: {
+            datasets: [
+              { label: t("IC 95% (máx.)"), data: g.linhas.map(l => ponto(l, l.est.sup)), yAxisID: "y", borderWidth: 0,
+                pointRadius: 0, backgroundColor: hexParaRgba(CORES_INDICE_GERAL, 0.10), fill: "+1", spanGaps: true, faixa: true },
+              { label: t("IC 95% (mín.)"), data: g.linhas.map(l => ponto(l, l.est.inf)), yAxisID: "y", borderWidth: 0,
+                pointRadius: 0, fill: false, spanGaps: true, faixa: true },
+              { label: t("Índice de valência"), data: g.linhas.map(l => ponto(l, l.est.indice)), yAxisID: "y",
+                borderColor: CORES_INDICE_GERAL, backgroundColor: CORES_INDICE_GERAL, borderWidth: 2.2, pointRadius: 4,
+                tension: 0.2, spanGaps: true, extra: g.linhas },
+              { label: t("Intenção de voto (%)"), data: g.linhas.map(l => ponto(l, l.intencao)), yAxisID: "y2",
+                borderColor: cor, backgroundColor: cor, borderWidth: 2.2, borderDash: [6, 4], pointRadius: 4,
+                pointStyle: "rectRot", tension: 0.2, extra: g.linhas }
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+              legend: { position: "bottom", labels: { usePointStyle: true, filter: (item, dados) => !dados.datasets[item.datasetIndex].faixa } },
+              tooltip: {
+                filter: item => item.dataset.extra,
+                callbacks: {
+                  title: itens => itens.length ? formatarData(itens[0].raw.x) : "",
+                  label: ctx => {
+                    const l = ctx.dataset.extra[ctx.dataIndex];
+                    if (ctx.dataset.yAxisID === "y2") {
+                      const d = l.dIntencao === null ? "" : ` (${l.dIntencao >= 0 ? "+" : ""}${l.dIntencao.toLocaleString(LOCALE, { maximumFractionDigits: 1 })} p.p.)`;
+                      return `${t("Intenção de voto")}: ${l.intencao.toLocaleString(LOCALE, { maximumFractionDigits: 1 })}%${d}`;
+                    }
+                    return l.est.indice === null ? `${t("Índice de valência")}: ${t("sem comentários")}` :
+                      `${t("Índice de valência")}: ${formatarIndice(l.est.indice)} (${textoIntervalo(l.est)} · ${l.est.n.toLocaleString(LOCALE)} ${t("comentários")})`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: { type: "time", time: { unit: "day", tooltipFormat: "dd/MM/yyyy" },
+                   min: Math.min(...x) - 3 * 86400000, max: Math.max(...x) + 3 * 86400000,
+                   ticks: { callback: v => new Date(v).toLocaleDateString(LOCALE, { day: "2-digit", month: "2-digit" }), maxTicksLimit: 8 } },
+              y: { min: 0, max: 1, position: "left", ticks: { stepSize: 0.25, callback: v => formatarIndice(v) },
+                   title: { display: true, text: t("Índice de valência (0 a 1)") } },
+              y2: { position: "right", grid: { drawOnChartArea: false },
+                    suggestedMin: Math.max(0, Math.min(...g.linhas.map(l => l.intencao)) - 5),
+                    suggestedMax: Math.max(...g.linhas.map(l => l.intencao)) + 5,
+                    ticks: { callback: v => `${v}%` }, title: { display: true, text: t("Intenção de voto (%)") } }
+            }
+          }
+        });
+      });
+
+      // Medidas resumo: variações de todos os candidatos do turno juntas
+      const todas = grupos.flatMap(g => g.linhas);
+      const pares1 = todas.filter(l => l.dIndice !== null && l.dIntencao !== null);
+      const mesmo = correlacao(pares1.map(l => l.dIndice), pares1.map(l => l.dIntencao));
+      const pares2 = grupos.flatMap(g => g.linhas.slice(0, -1).map((l, i) => ({ ind: l.est.indice, d: g.linhas[i + 1].dIntencao })))
+        .filter(p => p.ind !== null && p.d !== null);
+      const seguinte = correlacao(pares2.map(p => p.ind), pares2.map(p => p.d));
+      const fmtR = c => c ? c.r.toLocaleString(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—";
+      const detalhe = (c, n) => {
+        const qtd = k => k === 1 ? t("1 intervalo") : tf("{n} intervalos", { n: k });
+        if (!c) return `${qtd(n)}: ${t("poucos para calcular")}`;
+        const ic = c.inf === null ? "" : ` · ${tf("IC 95%: {a} a {b}", { a: fmtR({ r: c.inf }), b: fmtR({ r: c.sup }) })}`;
+        return `${qtd(c.n)}${ic}`;
+      };
+      const menor = Math.min(pares1.length, pares2.length);
+      document.getElementById("pesquisasResumo").innerHTML = `
+        <div class="pesquisa-medida"><span>${t("Variação do índice × variação da intenção")}</span>
+          <strong>r = ${fmtR(mesmo)}</strong><small>${detalhe(mesmo, pares1.length)}</small></div>
+        <div class="pesquisa-medida"><span>${t("Índice do intervalo × variação da intenção no seguinte")}</span>
+          <strong>r = ${fmtR(seguinte)}</strong><small>${detalhe(seguinte, pares2.length)}</small></div>
+        ${menor < 8 ? `<div class="pesquisa-aviso">${t("Poucos intervalos entre pesquisas: as correlações são muito instáveis e servem só como indicação. Elas ficam mais confiáveis à medida que novas pesquisas e comentários entram na base.")}</div>` : ""}`;
+
+      const num1 = (v, casas = 1) => v === null ? "—" : `${v >= 0 ? "+" : ""}${v.toLocaleString(LOCALE, { minimumFractionDigits: casas, maximumFractionDigits: casas })}`;
+      const linhasTabela = todas.map(l => `<tr>
+          <td>${l.candidato}</td>
+          <td>${formatarData(l.inicio)} – ${formatarData(l.quando)}</td>
+          <td>${formatarIndice(l.est.indice)}</td>
+          <td>${l.est.indice === null ? "" : `${formatarIndice(l.est.inf)} – ${formatarIndice(l.est.sup)}`}</td>
+          <td>${l.est.n.toLocaleString(LOCALE)}</td>
+          <td>${num1(l.dIndice, 2)}</td>
+          <td>${l.intencao.toLocaleString(LOCALE, { maximumFractionDigits: 1 })}%</td>
+          <td>${num1(l.dIntencao)}</td></tr>`).join("");
+      document.getElementById("pesquisasTabela").innerHTML = `<table>
+        <thead><tr><th>${t("Candidato")}</th><th>${t("Intervalo")}</th><th>${t("Índice")}</th><th>${t("IC 95%")}</th>
+          <th>${t("comentários")}</th><th>${t("Variação do índice")}</th><th>${t("Intenção de voto")}</th><th>${t("Variação (p.p.)")}</th></tr></thead>
+        <tbody>${linhasTabela}</tbody></table>`;
     }
 
 

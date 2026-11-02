@@ -573,6 +573,13 @@ ui <- page_navbar(
             radioButtons("rel_comentarios", NULL,
                          c("Validados; os demais com a classificação da IA" = "todos",
                            "Só os comentários validados" = "validados"))
+          ),
+          accordion_panel(
+            "Pesquisas eleitorais", value = "pesquisas", icon = icon("square-poll-vertical"),
+            p(class = "dica mb-2", "CSV de um agregador com as colunas ", code("data"), ", ", code("candidato"), " e ",
+              code("intencao"), ". O turno pode vir no nome (\"Lula (2º turno)\") ou numa coluna ", code("turno"), "."),
+            fileInput("pesquisas_arquivo", NULL, accept = c(".csv", ".txt"), buttonLabel = "Escolher", placeholder = ".csv"),
+            uiOutput("pesquisas_resumo")
           )
         ),
         div(class = "acao-final",
@@ -2185,6 +2192,42 @@ server <- function(input, output, session) {
     req(nzchar(nome))
     candidatos_info(completar_candidatos_info(nome))
     updateTextInput(session, "novo_candidato", value = "")
+  })
+
+  # ---- Pesquisas eleitorais ------------------------------
+  versao_pesq <- reactiveVal(0)
+  observeEvent(input$pesquisas_arquivo, {
+    arq <- input$pesquisas_arquivo
+    candidatos <- tryCatch(unique(base_rel()$candidato), error = function(e) character())
+    p <- tryCatch(ler_pesquisas_arquivo(arq$datapath, candidatos),
+                  error = notificar_erro("Não foi possível ler as pesquisas:"))
+    req(p)
+    salvar_pesquisas(p)
+    versao_pesq(versao_pesq() + 1)
+    showNotification(sprintf("%d pesquisas importadas. Elas entram no relatório na próxima vez que você gerar.", nrow(p)),
+                     type = "message")
+  })
+  observeEvent(input$apagar_pesquisas, {
+    apagar_pesquisas()
+    versao_pesq(versao_pesq() + 1)
+    showNotification("Pesquisas removidas.", type = "message")
+  })
+  output$pesquisas_resumo <- renderUI({
+    versao_pesq()
+    p <- ler_pesquisas()
+    if (nrow(p) == 0) return(p(class = "dica mb-0", "Nenhuma pesquisa importada."))
+    candidatos <- tryCatch(unique(base_rel()$candidato), error = function(e) character())
+    sem_par <- setdiff(unique(p$candidato), candidatos)
+    tagList(
+      div(class = "dica", icon("check"), " ", nrow(p), " pesquisas de ", num(length(unique(p$data))), " datas (",
+          format(min(p$data), "%d/%m/%Y"), " a ", format(max(p$data), "%d/%m/%Y"), ")"),
+      div(class = "dica", strong("Candidatos: "), paste(unique(p$candidato), collapse = ", "),
+          " · ", strong("Turnos: "), paste(sort(unique(p$turno)), collapse = " e ")),
+      if (length(sem_par) && length(candidatos))
+        div(class = "dica text-warning", icon("triangle-exclamation"), " Sem postagens na base com esse nome: ",
+            paste(sem_par, collapse = ", "), ". Confira se o nome é o mesmo da tabela de candidatos."),
+      actionLink("apagar_pesquisas", tagList(icon("trash"), " Remover pesquisas"), class = "text-danger small")
+    )
   })
 
   # ---- Sobre a pesquisa ----------------------------------

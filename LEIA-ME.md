@@ -208,6 +208,7 @@ Algumas seções:
 | **08 · Top 10** | As 10 postagens com mais curtidas, mais comentários e mais visualizações (só os vídeos têm visualizações) |
 | **09 · Evolução do índice de valência** | Linha do tempo do índice da Autenticidade, da Competência, da Humanização e do índice geral (tracejado) |
 | **10 · Desempenho nos comentários** | **Radar** circular com a proporção de comentários positivos (verde) e negativos (vermelho) do período, por subcategoria da Liderança ou por categoria, com o índice de cada uma e o **índice geral**, todos com IC 95%. Quanto maior a área verde, melhor o desempenho; quanto maior a vermelha, pior. |
+| **11 · Índice de valência e intenção de voto** | Aparece quando há pesquisas importadas (veja abaixo): o índice dos comentários ao lado da intenção de voto de cada candidato, por turno |
 
 Cada variável tem sempre a mesma cor em todas as seções: Liderança (anil), Partido (verde-azulado), Políticas (laranja), Autenticidade (rosa), Competência (dourado), Humanização (azul-claro); comentários positivos em verde, neutros em cinza e negativos em vermelho; e cada candidato com a sua cor.
 
@@ -222,11 +223,35 @@ No painel **Idioma do relatório** (aba 4), escolha **Português**, **English** 
 
 O **título**, o **subtítulo**, o **texto do rodapé** e os quadros do **Sobre a pesquisa** são escritos por você, por isso são guardados **separadamente para cada idioma**. Ao trocar o idioma, os campos mostram a versão daquele idioma (na primeira vez, partem do texto em português, para você traduzir). Textos de considerações finais já salvos não são traduzidos: com outro idioma, clique em **Rascunho** e salve o texto novo.
 
+### Pesquisas eleitorais (índice × intenção de voto)
+
+No painel **Pesquisas eleitorais** (aba 4), escolha o CSV baixado de um agregador de pesquisas. Ele precisa das colunas `data`, `candidato` e `intencao`:
+
+```
+data,candidato,intencao
+05/08/2026,Lula (1º turno),"40,3"
+05/08/2026,Lula (2º turno),"45,6"
+```
+
+- Datas em `DD/MM/AAAA` ou `AAAA-MM-DD`; vírgula ou ponto decimal; separador vírgula ou ponto e vírgula.
+- O turno pode vir no nome do candidato, como acima, ou numa coluna `turno`. Sem turno, vale o 1º.
+- Os nomes são ligados aos da tabela de candidatos ("Flavio Bolsonaro" vira "Flávio Bolsonaro"). O painel avisa se algum nome não tem postagens na base.
+- Importar de novo substitui as pesquisas anteriores. O arquivo fica em `config/pesquisas.csv`.
+
+**Como o relatório compara as duas séries (seção 11):**
+- Para cada pesquisa, o índice de valência é calculado com os comentários das postagens publicadas **desde a pesquisa anterior** do mesmo candidato (a primeira usa os 14 dias antes dela). Assim, cada ponto do índice fica ao lado da intenção de voto medida no fim do mesmo intervalo.
+- O gráfico de cada candidato tem dois eixos: o índice (0 a 1, com a faixa do IC 95%) à esquerda e a intenção de voto (%) à direita. Botões trocam entre 1º e 2º turno.
+- As medidas resumo usam as **variações** entre pesquisas, não os níveis (duas séries com tendência parecem andar juntas mesmo sem relação):
+  - correlação entre a variação do índice e a variação da intenção (em p.p.) no mesmo intervalo;
+  - correlação entre o índice de um intervalo e a variação da intenção no intervalo seguinte (o índice antecipa as pesquisas?).
+  - Os resultados saem com o número de intervalos e o IC 95% (transformação de Fisher, a partir de 4 intervalos).
+- É uma associação exploratória, não causal. Com menos de 8 intervalos, o relatório avisa que o resultado serve só como indicação. A seção usa todo o período analisado, qualquer que seja o botão escolhido no topo.
+
 ### Cabeçalho e rodapé
 
 Em **Sobre a pesquisa** (aba 4):
 - **Cabeçalho:** título, subtítulo (opcional) e a assinatura acima do título.
-- **Rodapé:** nome, foto (vira `assets/img_cand/politica-logo`), links do **Google Acadêmico**, **Lattes**, **ORCID**, **GitHub** e **LinkedIn** e um texto opcional. Os links preenchidos viram ícones; os vazios não aparecem.
+- **Rodapé:** foto (vira `assets/img_cand/politica-logo`), nome, **cargo ou formação**, **minibiografia**, links do **Lattes**, **ORCID**, **LinkedIn**, **Google Acadêmico** e **GitHub** e uma nota final opcional. Os links preenchidos viram ícones; os vazios não aparecem. Cargo, minibiografia e nota têm uma versão para cada idioma.
 
 Clique em **Salvar cabeçalho, rodapé e textos** (ou só gere o relatório, que também salva).
 
@@ -243,7 +268,7 @@ Clique em **Salvar cabeçalho, rodapé e textos** (ou só gere o relatório, que
 - **Editar** carrega o texto no formulário. **Excluir** apaga a análise; os dados validados continuam guardados.
 
 **Relatório gerado:** fica em `saidas/relatorio/` (`index.html` + `dados/monitoramento.csv` + `dados/comentarios_valencia.csv` + `assets/img_cand/`), pronto para publicar no GitHub Pages.
-- As fotos são lidas de `assets/img_cand/`, a mesma estrutura do projeto. Ao publicar, mantenha essa pasta ao lado do `index.html`.
+- A pasta `assets/img_cand/` ao lado do `index.html` recebe as fotos dos candidatos e a sua foto do rodapé. Elas vêm da sua pasta de dados; as que faltarem, das fotos que acompanham o programa. Ao publicar, mantenha essa pasta ao lado do `index.html`.
 - **Baixar (.html com as fotos)** gera um arquivo único, com as fotos dentro, para mandar por e-mail ou abrir em qualquer lugar.
 - O link **Excluir** no quadro do relatório apaga essa pasta. Dá para gerar de novo quando quiser.
 - Para excluir uma **rodada** inteira, use **Excluir esta rodada** na aba 2.
