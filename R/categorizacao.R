@@ -63,7 +63,8 @@ ler_base <- function(arquivos, candidatos) {
     # Visualizações: só os vídeos têm. videoPlayCount (reproduções) é o número que o
     # Instagram mostra; videoViewCount fica só para coletas que não trazem o primeiro
     mutate(visualizacoes = coalesce(coluna_numerica(., "videoPlayCount"), coluna_numerica(., "videoViewCount"))) %>%
-    mutate(across(c(likes, comentarios), as.numeric))
+    mutate(across(c(likes, comentarios), as.numeric)) %>%
+    registrar_postagens()
 }
 
 coluna_numerica <- function(d, nome) {
@@ -131,7 +132,9 @@ quantas_no_topo <- function(n, proporcao) {
 }
 
 # Critério da seleção: os X% mais curtidos, mais visualizados ou mais comentados
-CRITERIOS_SELECAO <- c(likes = "curtidas", visualizacoes = "visualizadas", comentarios = "comentadas")
+CRITERIOS_SELECAO <- c(likes = "curtidas", visualizacoes = "visualizadas", comentarios = "comentadas",
+                       aleatorio = "sorteadas")
+SEMENTE_SORTEIO <- 2026   # o sorteio é sempre o mesmo para a mesma base e o mesmo período
 
 # Filtra o período escolhido (alguns dias, uma semana, um mês, um ano...) e mantém
 # os X% de CADA candidato com mais curtidas, visualizações ou comentários nesse período.
@@ -140,7 +143,21 @@ CRITERIOS_SELECAO <- c(likes = "curtidas", visualizacoes = "visualizadas", comen
 # esse número ficam no fim da fila.
 preparar_dados <- function(dados, data_inicio, data_fim, proporcao = PROPORCAO_TOP_PADRAO,
                            criterio = "likes") {
-  if (!criterio %in% names(CRITERIOS_SELECAO) || !criterio %in% names(dados)) criterio <- "likes"
+  if (!criterio %in% names(CRITERIOS_SELECAO) || (criterio != "aleatorio" && !criterio %in% names(dados))) criterio <- "likes"
+  if (criterio == "aleatorio") {
+    # Amostra aleatória simples de X% das postagens de cada candidato (reproduzível)
+    no_periodo <- dados %>%
+      filter(!is.na(candidato), candidato != "", data >= as.Date(data_inicio), data <= as.Date(data_fim)) %>%
+      mutate(semana = calcular_semana(data)) %>%
+      arrange(candidato, shortCode)
+    sorteio <- local({
+      set.seed(SEMENTE_SORTEIO)
+      no_periodo %>% mutate(.ordem = runif(n()))
+    })
+    return(sorteio %>% group_by(candidato) %>% arrange(.ordem, .by_group = TRUE) %>%
+             filter(row_number() <= quantas_no_topo(n(), proporcao)) %>% ungroup() %>%
+             select(-.ordem) %>% arrange(candidato, data))
+  }
 
   dados %>%
     filter(
@@ -324,27 +341,73 @@ classificar_imagens <- function(shortCode, modelo) {
 }
 
 # ---------------------------------------------------------
-# 3. Imagens e vídeos
-#    Imagem única: midia/postagens/SHORTCODE.jpg
-#    Carrossel:    midia/postagens/SHORTCODE_1.jpg, SHORTCODE_2.jpg, ...
-#    Vídeo:        midia/videos/SHORTCODE.mp4 (+ capa em postagens/SHORTCODE.jpg)
+# 3. Imagens, vídeos, áudios e comentários: uma pasta por candidato
+#    midia/<Candidato>/imagens/AAAA-MM-DD_SHORTCODE.jpg (carrossel: _1, _2, ...)
+#    midia/<Candidato>/videos/AAAA-MM-DD_SHORTCODE.mp4
+#    midia/<Candidato>/audios/AAAA-MM-DD_SHORTCODE.mp3
+#    midia/<Candidato>/comentarios/AAAA-MM-DD_SHORTCODE.csv
+#  O candidato e a data de cada postagem vêm de um índice preenchido sempre que
+#  as postagens são lidas (registrar_postagens). Arquivos baixados por versões
+#  antigas (midia/postagens/SHORTCODE.jpg etc.) continuam sendo encontrados.
 # ---------------------------------------------------------
 
+.indice_midia <- new.env(parent = emptyenv())
+
+registrar_postagens <- function(d) {
+  if (is.null(d) || !nrow(d) || !all(c("shortCode", "candidato", "data") %in% names(d))) return(invisible(d))
+  ok <- !is.na(d$shortCode) & nzchar(d$shortCode)
+  for (i in which(ok)) {
+    assign(d$shortCode[i], list(candidato = as.character(d$candidato[i]),
+                                data = as.character(as.Date(substr(as.character(d$data[i]), 1, 10)))),
+           envir = .indice_midia)
+  }
+  invisible(d)
+}
+
+local_midia <- function(shortCode) {
+  if (exists(shortCode, envir = .indice_midia, inherits = FALSE)) get(shortCode, envir = .indice_midia) else NULL
+}
+
+# Pasta e prefixo dos arquivos de uma postagem (NULL se o candidato não é conhecido)
+destino_midia <- function(shortCode, tipo) {
+  l <- local_midia(shortCode)
+  if (is.null(l)) return(NULL)
+  prefixo <- if (!is.na(l$data)) paste0(l$data, "_", shortCode) else shortCode
+  list(pasta = file.path(PASTA_MIDIA, pasta_candidato(l$candidato), tipo), prefixo = prefixo)
+}
+
+caminho_midia <- function(shortCode, tipo, extensao, legado) {
+  d <- destino_midia(shortCode, tipo)
+  novo <- if (!is.null(d)) file.path(d$pasta, paste0(d$prefixo, extensao)) else NA_character_
+  antigo <- file.path(legado, paste0(shortCode, extensao))
+  if (!is.na(novo) && file.exists(novo)) return(novo)
+  if (file.exists(antigo)) return(antigo)
+  if (!is.na(novo)) novo else antigo   # onde gravar
+}
+
 criar_pastas_midia <- function() {
-  for (p in c(PASTA_IMAGENS, PASTA_VIDEOS, PASTA_AUDIOS, file.path(PASTA_MIDIA, "comentarios"))) dir.create(p, showWarnings = FALSE, recursive = TRUE)
+  dir.create(PASTA_MIDIA, showWarnings = FALSE, recursive = TRUE)
 }
 
 arquivos_imagens <- function(shortCode) {
-  arquivos <- list.files(PASTA_IMAGENS, full.names = TRUE,
-                         pattern = paste0("^", str_escape(shortCode), "(_[0-9]+)?\\.jpg$"))
-  ordem <- suppressWarnings(as.integer(str_match(arquivos, "_([0-9]+)\\.jpg$")[, 2]))
-  arquivos[order(coalesce(ordem, 0L))]
+  d <- destino_midia(shortCode, "imagens")
+  achados <- character()
+  if (!is.null(d) && dir.exists(d$pasta)) {
+    achados <- list.files(d$pasta, full.names = TRUE, pattern = paste0("^", str_escape(d$prefixo), "(_[0-9]+)?\\.jpg$"))
+  }
+  if (!length(achados) && dir.exists(PASTA_IMAGENS)) {
+    achados <- list.files(PASTA_IMAGENS, full.names = TRUE, pattern = paste0("^", str_escape(shortCode), "(_[0-9]+)?\\.jpg$"))
+  }
+  ordem <- suppressWarnings(as.integer(str_match(achados, "_([0-9]+)\\.jpg$")[, 2]))
+  achados[order(coalesce(ordem, 0L))]
 }
 
 arquivo_video <- function(shortCode) {
-  v <- file.path(PASTA_VIDEOS, paste0(shortCode, ".mp4"))
+  v <- caminho_midia(shortCode, "videos", ".mp4", PASTA_VIDEOS)
   if (file.exists(v)) v else NA_character_
 }
+
+arquivo_audio <- function(shortCode) caminho_midia(shortCode, "audios", ".mp3", PASTA_AUDIOS)
 
 baixar_arquivo <- function(url, destino) {
   if (file.exists(destino) && file.size(destino) > 0) return("já existia")
@@ -380,14 +443,18 @@ baixar_midia <- function(post) {
     urls <- character(0)
   }
   urls <- urls[!is.na(urls) & urls != ""]
-  nomes <- if (length(urls) == 1) paste0(sc, ".jpg") else paste0(sc, "_", seq_along(urls), ".jpg")
+  registrar_postagens(post)
+  di <- destino_midia(sc, "imagens") %||% list(pasta = PASTA_IMAGENS, prefixo = sc)
+  dir.create(di$pasta, recursive = TRUE, showWarnings = FALSE)
+  nomes <- if (length(urls) == 1) paste0(di$prefixo, ".jpg") else paste0(di$prefixo, "_", seq_along(urls), ".jpg")
 
   registro <- map2(urls, nomes, \(u, nome) {
-    destino <- file.path(PASTA_IMAGENS, nome)
+    destino <- file.path(di$pasta, nome)
     tibble(shortCode = sc, arquivo = destino, status = baixar_arquivo(u, destino))
   })
   if (tipo == "Video") {
-    destino <- file.path(PASTA_VIDEOS, paste0(sc, ".mp4"))
+    destino <- caminho_midia(sc, "videos", ".mp4", PASTA_VIDEOS)
+    dir.create(dirname(destino), recursive = TRUE, showWarnings = FALSE)
     registro <- c(registro, list(tibble(shortCode = sc, arquivo = destino,
                                         status = baixar_arquivo(post$videoUrl, destino))))
   }
@@ -411,7 +478,8 @@ baixar_midia_base <- function(dados, progresso = NULL) {
     video <- arquivo_video(sc)
     audio <- if (!is.na(video) && pode_extrair_audio()) {
       if (is.function(progresso)) progresso(i, total, "extraindo o áudio")
-      destino <- file.path(PASTA_AUDIOS, paste0(sc, ".mp3"))
+      destino <- arquivo_audio(sc)
+      dir.create(dirname(destino), recursive = TRUE, showWarnings = FALSE)
       tryCatch(file.exists(destino) || extrair_audio(video, destino), error = function(e) FALSE)
     } else FALSE
     tibble(shortCode = sc, imagens = length(arquivos_imagens(sc)), video = !is.na(video), audio = isTRUE(audio),
@@ -460,7 +528,8 @@ transcrever_video <- function(shortCode, modelo = MODELO_TRANSCRICAO) {
   video <- arquivo_video(shortCode)
   if (is.na(video)) return(NA_character_)
 
-  audio <- file.path(PASTA_AUDIOS, paste0(shortCode, ".mp3"))
+  audio <- arquivo_audio(shortCode)
+  dir.create(dirname(audio), recursive = TRUE, showWarnings = FALSE)
   if (!file.exists(audio) && !extrair_audio(video, audio)) return("[SEM ÁUDIO]")
   conteudo <- list(
     list(type = "text", text = ler_texto(PROMPTS$transcrever)),

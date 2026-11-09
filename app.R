@@ -14,6 +14,7 @@ library(DT)
 PASTA_APP <- normalizePath(Sys.getenv("RADAR_APP", getwd()))
 source(file.path(PASTA_APP, "R/carregar.R"), encoding = "UTF-8")
 usar_pasta_dados()   # programa instalado: dados na pasta do usuário
+abrir_ultimo_projeto()   # e volta ao último projeto aberto
 
 options(shiny.maxRequestSize = 500 * 1024^2)
 
@@ -21,7 +22,6 @@ options(shiny.maxRequestSize = 500 * 1024^2)
 
 # Imagens e vídeos baixados ficam acessíveis no app em "midia/..."
 criar_pastas_midia()
-addResourcePath("midia", normalizePath(PASTA_MIDIA))
 
 # Chaves do OpenRouter e do Apify salvas no projeto (se houver)
 carregar_chave()
@@ -30,6 +30,20 @@ carregar_chave_apify()
 estilos <- tags$head(
   tags$script(src = "https://www.instagram.com/embed.js", async = NA),
   tags$script(HTML("
+    // Escolher pasta: no programa instalado abre a janela do sistema
+    function escolherPasta(campo, titulo) {
+      if (!(window.radar && window.radar.escolherPasta)) {
+        alert('Digite o caminho da pasta no campo ao lado.');
+        return;
+      }
+      window.radar.escolherPasta(titulo).then(function(pasta) {
+        if (!pasta) return;
+        var el = document.getElementById(campo);
+        el.value = pasta;
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+        Shiny.setInputValue(campo, pasta, { priority: 'event' });
+      });
+    }
     Shiny.addCustomMessageHandler('instagram', function(msg) {
       setTimeout(function() { if (window.instgrm) window.instgrm.Embeds.process(); }, 300);
     });
@@ -244,6 +258,10 @@ estilos <- tags$head(
 
     /* ---------- listas ---------- */
     .lista-arquivos { list-style: none; padding: 0; margin: 0 0 .5rem; }
+    .foto-mini { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .foto-mini.vazia { display: inline-flex; align-items: center; justify-content: center; background: var(--bs-tertiary-bg); color: var(--suave); }
+    .projeto-atual { font-size: .9rem; overflow-wrap: anywhere; }
+    .projeto-atual .nome-arquivo { font-size: .72rem; color: var(--suave); }
     .lista-arquivos li { display: flex; justify-content: space-between; gap: 8px; align-items: center;
                          border: 1px solid var(--linha); border-radius: 10px; padding: 7px 10px; margin-bottom: 6px; font-size: .82rem; }
     .lista-arquivos .nome-arquivo { font-size: .72rem; color: var(--suave); overflow-wrap: anywhere; }
@@ -382,7 +400,11 @@ ui <- page_navbar(
         width = 330,
         uiOutput("status_chave"),
         accordion(
-          id = "acc_cat", multiple = TRUE, open = "arquivos",
+          id = "acc_cat", multiple = TRUE, open = c("projeto", "arquivos"),
+          accordion_panel(
+            "Projeto", value = "projeto", icon = icon("folder-open"),
+            uiOutput("painel_projeto")
+          ),
           accordion_panel(
             "Chave da IA", value = "chave", icon = icon("key"),
             uiOutput("painel_chave")
@@ -393,21 +415,33 @@ ui <- page_navbar(
             uiOutput("campo_arquivo"),
             selectizeInput("candidato_novo", "Candidato deste arquivo", choices = NULL,
                            options = list(create = TRUE, placeholder = "Escolha ou digite o nome")),
+            textInput("partido_novo", "Partido e número (opcional)", placeholder = "Ex.: PT · 13"),
+            uiOutput("campo_foto"),
             actionButton("adicionar_arquivo", "Adicionar à lista", icon = icon("plus"),
                          class = "btn-outline-primary btn-sm w-100 mb-3"),
-            uiOutput("lista_arquivos")
+            uiOutput("lista_arquivos"),
+            div(class = "titulo-lateral mt-3", "Pesquisas e desempenho (opcional)"),
+            p(class = "dica mb-2", "Um .csv com ", code("data"), ", ", code("candidato"), " e uma coluna por métrica ",
+              "(ex.: ", code("intencao_voto"), ", ", code("seguidores_ig"), "). As colunas de intenção de voto também ",
+              "entram na comparação com o índice dos comentários. Sem o arquivo, essas seções não aparecem no relatório."),
+            fileInput("performance_arquivo", NULL, accept = c(".csv", ".txt"), buttonLabel = "Escolher", placeholder = ".csv"),
+            uiOutput("performance_resumo")
           ),
           accordion_panel(
             "Selecionar", value = "periodo", icon = icon("calendar"),
             dateRangeInput("periodo", "Período", language = "pt-BR",
                            format = "dd/mm/yyyy", separator = "até"),
-            radioButtons("criterio", "Selecionar as postagens mais…",
-                         c("Curtidas" = "likes", "Visualizadas" = "visualizacoes", "Comentadas" = "comentarios"),
+            radioButtons("criterio", "Selecionar as postagens…",
+                         c("Mais curtidas" = "likes", "Mais visualizadas" = "visualizacoes",
+                           "Mais comentadas" = "comentarios", "Aleatórias" = "aleatorio"),
                          inline = TRUE),
             sliderInput("proporcao", "% de cada candidato no período",
                         min = 5, max = 100, value = PROPORCAO_TOP_PADRAO * 100, step = 5, post = "%"),
             conditionalPanel("input.criterio == 'visualizacoes'",
-                             p(class = "dica", "Só os vídeos têm visualizações: as demais postagens ficam no fim da fila."))
+                             p(class = "dica", "Só os vídeos têm visualizações: as demais postagens ficam no fim da fila.")),
+            conditionalPanel("input.criterio == 'aleatorio'",
+                             p(class = "dica", "Amostra aleatória simples de cada candidato. O sorteio é sempre o mesmo ",
+                               "para a mesma base e o mesmo período (dá para refazer a análise)."))
           ),
           accordion_panel(
             "Analisar", value = "fontes", icon = icon("eye"),
@@ -461,6 +495,33 @@ ui <- page_navbar(
         accordion(
           open = FALSE,
           accordion_panel(
+            "Comentários (todas as postagens)", value = "comentarios", icon = icon("comments"),
+            uiOutput("progresso_com"),
+            radioButtons("com_origem", "Coletar", c("Pelo Apify, direto do app" = "apify", "Arquivo baixado do Apify" = "arquivo")),
+            conditionalPanel(
+              "input.com_origem == 'apify'",
+              uiOutput("painel_chave_apify"),
+              numericInput("com_limite", "Comentários por postagem (máximo)", COMENTARIOS_POR_POSTAGEM_PADRAO,
+                           min = 1, max = 5000, step = 10),
+              checkboxInput("com_so_novas", "Só postagens ainda sem comentários do Apify", TRUE),
+              numericInput("com_preco", "Preço do Apify (US$ por 1.000 comentários)", APIFY_PRECO_MIL, min = 0, step = 0.1),
+              uiOutput("com_estimativa"),
+              actionButton("com_coletar", "Coletar para todas as postagens", icon = icon("cloud-arrow-down"),
+                           class = "btn-outline-primary btn-sm w-100 mb-3")
+            ),
+            conditionalPanel(
+              "input.com_origem == 'arquivo'",
+              p(class = "dica mb-2", "No Apify, rode o Instagram Comments Scraper com os links das postagens e baixe o ",
+                "resultado em CSV ou JSON. Os comentários vão para a pasta de cada candidato."),
+              fileInput("com_arquivo", NULL, multiple = TRUE, accept = c(".csv", ".json"),
+                        buttonLabel = "Escolher", placeholder = ".csv ou .json")
+            ),
+            textInput("com_modelo", "Modelo de IA para os comentários", MODELO_PADRAO),
+            uiOutput("com_pendentes_ia"),
+            actionButton("com_classificar", "Classificar todos os comentários", icon = icon("robot"),
+                         class = "btn-outline-primary btn-sm w-100")
+          ),
+          accordion_panel(
             "Mais opções", icon = icon("ellipsis"),
             downloadButton("baixar_validada", "Baixar base validada (.csv)", class = "btn-sm w-100 mb-2"),
             actionLink("excluir_rodada", tagList(icon("trash-can"), " Excluir esta rodada"), class = "small text-danger")
@@ -477,8 +538,13 @@ ui <- page_navbar(
               uiOutput("comentarios_val"))
         ),
         nav_panel(
+          "Comentários", icon = icon("comments"),
+          uiOutput("resumo_com"), DTOutput("tabela_com")
+        ),
+        nav_panel(
           "Acurácia da IA", icon = icon("bullseye"),
-          uiOutput("painel_acuracia")
+          uiOutput("painel_acuracia"),
+          div(class = "mt-4", h5(icon("comments"), " Comentários"), uiOutput("acuracia_com"))
         ),
         nav_panel(
           "Validação compartilhada", icon = icon("people-group"),
@@ -489,74 +555,10 @@ ui <- page_navbar(
   ),
 
   # =======================================================
-  # 3 · COMENTÁRIOS
-  # =======================================================
-  nav_panel(
-    aba(3, "Comentários"), value = "comentarios",
-    layout_sidebar(
-      fillable = FALSE,
-      sidebar = sidebar(
-        width = 320,
-        selectInput("rodada_com", "Rodada", choices = NULL),
-        uiOutput("progresso_com"),
-        accordion(
-          id = "acc_com", multiple = TRUE, open = "coletar",
-          accordion_panel(
-            "Coletar comentários", value = "coletar", icon = icon("download"),
-            radioButtons("com_origem", NULL,
-                         c("Pelo Apify, direto do app" = "apify", "Arquivo baixado do Apify" = "arquivo")),
-            conditionalPanel(
-              "input.com_origem == 'apify'",
-              uiOutput("painel_chave_apify"),
-              numericInput("com_limite", "Comentários por postagem (máximo)", COMENTARIOS_POR_POSTAGEM_PADRAO,
-                           min = 1, max = 5000, step = 10),
-              checkboxInput("com_so_novas", "Só postagens ainda sem comentários do Apify", TRUE),
-              numericInput("com_preco", "Preço do Apify (US$ por 1.000 comentários)", APIFY_PRECO_MIL,
-                           min = 0, step = 0.1),
-              uiOutput("com_estimativa"),
-              actionButton("com_coletar", "Coletar comentários", icon = icon("cloud-arrow-down"),
-                           class = "btn-outline-primary btn-sm w-100")
-            ),
-            conditionalPanel(
-              "input.com_origem == 'arquivo'",
-              p(class = "dica mb-2",
-                "No Apify, rode o Instagram Comments Scraper com os links das postagens e baixe o resultado ",
-                "em CSV ou JSON. Os comentários de cada postagem vão para ", code("midia/comentarios/SHORTCODE.csv"), "."),
-              fileInput("com_arquivo", NULL, multiple = TRUE, accept = c(".csv", ".json"),
-                        buttonLabel = "Escolher", placeholder = ".csv ou .json")
-            )
-          ),
-          accordion_panel(
-            "Classificar com IA", value = "classificar", icon = icon("robot"),
-            textInput("com_modelo", "Modelo", MODELO_PADRAO),
-            uiOutput("com_pendentes_ia"),
-            actionButton("com_classificar", "Classificar comentários", icon = icon("play"),
-                         class = "btn-outline-primary btn-sm w-100")
-          ),
-          accordion_panel(
-            "Validação", value = "validar", icon = icon("user-check"),
-            textInput("avaliador_com", "Seu nome", placeholder = "Fica registrado em cada validação"),
-            numericInput("com_amostra", "Comentários a validar por postagem", 30, min = 1, step = 5),
-            p(class = "dica",
-              "Uma amostra fixa de cada postagem. Os demais comentários entram no relatório com a ",
-              "classificação da IA (ou ficam de fora, se você escolher só os validados na aba 4).")
-          )
-        )
-      ),
-      navset_card_underline(
-        id = "sub_com",
-        nav_panel("Visão geral", icon = icon("table"), uiOutput("resumo_com"), DTOutput("tabela_com")),
-        nav_panel("Validar", icon = icon("list-check"), uiOutput("cartao_com")),
-        nav_panel("Acurácia da IA", icon = icon("bullseye"), uiOutput("acuracia_com"))
-      )
-    )
-  ),
-
-  # =======================================================
   # 4 · RELATÓRIO
   # =======================================================
   nav_panel(
-    aba(4, "Relatório"), value = "relatorio",
+    aba(3, "Relatório"), value = "relatorio",
     layout_sidebar(
       fillable = FALSE,
       sidebar = sidebar(
@@ -572,16 +574,15 @@ ui <- page_navbar(
           ),
           accordion_panel(
             "Base validada", value = "base", icon = icon("database"),
-            radioButtons("base_modo", NULL,
-                         c("Tudo junto (todas as rodadas)" = "tudo", "Uma rodada" = "rodada")),
-            conditionalPanel("input.base_modo == 'rodada'",
-                             selectInput("rodada_rel", NULL, choices = NULL)),
+            uiOutput("base_rel_info"),
+            conditionalPanel("output.varias_rodadas", selectInput("rodada_rel", "Rodada", choices = NULL)),
             fileInput("csv_validado", "…ou importar um CSV já validado", accept = ".csv",
                       multiple = TRUE, buttonLabel = "Escolher", placeholder = ".csv")
           ),
           accordion_panel(
-            "Período", value = "periodo", icon = icon("calendar"),
-            p(class = "dica mb-2", "Os mesmos botões do relatório. As datas saem da base: o trecho mais recente analisado."),
+            "Texto por botão do relatório", value = "periodo", icon = icon("calendar"),
+            p(class = "dica mb-2", "O período da pesquisa é o escolhido na aba 1. Aqui você escolhe qual botão do ",
+              "relatório (Semana, Mês, Ano, Tudo) recebe as considerações finais e em qual ele abre."),
             radioButtons("periodo_tipo", NULL,
                          c("Semana (últimos 7 dias)" = "semana", "Mês (último mês)" = "mes",
                            "Ano (último ano)" = "ano", "Tudo" = "tudo")),
@@ -592,19 +593,8 @@ ui <- page_navbar(
             radioButtons("rel_comentarios", NULL,
                          c("Validados; os demais com a classificação da IA" = "todos",
                            "Só os comentários validados" = "validados"))
-          ),
-          accordion_panel(
-            "Pesquisas e desempenho", value = "pesquisas", icon = icon("square-poll-vertical"),
-            p(class = "dica mb-2", "CSV de um agregador com as colunas ", code("data"), ", ", code("candidato"), " e ",
-              code("intencao"), ". O turno pode vir no nome (\"Lula (2º turno)\") ou numa coluna ", code("turno"), "."),
-            fileInput("pesquisas_arquivo", NULL, accept = c(".csv", ".txt"), buttonLabel = "Escolher", placeholder = ".csv"),
-            uiOutput("pesquisas_resumo"),
-            p(class = "dica mt-3 mb-2", strong("Desempenho dos candidatos"), " (", code("performance.csv"), "): colunas ",
-              code("data"), ", ", code("candidato"), " e uma coluna por métrica (ex.: ", code("seguidores_ig"), ", ",
-              code("intencao_voto"), "). Vira uma seção com a evolução de cada métrica."),
-            fileInput("performance_arquivo", NULL, accept = c(".csv", ".txt"), buttonLabel = "Escolher", placeholder = "performance.csv"),
-            uiOutput("performance_resumo")
           )
+
         ),
         div(class = "acao-final",
             actionButton("gerar_rel", "Gerar relatório", class = "btn-primary w-100", icon = icon("file-lines")),
@@ -678,7 +668,6 @@ server <- function(input, output, session) {
     sel <- selecionar %||% ids[1]
     updateSelectInput(session, "rodada_val", choices = escolhas, selected = sel)
     updateSelectInput(session, "rodada_rel", choices = escolhas, selected = sel)
-    updateSelectInput(session, "rodada_com", choices = escolhas, selected = sel)
   }
   atualizar_listas()
 
@@ -712,9 +701,86 @@ server <- function(input, output, session) {
   # 1 · CATEGORIZAÇÃO
   # =======================================================
 
-  # Lista de arquivos adicionados, um por vez (arquivo + candidato)
-  arquivos <- reactiveVal(tibble(nome = character(), caminho = character(),
-                                 candidato = character(), postagens = integer()))
+  # ---- Projeto -------------------------------------------
+  # A mídia baixada fica acessível no app em "midia/..." (pasta do projeto aberto)
+  addResourcePath("midia", normalizePath(PASTA_MIDIA))
+  dir.create(PASTA_FOTOS, recursive = TRUE, showWarnings = FALSE)
+  addResourcePath("fotos", normalizePath(PASTA_FOTOS))
+  versao_fotos <- reactiveVal(0)
+  foto_mini <- function(nome) {
+    info <- tryCatch(ler_candidatos_info(), error = function(e) NULL)
+    f <- if (!is.null(info)) info$foto[match(nome, info$nome)] else NA
+    if (is.na(f) || !file.exists(file.path(PASTA_FOTOS, f))) return(span(class = "foto-mini vazia", icon("user")))
+    tags$img(class = "foto-mini", src = paste0("fotos/", utils::URLencode(f), "?v=", as.integer(file.mtime(file.path(PASTA_FOTOS, f)))))
+  }
+
+  output$painel_projeto <- renderUI({
+    pr <- info_projeto()
+    tagList(
+      div(class = "projeto-atual", icon(if (pr$antigo) "box-archive" else "folder"), " ", strong(pr$nome),
+          div(class = "nome-arquivo", title = pr$pasta, pr$pasta)),
+      if (pr$antigo) p(class = "dica mt-1 mb-2",
+                       "Esta é a pasta de dados das versões anteriores. Para uma pesquisa nova, crie um projeto: ",
+                       "candidatos, períodos e mídias de cada pesquisa ficam separados."),
+      div(class = "d-flex gap-2 mt-2",
+          actionButton("novo_projeto", "Novo projeto", icon = icon("folder-plus"), class = "btn-sm btn-primary"),
+          actionButton("abrir_projeto", "Abrir projeto", icon = icon("folder-open"), class = "btn-sm btn-outline-primary"))
+    )
+  })
+
+  campo_pasta <- function(id, valor, titulo) {
+    div(class = "d-flex gap-2 align-items-end",
+        div(class = "flex-grow-1", textInput(id, "Pasta", valor, width = "100%")),
+        tags$button(type = "button", class = "btn btn-outline-secondary mb-3",
+                    onclick = sprintf("escolherPasta('%s', '%s')", id, titulo), icon("folder-open"), " Escolher…"))
+  }
+
+  observeEvent(input$novo_projeto, {
+    sugestao <- file.path(dirname(PASTA_BASE), "Radar - projetos")
+    showModal(modalDialog(
+      title = tagList(icon("folder-plus"), " Novo projeto"),
+      textInput("np_nome", "Nome da pesquisa", placeholder = "Ex.: Eleições Texas 2026"),
+      campo_pasta("np_pasta", sugestao, "Onde salvar o projeto"),
+      p(class = "dica", "O Radar cria, dentro da pasta escolhida, uma pasta com o nome da pesquisa. Nela ficam as bases, ",
+        "a mídia de cada candidato (", code("midia/<Candidato>/imagens, videos, audios, comentarios"), "), a categorização, ",
+        "a validação e o relatório. O cabeçalho e o rodapé do relatório vêm do projeto atual."),
+      footer = tagList(modalButton("Cancelar"), actionButton("criar_projeto", "Criar e abrir", class = "btn-primary"))
+    ))
+  })
+  observeEvent(input$criar_projeto, {
+    nome <- str_trim(input$np_nome %||% "")
+    if (!nzchar(nome)) return(showNotification("Dê um nome à pesquisa.", type = "warning"))
+    pasta <- file.path(path.expand(input$np_pasta %||% ""), pasta_candidato(nome))
+    ok <- tryCatch({ criar_projeto(pasta, nome); abrir_projeto(pasta); TRUE },
+                   error = notificar_erro("Não foi possível criar o projeto:"))
+    req(ok)
+    removeModal()
+    session$reload()
+  })
+
+  observeEvent(input$abrir_projeto, {
+    lista <- ler_projetos()$lista
+    opcoes <- set_names(map_chr(lista, "pasta"), map_chr(lista, \(x) sprintf("%s — %s", x$nome, x$pasta)))
+    opcoes <- c(opcoes, set_names(PASTA_BASE, sprintf("Pasta de dados do Radar (versões anteriores) — %s", PASTA_BASE)))
+    opcoes <- opcoes[!duplicated(opcoes)]
+    showModal(modalDialog(
+      title = tagList(icon("folder-open"), " Abrir projeto"),
+      radioButtons("ap_lista", "Projetos recentes", choices = opcoes, selected = normalizePath(getwd())),
+      campo_pasta("ap_pasta", "", "Pasta do projeto"),
+      p(class = "dica", "Escolha da lista ou indique a pasta de um projeto (a que tem a pasta ", code("config"), ")."),
+      footer = tagList(modalButton("Cancelar"), actionButton("confirmar_abrir_projeto", "Abrir", class = "btn-primary"))
+    ))
+  })
+  observeEvent(input$confirmar_abrir_projeto, {
+    pasta <- if (nzchar(str_trim(input$ap_pasta %||% ""))) path.expand(str_trim(input$ap_pasta)) else input$ap_lista
+    ok <- tryCatch({ abrir_projeto(pasta); TRUE }, error = notificar_erro("Não foi possível abrir o projeto:"))
+    req(ok)
+    removeModal()
+    session$reload()
+  })
+
+  # Bases do projeto (as planilhas importadas ficam guardadas em bases/)
+  arquivos <- reactiveVal(ler_bases())
   arquivo_pendente <- reactiveVal(NULL)
   contador_arquivo <- reactiveVal(0)   # recria o campo de arquivo vazio após cada adição
 
@@ -722,6 +788,11 @@ server <- function(input, output, session) {
     contador_arquivo()
     fileInput("arquivo_novo", NULL, accept = ".xlsx", multiple = FALSE,
               buttonLabel = "Escolher .xlsx", placeholder = "Nenhum arquivo")
+  })
+  output$campo_foto <- renderUI({
+    contador_arquivo()
+    fileInput("foto_nova", "Foto do candidato (opcional)", accept = c(".jpg", ".jpeg", ".png", ".webp"),
+              buttonLabel = "Escolher", placeholder = "Usada no relatório")
   })
 
   opcoes_candidatos <- function() {
@@ -764,12 +835,18 @@ server <- function(input, output, session) {
         versao_val(versao_val() + 1)
       }
     }, error = notificar_erro("Não foi possível atualizar as postagens já categorizadas:"))
-    arquivos(bind_rows(arquivos(), tibble(nome = arq$name, caminho = arq$datapath,
-                                          candidato = candidato, postagens = nrow(dados))))
+    # Candidato do relatório: nome, partido e número, foto
+    if (candidato != CANDIDATO_PELA_ALT) {
+      foto <- input$foto_nova
+      tryCatch(salvar_candidato(candidato, str_squish(input$partido_novo %||% ""), foto$datapath, foto$name),
+               error = notificar_erro("Não foi possível guardar a foto do candidato:"))
+    }
+    arquivos(guardar_base(arq$datapath, arq$name, candidato, nrow(dados)))
     arquivo_pendente(NULL)
     contador_arquivo(contador_arquivo() + 1)
     updateSelectizeInput(session, "candidato_novo", choices = opcoes_candidatos(), selected = "",
                          options = list(create = TRUE, placeholder = "Escolha ou digite o nome"))
+    updateTextInput(session, "partido_novo", value = "")
     showNotification(sprintf("%s adicionado (%d postagens). Escolha o próximo arquivo.",
                              if (candidato == CANDIDATO_PELA_ALT) arq$name else candidato,
                              nrow(dados)), type = "message")
@@ -783,7 +860,8 @@ server <- function(input, output, session) {
       tags$ul(class = "lista-arquivos",
         map(seq_len(nrow(a)), \(i) {
           tags$li(
-            div(tags$b(if (a$candidato[i] == CANDIDATO_PELA_ALT) "Vários candidatos" else a$candidato[i]),
+            foto_mini(a$candidato[i]),
+            div(class = "flex-grow-1", tags$b(if (a$candidato[i] == CANDIDATO_PELA_ALT) "Vários candidatos" else a$candidato[i]),
                 div(class = "nome-arquivo", sprintf("%s · %d postagens", a$nome[i], a$postagens[i]))),
             tags$span(class = "remover", title = "Remover da lista", icon("xmark"),
                       onclick = sprintf("Shiny.setInputValue('remover_arquivo', %d, {priority: 'event'})", i))
@@ -794,7 +872,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$remover_arquivo, {
-    arquivos(arquivos()[-input$remover_arquivo, ])
+    arquivos(remover_base(input$remover_arquivo))
   })
 
   base <- reactive({
@@ -898,8 +976,9 @@ server <- function(input, output, session) {
                 tagList(sprintf("%d arquivo(s) · ", nrow(arquivos())),
                         downloadLink("baixar_unificada", "baixar base unificada")), "database"),
       indicador("Selecionadas", num(nrow(p)),
-                sprintf("%d%% mais %s de cada candidato", input$proporcao,
-                        CRITERIOS_SELECAO[[input$criterio %||% "likes"]]), "filter", "destaque"),
+                if (identical(input$criterio, "aleatorio")) sprintf("%d%% sorteadas de cada candidato", input$proporcao)
+                else sprintf("%d%% mais %s de cada candidato", input$proporcao, CRITERIOS_SELECAO[[input$criterio %||% "likes"]]),
+                "filter", "destaque"),
       # ~8 s por fonte analisada + download e transcrição
       indicador("A classificar", num(novas),
                 sprintf("~%d min · %d já no cache", ceiling(novas * 8 * length(input$fontes) / 60), nrow(p) - novas),
@@ -1150,14 +1229,13 @@ server <- function(input, output, session) {
         div(icon("circle-check"), tags$b(" Validação concluída: "),
             sprintf("as %d postagens desta rodada foram validadas. ", nrow(d)),
             actionLink("ver_acuracia", "Ver a acurácia da IA")),
-        actionButton("ir_relatorio", "Ir para os comentários", icon = icon("arrow-right"),
+        actionButton("ir_relatorio", "Ir para o relatório", icon = icon("arrow-right"),
                      class = "btn-success"))
   })
 
   ir_para_relatorio <- function() {
     removeModal()
-    updateSelectInput(session, "rodada_com", selected = input$rodada_val)
-    nav_select("abas", "comentarios")
+    nav_select("abas", "relatorio")
   }
   observeEvent(input$ir_relatorio, ir_para_relatorio())
   observeEvent(input$ir_relatorio_modal, ir_para_relatorio())
@@ -1229,9 +1307,9 @@ server <- function(input, output, session) {
           div(actionButton("val_proxima", "Pular", icon = icon("forward")),
               actionButton("val_confirmar", "Confirmar e próxima", icon = icon("check"),
                            class = "btn-primary"),
-              actionButton("val_aceitar_todas", "Aceitar classificação", icon = icon("check-double"),
+              actionButton("val_aceitar_todas", "Aceitar classificação da IA", icon = icon("check-double"),
                            class = "btn-outline-success",
-                           title = "Aceita a sugestão da IA em todas as postagens ainda pendentes desta rodada")))
+                           title = "Aceita a classificação da IA de todas as postagens pendentes e de todos os comentários da rodada")))
     )
   })
 
@@ -1256,7 +1334,7 @@ server <- function(input, output, session) {
         footer = tagList(
           modalButton("Continuar revisando"),
           actionButton("ver_acuracia_modal", "Ver acurácia da IA", icon = icon("bullseye")),
-          actionButton("ir_relatorio_modal", "Ir para os comentários",
+          actionButton("ir_relatorio_modal", "Ir para o relatório",
                        icon = icon("arrow-right"), class = "btn-primary")
         ),
         easyClose = TRUE
@@ -1266,25 +1344,62 @@ server <- function(input, output, session) {
     ir_para(1)
   })
 
-  # ---- Aceitar a classificação da IA (todas as pendentes) ----
+  # ---- Aceitar a classificação da IA: postagens e comentários, de uma vez ----
+  # 1. postagens pendentes ficam com a sugestão da IA;
+  # 2. comentários ainda sem classificação são classificados pela IA (opcional);
+  # 3. a classificação da IA dos comentários passa a valer como validada.
   observeEvent(input$val_aceitar_todas, {
-    n <- sum(pendente(dados_val()))
-    if (n == 0) return(showNotification("Não há postagens pendentes nesta rodada.", type = "message"))
+    d <- dados_val()
+    n_posts <- sum(pendente(d))
+    b <- base_comentarios(d$shortCode)
+    sem_ia <- sum(is.na(b$valencia_ia)); a_validar <- sum(!b$validado & !is.na(b$valencia_ia))
+    if (n_posts + sem_ia + a_validar == 0) {
+      return(showNotification("Tudo já foi aceito ou validado nesta rodada.", type = "message"))
+    }
     showModal(modalDialog(
-      title = "Aceitar a classificação da IA",
-      p("As ", strong(n), " postagens ainda pendentes desta rodada passam a valer com a sugestão da IA, ",
-        "sem revisão humana. As já validadas não mudam."),
-      p(class = "text-muted small", "Fica registrado como \"IA (aceita)\". Você pode revisar qualquer postagem depois."),
+      title = tagList(icon("check-double"), " Aceitar a classificação da IA"),
+      tags$ul(
+        tags$li(strong(n_posts), " postagens pendentes ficam com a categorização sugerida pela IA."),
+        tags$li(strong(num(a_validar)), " comentários já classificados pela IA passam a valer como validados."),
+        if (sem_ia > 0) tags$li(strong(num(sem_ia)), " comentários ainda não foram classificados pela IA.")
+      ),
+      if (sem_ia > 0) checkboxInput("aceitar_classificar", sprintf(
+        "Classificar agora com IA esses %s comentários e aceitar também (≈ %d min)", num(sem_ia),
+        max(1, ceiling(sem_ia / COMENTARIOS_POR_LOTE * 8 / 60))), TRUE),
+      p(class = "text-muted small", "Fica registrado como \"IA (aceita)\". As postagens e os comentários já validados ",
+        "por você não mudam, e dá para revisar qualquer um depois."),
       footer = tagList(modalButton("Cancelar"),
-                       actionButton("confirmar_aceitar_todas", "Aceitar", icon = icon("check-double"), class = "btn-success"))
+                       actionButton("confirmar_aceitar_todas", "Aceitar e ir para o relatório", icon = icon("check-double"),
+                                    class = "btn-success"))
     ))
   })
   observeEvent(input$confirmar_aceitar_todas, {
     removeModal()
-    n <- tryCatch(aceitar_sugestoes_ia(input$rodada_val), error = notificar_erro("Não foi possível aceitar a classificação:"))
-    req(n)
+    id <- input$rodada_val
+    n_posts <- tryCatch(aceitar_sugestoes_ia(id), error = notificar_erro("Não foi possível aceitar as postagens:"))
+    req(!is.null(n_posts))
     versao_val(versao_val() + 1)
-    showNotification(sprintf("%d postagens aceitas com a classificação da IA.", n), type = "message")
+    n_class <- 0
+    if (isTRUE(input$aceitar_classificar)) {
+      p <- posts_com() %>% filter(com_salvos > com_classificados)
+      total <- sum(p$com_salvos - p$com_classificados)
+      tryCatch(withProgress(message = "Classificando os comentários com IA", value = 0, {
+        for (i in seq_len(nrow(p))) {
+          post <- p[i, ] %>% mutate(subcategorias = categorias_txt)
+          classificar_valencia_postagem(post, input$com_modelo %||% MODELO_PADRAO, progresso = \(n) {
+            n_class <<- n_class + n
+            setProgress(n_class / max(1, total), detail = sprintf("Postagem %d de %d · %s de %s comentários",
+                                                                  i, nrow(p), num(n_class), num(total)))
+          })
+        }
+      }), error = notificar_erro("A classificação dos comentários parou (o que já foi feito está salvo; clique de novo para continuar):"))
+    }
+    n_com <- aceitar_valencia_ia(dados_val()$shortCode)
+    versao_com(versao_com() + 1)
+    showNotification(sprintf("Aceitos: %d postagens e %s comentários%s.", n_posts, num(n_com),
+                             if (n_class) sprintf(" (%s classificados agora pela IA)", num(n_class)) else ""),
+                     type = "message", duration = 10)
+    nav_select("abas", "relatorio")
   })
 
   # ---- Comentários da postagem (continuação da validação) ----
@@ -1311,7 +1426,8 @@ server <- function(input, output, session) {
     paginas <- max(1, ceiling(nrow(com) / POR_PAGINA_CV))
     pag <- min(pagina_cv(), paginas)
     visiveis <- if (nrow(com)) com[((pag - 1) * POR_PAGINA_CV + 1):min(nrow(com), pag * POR_PAGINA_CV), ] else com
-    fmt_m <- function(m) if (is.na(m)) "—" else paste0("±", formatC(m, format = "f", digits = 2, decimal.mark = ","))
+    dec <- function(x) formatC(x, format = "f", digits = 2, decimal.mark = ",")
+    fmt_m <- function(m) if (is.na(m)) "—" else paste0("±", dec(m))
 
     linha_comentario <- function(c, k) {
       escolhido <- coalesce(c$valencia_final, c$valencia_ia, "")
@@ -1336,14 +1452,24 @@ server <- function(input, output, session) {
           indicador("Classificados", num(pr$n), sprintf("%s validados · índice %s", num(pv$n),
                                                           if (is.na(pr$indice)) "—" else formatC(pr$indice, format = "f", digits = 2, decimal.mark = ",")),
                     "robot"),
-          indicador("Margem de erro do índice (95%)", fmt_m(pr$margem),
-                    sprintf("só validados: %s", fmt_m(pv$margem)), "bullseye", if (!is.na(pr$margem) && pr$margem <= margem_alvo) "destaque" else NULL)
+          indicador("Margem de erro com a amostra atual", fmt_m(pr$margem),
+                    if (is.na(pr$margem)) "sem comentários classificados" else
+                      sprintf("IC 95%%: %s a %s · %s de %s comentários · só validados: %s",
+                              dec(max(0, pr$indice - pr$margem)), dec(min(1, pr$indice + pr$margem)),
+                              num(pr$n), num(total), fmt_m(pv$margem)),
+                    "bullseye", if (!is.na(pr$margem) && pr$margem <= margem_alvo) "destaque" else NULL)
         ),
+        if (pendentes_ia > 0)
+          div(class = "alert alert-warning small py-2 mt-2 mb-0", icon("triangle-exclamation"), " ",
+              strong(num(pendentes_ia)), " comentários desta postagem ainda não foram classificados pela IA. ",
+              "Use “Classificar com IA” abaixo ou “Aceitar classificação da IA”, que classifica e aceita tudo de uma vez."),
         div(class = "cv-amostra small",
             icon("calculator"),
-            HTML(sprintf(" Para uma margem de ±%s no índice (de 0 a 1), seriam necessários <b>%s</b> comentários classificados de %s%s",
-                         formatC(margem_alvo, format = "f", digits = 2, decimal.mark = ","), num(pr$necessarios), num(total),
-                         if (pr$faltam > 0) paste0("; faltam <b>", num(pr$faltam), "</b>.") else " (já atingido)."))),
+            HTML(sprintf(paste0(" <b>Amostra representativa</b> (margem de ±%s): <b>%s</b> comentários classificados de %s%s ",
+                                "<b>Amostra atual</b>: %s comentários, margem de %s."),
+                         dec(margem_alvo), num(pr$necessarios), num(total),
+                         if (pr$faltam > 0) paste0(" — faltam <b>", num(pr$faltam), "</b>.") else " (já atingida).",
+                         num(pr$n), fmt_m(pr$margem)))),
         div(class = "cv-acoes",
             actionButton("cv_classificar", sprintf("Classificar com IA (%d pendentes)", pendentes_ia), icon = icon("robot"),
                          class = "btn-sm btn-outline-primary", disabled = if (pendentes_ia == 0) "disabled" else NULL),
@@ -1351,8 +1477,7 @@ server <- function(input, output, session) {
                 span(class = "small", "Baixar mais"),
                 numericInput("cv_mais", NULL, value = max(10, pr$faltam), min = 1, step = 10, width = "90px"),
                 actionButton("cv_baixar", "pelo Apify", icon = icon("cloud-arrow-down"), class = "btn-sm btn-outline-primary")),
-            actionButton("cv_aceitar_post", "Aceitar a IA nesta postagem", icon = icon("check"), class = "btn-sm btn-outline-success"),
-            actionButton("cv_aceitar_rodada", "Aceitar a IA em todos os comentários da rodada", icon = icon("check-double"),
+            actionButton("cv_aceitar_post", "Aceitar a IA nos comentários desta postagem", icon = icon("check"),
                          class = "btn-sm btn-outline-success")),
         if (nrow(com) == 0)
           p(class = "text-muted mt-2", "Esta postagem ainda não tem comentários salvos. Baixe pelo Apify para classificá-los.")
@@ -1439,28 +1564,6 @@ server <- function(input, output, session) {
     versao_com(versao_com() + 1)
     showNotification(if (n) sprintf("%d comentários aceitos com a classificação da IA.", n)
                      else "Não há comentários classificados pela IA aguardando validação.", type = "message")
-  })
-
-  observeEvent(input$cv_aceitar_rodada, {
-    scs <- dados_val()$shortCode
-    b <- base_comentarios(scs)
-    n_ia <- sum(!b$validado & !is.na(b$valencia_ia)); n_sem <- sum(is.na(b$valencia_ia))
-    showModal(modalDialog(
-      title = "Aceitar a classificação da IA dos comentários",
-      p(strong(num(n_ia)), " comentários classificados pela IA e ainda não validados nesta rodada passam a valer ",
-        "como validados, sem revisão humana."),
-      if (n_sem > 0) p(class = "text-muted small", num(n_sem), " comentários ainda não foram classificados pela IA e ficam de fora ",
-                       "(classifique-os na aba 3 ou nesta postagem)."),
-      footer = tagList(modalButton("Cancelar"),
-                       actionButton("cv_confirmar_aceitar_rodada", "Aceitar e ir para o relatório", class = "btn-success"))
-    ))
-  })
-  observeEvent(input$cv_confirmar_aceitar_rodada, {
-    removeModal()
-    n <- aceitar_valencia_ia(dados_val()$shortCode)
-    versao_com(versao_com() + 1)
-    showNotification(sprintf("%s comentários aceitos com a classificação da IA.", num(n)), type = "message")
-    nav_select("abas", "relatorio")
   })
 
   output$baixar_validada <- downloadHandler(
@@ -1739,7 +1842,7 @@ server <- function(input, output, session) {
   # e os números dos comentários
   posts_com <- reactive({
     versao_val(); versao_com()
-    id <- input$rodada_com
+    id <- input$rodada_val
     req(rodada_existe(id))
     b <- base_validada_rodada(id) %>% arrange(candidato, data)
     sugestao <- map_chr(seq_len(nrow(b)), \(i) paste(rotulo_de(chaves_marcadas(b[i, ], "ia_sugestao_")), collapse = " · "))
@@ -1750,44 +1853,17 @@ server <- function(input, output, session) {
       mutate(across(starts_with("com_"), \(x) coalesce(x, 0L)))
   })
 
-  # Amostra fixa de comentários de uma postagem (a mesma ordem toda vez)
-  amostra_comentarios <- function(sc, n) {
-    b <- base_comentarios(sc)
-    if (nrow(b) == 0) return(b)
-    peso <- map_dbl(b$comentario_id, \(x) { v <- utf8ToInt(x); sum(v * seq_along(v)) %% 9973 })
-    b[order(peso, b$comentario_id), ] %>% head(n)
-  }
-
-  amostra_n <- reactive(max(1L, as.integer(input$com_amostra %||% 30)))
-
-  # Postagens com comentários e quantos da amostra já foram validados
-  fila_com <- reactive({
-    p <- posts_com() %>% filter(com_salvos > 0)
-    if (nrow(p) == 0) return(p %>% mutate(amostra = integer(), feitos = integer()))
-    n <- amostra_n()
-    p %>% mutate(
-      amostra = pmin(com_salvos, n),
-      feitos = map_int(shortCode, \(sc) sum(amostra_comentarios(sc, n)$validado))
-    )
-  })
-
-  pendente_com <- function(f) f$feitos < f$amostra
-
-  observeEvent(list(input$rodada_com, amostra_n()), {
-    f <- isolate(fila_com())
-    posicao_com(which(pendente_com(f))[1] %|% 1)
-  }, ignoreInit = TRUE)
-
+  # Andamento dos comentários da rodada (salvos, classificados pela IA, validados)
   output$progresso_com <- renderUI({
-    f <- fila_com()
-    if (nrow(f) == 0) return(p(class = "dica", "Nenhum comentário salvo para esta rodada ainda."))
-    feitos <- sum(f$feitos); total <- sum(f$amostra)
-    tagList(
-      div(class = "d-flex justify-content-between small mb-1",
-          span(class = "text-muted", "Validação (amostra)"), span(tags$b(feitos), sprintf(" de %d", total))),
-      div(class = "progress mb-3", style = "height: 6px",
-          div(class = "progress-bar", style = sprintf("width: %d%%", round(100 * feitos / max(1, total)))))
-    )
+    p <- posts_com()
+    salvos <- sum(p$com_salvos); class <- sum(p$com_classificados); val <- sum(p$com_validados)
+    if (salvos == 0) return(p(class = "dica", "Nenhum comentário salvo para esta rodada ainda."))
+    barra <- function(rotulo, n, cor) tagList(
+      div(class = "d-flex justify-content-between small mb-1", span(class = "text-muted", rotulo),
+          span(tags$b(num(n)), sprintf(" de %s", num(salvos)))),
+      div(class = "progress mb-2", style = "height: 6px",
+          div(class = paste("progress-bar", cor), style = sprintf("width: %d%%", round(100 * n / salvos)))))
+    tagList(barra("Classificados pela IA", class, ""), barra("Validados", val, "bg-success"))
   })
 
   # ---- Chave do Apify -------------------------------------
@@ -1981,100 +2057,6 @@ server <- function(input, output, session) {
   })
 
   # ---- Validação ---------------------------------------------
-  output$cartao_com <- renderUI({
-    f <- fila_com()
-    if (nrow(f) == 0) return(div(class = "p-4 text-muted", "Nenhum comentário salvo para esta rodada ainda."))
-    i <- min(posicao_com(), nrow(f))
-    r <- f[i, ]
-    com <- amostra_comentarios(r$shortCode, amostra_n())
-    feito <- r$feitos >= r$amostra
-    concluido <- !any(pendente_com(f))
-    imagens <- arquivos_imagens(r$shortCode)
-    web <- function(arq) paste0("midia/", sub(paste0("^", PASTA_MIDIA, "/"), "", arq))
-
-    linha_comentario <- function(c) {
-      atual <- coalesce(c$valencia_final, c$valencia_ia, "")
-      opcao <- function(v, rotulo, cls) tags$label(
-        class = paste("val-opcao", cls),
-        tags$input(type = "radio", name = paste0("val_", c$comentario_id), value = v,
-                   checked = if (identical(atual, v)) NA),
-        span(rotulo))
-      div(class = paste("comentario", if (c$validado) "validado"), `data-id` = c$comentario_id,
-          `data-ia` = coalesce(c$valencia_ia, ""),
-          div(class = "comentario-texto",
-              div(c$texto),
-              div(class = "comentario-meta",
-                  sprintf("@%s · %s curtida(s)", coalesce(c$usuario, "?"), num(coalesce(c$curtidas, 0))),
-                  " · IA: ", if (is.na(c$valencia_ia)) span(class = "text-muted", "não classificado") else
-                    span(class = paste("val-badge", c$valencia_ia), VALENCIAS[[c$valencia_ia]]),
-                  if (c$validado) span(class = "ms-1 text-success", icon("check"), " validado"))),
-          div(class = "val-grupo",
-              opcao("positivo", "Positivo", "pos"), opcao("neutro", "Neutro", "neu"), opcao("negativo", "Negativo", "neg")))
-    }
-
-    tagList(
-      if (concluido)
-        div(class = "alert alert-success d-flex justify-content-between align-items-center flex-wrap gap-2",
-            div(icon("circle-check"), tags$b(" Amostra validada: "), "todos os comentários da amostra desta rodada foram validados."),
-            actionButton("ir_rel_com", "Ir para o relatório", icon = icon("arrow-right"), class = "btn-success")),
-      div(class = "d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3",
-          div(tags$b(r$candidato), " · ", format(as.Date(r$data), "%d/%m/%Y"), " · ",
-              span(class = "text-muted", r$categorias_txt %|% "sem categoria"), " · ",
-              tags$a(href = r$url, target = "_blank", r$shortCode)),
-          div(sprintf("Postagem %d de %d", i, nrow(f)),
-              span(class = paste("badge ms-2", if (feito) "bg-success" else "bg-secondary"),
-                   sprintf("%d de %d validados", r$feitos, r$amostra)))),
-      layout_columns(
-        col_widths = c(3, 9),
-        div(if (length(imagens)) div(class = "midia", tags$img(src = web(imagens[1]), style = "max-width:100%; max-height:240px; border-radius:8px")),
-            div(class = "legenda mt-2", style = "max-height:200px; font-size:.82rem", r$caption %|% "Sem legenda")),
-        div(
-          div(class = "d-flex justify-content-between align-items-center mb-2",
-              span(class = "rotulo-secao m-0", sprintf("Comentários da amostra (%d de %s salvos)", nrow(com), num(r$com_salvos))),
-              tags$button(id = "com_sugestao_ia", type = "button", class = "btn btn-light btn-sm",
-                          icon("wand-magic-sparkles"), " Voltar à sugestão da IA")),
-          div(id = "lista-comentarios", `data-sc` = r$shortCode,
-              map(seq_len(nrow(com)), \(j) linha_comentario(com[j, ])))
-        )
-      ),
-      div(class = "d-flex justify-content-between mt-3 pt-3 border-top",
-          actionButton("com_anterior", "Anterior", icon = icon("chevron-left")),
-          div(actionButton("com_pular", "Pular", icon = icon("forward")),
-              tags$button(type = "button", class = "btn btn-primary", onclick = "enviarValencias()",
-                          icon("check"), " Confirmar e próxima")))
-    )
-  })
-
-  ir_com <- function(direcao) {
-    f <- fila_com()
-    atual <- posicao_com()
-    pend <- which(pendente_com(f))
-    destino <- if (direcao > 0) c(pend[pend > atual], pend)[1] else tail(seq_len(nrow(f))[seq_len(nrow(f)) < atual], 1)
-    if (length(destino) == 0 || is.na(destino)) {
-      if (direcao > 0 && atual < nrow(f)) destino <- atual + 1 else
-        return(showNotification(if (direcao > 0) "Não há mais postagens pendentes." else "Esta é a primeira.", type = "message"))
-    }
-    posicao_com(destino)
-  }
-  observeEvent(input$com_anterior, ir_com(-1))
-  observeEvent(input$com_pular, ir_com(1))
-  observeEvent(input$ir_rel_com, nav_select("abas", "relatorio"))
-
-  observeEvent(input$com_confirmar, {
-    e <- input$com_confirmar
-    itens <- tibble(id = map_chr(e$itens, "id"), v = map_chr(e$itens, \(x) x$v %||% ""))
-    sem <- sum(itens$v == "")
-    itens <- itens %>% filter(v %in% names(VALENCIAS))
-    if (nrow(itens) > 0) salvar_validacao_comentarios(itens$id, e$sc, itens$v, input$avaliador_com)
-    versao_com(versao_com() + 1)
-    if (sem > 0) {
-      showNotification(sprintf("%d comentário(s) ficaram sem valência escolhida e não foram salvos.", sem), type = "warning")
-      return()
-    }
-    ir_com(1)
-  })
-
-  # ---- Acurácia da IA nos comentários ----------------------------
   output$acuracia_com <- renderUI({
     a <- acuracia_comentarios(posts_com()$shortCode)
     if (is.null(a)) return(div(class = "p-4 text-muted", "A acurácia aparece aqui assim que houver comentários classificados pela IA e validados."))
@@ -2118,15 +2100,22 @@ server <- function(input, output, session) {
   })
 
   # Postagens validadas da base escolhida (uma rodada ou todas)
+  output$varias_rodadas <- reactive(length(rodadas()) > 1)
+  outputOptions(output, "varias_rodadas", suspendWhenHidden = FALSE)
+  output$base_rel_info <- renderUI({
+    ids <- rodadas()
+    if (!length(ids)) return(p(class = "dica", "Nenhuma rodada ainda. Categorize na aba 1."))
+    p(class = "dica mb-2", icon("folder"), " ", strong(info_projeto()$nome), " · ",
+      if (length(ids) == 1) "postagens categorizadas na aba 1 (rodada única do projeto)."
+      else "esta pasta tem várias rodadas; o relatório usa só a escolhida, sem misturar.")
+  })
+
   base_rel <- reactive({
     versao_val()
     rodadas()
-    d <- if (identical(input$base_modo, "rodada")) {
-      req(rodada_existe(input$rodada_rel))
-      base_validada_rodada(input$rodada_rel) %>% mutate(rodada = input$rodada_rel)
-    } else {
-      base_validada_todas(rodadas())
-    }
+    # Uma rodada só: num projeto, a da pesquisa; em pastas antigas, a escolhida (nunca misturadas)
+    req(rodada_existe(input$rodada_rel))
+    d <- base_validada_rodada(input$rodada_rel) %>% mutate(rodada = input$rodada_rel)
     if (nrow(d) == 0) return(d)
     versao_com()
     d <- tryCatch(aplicar_validacao(d), error = notificar_erro("Erro ao ler a base:"))
@@ -2138,7 +2127,7 @@ server <- function(input, output, session) {
   # Postagens ainda não validadas na base escolhida
   pendentes_rel <- reactive({
     versao_val()
-    ids <- if (identical(input$base_modo, "rodada")) req(input$rodada_rel) else rodadas()
+    ids <- req(input$rodada_rel)
     ids <- keep(ids, rodada_existe)
     sum(map_int(ids, \(id) { p <- progresso_rodada(id); p$total - p$feitas }))
   })
@@ -2448,47 +2437,11 @@ server <- function(input, output, session) {
     updateTextInput(session, "novo_candidato", value = "")
   })
 
-  # ---- Pesquisas eleitorais ------------------------------
-  versao_pesq <- reactiveVal(0)
-  observeEvent(input$pesquisas_arquivo, {
-    arq <- input$pesquisas_arquivo
-    candidatos <- tryCatch(unique(base_rel()$candidato), error = function(e) character())
-    p <- tryCatch(ler_pesquisas_arquivo(arq$datapath, candidatos),
-                  error = notificar_erro("Não foi possível ler as pesquisas:"))
-    req(p)
-    salvar_pesquisas(p)
-    versao_pesq(versao_pesq() + 1)
-    showNotification(sprintf("%d pesquisas importadas. Elas entram no relatório na próxima vez que você gerar.", nrow(p)),
-                     type = "message")
-  })
-  observeEvent(input$apagar_pesquisas, {
-    apagar_pesquisas()
-    versao_pesq(versao_pesq() + 1)
-    showNotification("Pesquisas removidas.", type = "message")
-  })
-  output$pesquisas_resumo <- renderUI({
-    versao_pesq()
-    p <- ler_pesquisas()
-    if (nrow(p) == 0) return(p(class = "dica mb-0", "Nenhuma pesquisa importada."))
-    candidatos <- tryCatch(unique(base_rel()$candidato), error = function(e) character())
-    sem_par <- setdiff(unique(p$candidato), candidatos)
-    tagList(
-      div(class = "dica", icon("check"), " ", nrow(p), " pesquisas de ", num(length(unique(p$data))), " datas (",
-          format(min(p$data), "%d/%m/%Y"), " a ", format(max(p$data), "%d/%m/%Y"), ")"),
-      div(class = "dica", strong("Candidatos: "), paste(unique(p$candidato), collapse = ", "),
-          " · ", strong("Turnos: "), paste(sort(unique(p$turno)), collapse = " e ")),
-      if (length(sem_par) && length(candidatos))
-        div(class = "dica text-warning", icon("triangle-exclamation"), " Sem postagens na base com esse nome: ",
-            paste(sem_par, collapse = ", "), ". Confira se o nome é o mesmo da tabela de candidatos."),
-      actionLink("apagar_pesquisas", tagList(icon("trash"), " Remover pesquisas"), class = "text-danger small")
-    )
-  })
-
   # ---- Desempenho dos candidatos (performance.csv) --------
   versao_perf <- reactiveVal(0)
   observeEvent(input$performance_arquivo, {
     arq <- input$performance_arquivo
-    candidatos <- tryCatch(unique(base_rel()$candidato), error = function(e) character())
+    candidatos <- unique(c(arquivos()$candidato, tryCatch(ler_candidatos_info()$nome, error = function(e) character())))
     p <- tryCatch(ler_performance_arquivo(arq$datapath, candidatos),
                   error = notificar_erro("Não foi possível ler o performance.csv:"))
     req(p)
@@ -2505,12 +2458,19 @@ server <- function(input, output, session) {
   output$performance_resumo <- renderUI({
     versao_perf()
     p <- ler_performance()
-    if (nrow(p) == 0) return(p(class = "dica mb-0", "Nenhum arquivo de desempenho importado."))
+    if (nrow(p) == 0) return(p(class = "dica mb-0", "Nenhum arquivo importado."))
+    metricas <- p %>% distinct(metrica, turno) %>%
+      mutate(rotulo = if_else(is.na(turno), metrica, paste0(metrica, " (", turno, "º turno)"))) %>% pull(rotulo)
+    sem_base <- setdiff(unique(p$candidato), arquivos()$candidato)
     tagList(
       div(class = "dica", icon("check"), " ", length(unique(p$data)), " datas (",
           format(min(p$data), "%d/%m/%Y"), " a ", format(max(p$data), "%d/%m/%Y"), ") · ",
           paste(unique(p$candidato), collapse = ", ")),
-      div(class = "dica", strong("Métricas: "), paste(unique(p$metrica), collapse = ", ")),
+      div(class = "dica", strong("Métricas: "), paste(metricas, collapse = ", ")),
+      if (any(eh_intencao(p$metrica))) div(class = "dica", icon("square-poll-vertical"),
+                                            " Intenção de voto: entra também na comparação com o índice dos comentários."),
+      if (length(sem_base) && nrow(arquivos())) div(class = "dica text-warning", icon("triangle-exclamation"),
+                                                     " Sem base importada com esse nome: ", paste(sem_base, collapse = ", "), "."),
       actionLink("apagar_performance", tagList(icon("trash"), " Remover desempenho"), class = "text-danger small")
     )
   })
@@ -2576,6 +2536,13 @@ server <- function(input, output, session) {
       showNotification("Ainda não há postagens validadas. Valide na aba 2 antes de gerar o relatório.",
                        type = "warning", duration = 8)
       return()
+    }
+    sem_com <- d %>% group_by(candidato) %>% summarise(n = sum(com_pos + com_neu + com_neg), .groups = "drop") %>%
+      filter(n == 0) %>% pull(candidato)
+    if (length(sem_com)) {
+      showNotification(paste0("Sem comentários classificados: ", paste(nome_completo(sem_com), collapse = ", "),
+                              ". As seções de comentários não terão esses candidatos. Na aba 2, use “Aceitar classificação ",
+                              "da IA” (classifica e aceita os comentários) e gere de novo."), type = "warning", duration = 15)
     }
     if (str_detect(input$texto_rel, "\\[[^\\]]+\\]")) {
       showNotification("Atenção: o texto ainda tem lembretes entre [colchetes].", type = "warning", duration = 8)

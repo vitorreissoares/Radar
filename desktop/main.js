@@ -5,7 +5,7 @@
 // Os dados de cada pessoa ficam em Documentos/Radar.
 // =========================================================
 
-const { app, BrowserWindow, Menu, shell, dialog } = require("electron");
+const { app, BrowserWindow, Menu, shell, dialog, ipcMain } = require("electron");
 const { spawn, execFile } = require("child_process");
 const path = require("path");
 const fs = require("fs");
@@ -169,7 +169,7 @@ function criarMenu() {
     {
       label: "Arquivo",
       submenu: [
-        { label: "Abrir pasta de dados", click: () => shell.openPath(pastaDados) },
+        { label: "Abrir pasta de dados do programa", click: () => shell.openPath(pastaDados) },
         { label: "Recarregar", accelerator: "CmdOrCtrl+R", click: () => janela && janela.reload() },
         { type: "separator" },
         { role: "quit", label: "Sair" }
@@ -198,13 +198,24 @@ function criarMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate(modelo));
 }
 
+// Janela do sistema para escolher a pasta de um projeto
+ipcMain.handle("escolher-pasta", async (evento, titulo) => {
+  const r = await dialog.showOpenDialog(janela, {
+    title: titulo || "Escolha a pasta do projeto",
+    defaultPath: app.getPath("documents"),
+    properties: ["openDirectory", "createDirectory", "promptToCreate"]
+  });
+  return r.canceled || !r.filePaths.length ? null : r.filePaths[0];
+});
+
 async function abrir() {
   criarMenu();
   janela = new BrowserWindow({
     width: 1440, height: 920, minWidth: 980, minHeight: 640,
     title: NOME, backgroundColor: "#f7f8fa", autoHideMenuBar: true, show: false,
     icon: path.join(__dirname, "build", "icon.png"),
-    webPreferences: { contextIsolation: true, nodeIntegration: false, spellcheck: true }
+    webPreferences: { contextIsolation: true, nodeIntegration: false, spellcheck: true,
+                      preload: path.join(__dirname, "preload.js") }
   });
   janela.once("ready-to-show", () => janela.show());
   janela.on("page-title-updated", e => e.preventDefault());

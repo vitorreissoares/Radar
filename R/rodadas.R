@@ -16,12 +16,15 @@ rodada_existe <- function(id) {
 }
 
 criar_rodada <- function(classificados, data_inicio, data_fim, proporcao, modelo, criterio = "likes") {
-  id <- paste0(as.Date(data_inicio), "_a_", as.Date(data_fim))
+  # Num projeto, a rodada é uma só: categorizar de novo atualiza a seleção e mantém
+  # as validações das postagens que continuam nela
+  id <- if (eh_projeto()) ID_RODADA_PROJETO else paste0(as.Date(data_inicio), "_a_", as.Date(data_fim))
   pasta <- pasta_rodada(id)
   dir.create(pasta, showWarnings = FALSE, recursive = TRUE)
+  anterior <- if (file.exists(file.path(pasta, "rodada.json"))) ler_rodada(id) else list()
 
   write_csv(classificados, file.path(pasta, "base_classificada.csv"), na = "")
-  write_json(list(
+  write_json(modifyList(anterior, list(
     id = id,
     inicio = as.character(as.Date(data_inicio)),
     fim = as.character(as.Date(data_fim)),
@@ -29,9 +32,9 @@ criar_rodada <- function(classificados, data_inicio, data_fim, proporcao, modelo
     criterio = criterio,
     modelo = modelo,
     criada_em = format(Sys.time(), "%Y-%m-%d %H:%M"),
-    remota = FALSE,
+    remota = anterior$remota %||% FALSE,
     esquema = ESQUEMA_VERSAO
-  ), file.path(pasta, "rodada.json"), auto_unbox = TRUE, pretty = TRUE)
+  )), file.path(pasta, "rodada.json"), auto_unbox = TRUE, pretty = TRUE)
 
   pasta
 }
@@ -111,7 +114,8 @@ ler_classificados <- function(id) {
     mutate(likes = as.numeric(likes), comentarios = as.numeric(comentarios),
            visualizacoes = suppressWarnings(as.numeric(visualizacoes))) %>%
     migrar_formato_antigo() %>%
-    mutate(across(starts_with("ia_"), as.integer))
+    mutate(across(starts_with("ia_"), as.integer)) %>%
+    registrar_postagens()
 }
 
 # ---------------------------------------------------------

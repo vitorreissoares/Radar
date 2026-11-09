@@ -40,7 +40,8 @@ comentarios_vazio <- function() {
 # 1. Arquivos de comentários (um por postagem)
 # ---------------------------------------------------------
 
-arquivo_comentarios <- function(shortCode) file.path(PASTA_COMENTARIOS, paste0(shortCode, ".csv"))
+# midia/<Candidato>/comentarios/AAAA-MM-DD_SHORTCODE.csv (ou midia/comentarios/SHORTCODE.csv, versões antigas)
+arquivo_comentarios <- function(shortCode) caminho_midia(shortCode, "comentarios", ".csv", PASTA_COMENTARIOS)
 
 # "https://www.instagram.com/p/DfCTPU6tRa0/c/181..." -> "DfCTPU6tRa0"
 shortcode_de_url <- function(url) {
@@ -127,7 +128,6 @@ ler_arquivo_apify <- function(arquivo, nome = basename(arquivo)) {
 # (sem repetir comentários). Devolve quantos comentários novos cada postagem ganhou.
 salvar_comentarios <- function(d) {
   if (nrow(d) == 0) return(tibble(shortCode = character(), novos = integer(), total = integer()))
-  dir.create(PASTA_COMENTARIOS, recursive = TRUE, showWarnings = FALSE)
   d %>%
     mutate(curtidas = as.character(curtidas)) %>%
     split(.$shortCode) %>%
@@ -136,7 +136,9 @@ salvar_comentarios <- function(d) {
       novos <- novos %>% garantir_coluna("origem") %>% mutate(origem = coalesce(origem, "apify"))
       tudo <- bind_rows(antigos, novos) %>% distinct(comentario_id, .keep_all = TRUE) %>%
         select(all_of(COLUNAS_COMENTARIOS))
-      write_csv(tudo, arquivo_comentarios(sc), na = "")
+      arq <- arquivo_comentarios(sc)
+      dir.create(dirname(arq), recursive = TRUE, showWarnings = FALSE)
+      write_csv(tudo, arq, na = "")
       tibble(shortCode = sc, novos = nrow(tudo) - nrow(antigos), total = nrow(tudo))
     }) %>%
     bind_rows()

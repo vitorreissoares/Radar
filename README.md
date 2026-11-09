@@ -1,13 +1,12 @@
 # Radar
 
-Programa para monitorar as postagens de candidatos no Instagram. Ele reúne as quatro etapas da pesquisa:
+Programa para monitorar as postagens de candidatos no Instagram. Cada pesquisa é um **projeto**, numa pasta escolhida por você, com três etapas:
 
 | Etapa | O que faz |
 |---|---|
-| **1 · Categorização** | Lê as planilhas coletadas, seleciona as postagens mais curtidas de cada candidato e as classifica com IA (legenda, imagens e vídeos) em Liderança (Autenticidade, Competência, Humanização), Partido e Políticas |
-| **2 · Validação** | Confere a classificação da IA, sozinho ou com outros pesquisadores, e mostra a acurácia da IA |
-| **3 · Comentários** | Coleta os comentários das postagens (pelo Apify), classifica a valência com IA (positivo, neutro, negativo) e valida uma amostra |
-| **4 · Relatório** | Gera o relatório com os botões Semana, Mês, Ano e Tudo, incluindo a valência dos comentários |
+| **1 · Categorização** | Cria o projeto, importa as planilhas de cada candidato (com nome, partido e foto), seleciona as postagens (mais curtidas, visualizadas, comentadas ou aleatórias), baixa a mídia na pasta de cada candidato e classifica com IA (legenda, imagens e vídeos) em Liderança (Autenticidade, Competência, Humanização), Partido e Políticas |
+| **2 · Validação** | Confere a classificação da IA e os comentários de cada postagem (valência positiva, neutra ou negativa, margem de erro, coleta pelo Apify), sozinho ou com outros pesquisadores, ou aceita a classificação da IA de uma vez; mostra a acurácia da IA |
+| **3 · Relatório** | Gera o relatório com os botões Semana, Mês, Ano e Tudo, incluindo a valência dos comentários e, se houver, pesquisas e desempenho |
 
 ## Baixar e instalar
 

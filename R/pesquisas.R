@@ -77,7 +77,18 @@ salvar_pesquisas <- function(d) {
 
 apagar_pesquisas <- function() if (file.exists(ARQUIVO_PESQUISAS)) file.remove(ARQUIVO_PESQUISAS)
 
-pesquisas_js <- function(p = ler_pesquisas()) {
+# Pesquisas de intenção de voto: as colunas de intenção do arquivo de desempenho
+# (ou, em projetos antigos, o config/pesquisas.csv)
+pesquisas_do_desempenho <- function(perf = ler_performance()) {
+  perf %>% filter(eh_intencao(metrica)) %>%
+    transmute(data, candidato, turno = coalesce(as.integer(turno), 1L), intencao = valor)
+}
+
+pesquisas_js <- function(p = NULL) {
+  if (is.null(p)) {
+    p <- pesquisas_do_desempenho()
+    if (nrow(p) == 0) p <- ler_pesquisas()
+  }
   if (nrow(p) == 0) return(list())
   p %>% mutate(data = as.character(data)) %>% transpose()
 }
@@ -114,30 +125,44 @@ ler_performance_arquivo <- function(arquivo, candidatos = character()) {
   if (!all(c("data", "candidato") %in% names(bruto))) {
     stop("O arquivo precisa das colunas data e candidato (encontradas: ", paste(originais, collapse = ", "), ").")
   }
+  if (!"turno" %in% names(bruto)) bruto$turno <- NA_character_
   longo <- if (all(c("metrica", "valor") %in% names(bruto))) {
-    bruto %>% select(data, candidato, metrica, valor)
+    bruto %>% select(data, candidato, turno, metrica, valor)
   } else {
-    outras <- setdiff(names(bruto), c("data", "candidato"))
+    outras <- setdiff(names(bruto), c("data", "candidato", "turno"))
     if (!length(outras)) stop("O arquivo não tem colunas de métricas além de data e candidato.")
     rotulos <- set_names(originais[match(outras, names(bruto))], outras)
     bruto %>% pivot_longer(all_of(outras), names_to = "metrica", values_to = "valor") %>%
       mutate(metrica = unname(rotulos[metrica]))
   }
+  regex_turno <- "(\\d)\\s*[ºo°]?\\s*(turno|t)\\b"
   d <- longo %>%
-    mutate(data = suppressWarnings(coalesce(dmy(data, quiet = TRUE), ymd(data, quiet = TRUE))),
-           valor = numero_br(valor), candidato = casar_candidato(str_squish(candidato), candidatos)) %>%
+    mutate(
+      # O turno pode vir numa coluna, no nome do candidato ("Lula (2º turno)") ou no da métrica ("intencao_2turno")
+      turno = as.integer(coalesce(str_extract(turno, "\\d"),
+                                  str_match(candidato, regex_turno)[, 2],
+                                  str_match(str_replace_all(metrica, "_", " "), regex_turno)[, 2])),
+      candidato = str_squish(str_remove(candidato, "\\s*[\\(\\[-]?\\s*\\d\\s*[ºo°]?\\s*turno\\s*[\\)\\]]?")),
+      metrica = str_squish(str_remove(str_replace_all(metrica, "_", " "), regex_turno)) %>% str_replace_all(" ", "_"),
+      data = suppressWarnings(coalesce(dmy(data, quiet = TRUE), ymd(data, quiet = TRUE))),
+      valor = numero_br(valor), candidato = casar_candidato(candidato, candidatos)) %>%
     filter(!is.na(data), !is.na(valor), nzchar(candidato))
   if (nrow(d) == 0) stop("Nenhuma linha válida (confira as datas e os números).")
-  d %>% group_by(data, candidato, metrica) %>% summarise(valor = mean(valor), .groups = "drop") %>%
-    arrange(metrica, candidato, data)
+  # Intenção de voto sem turno indicado: 1º turno
+  d <- d %>% mutate(turno = if_else(is.na(turno) & eh_intencao(metrica), 1L, turno))
+  d %>% group_by(data, candidato, turno, metrica) %>% summarise(valor = mean(valor), .groups = "drop") %>%
+    arrange(metrica, turno, candidato, data)
 }
+
+eh_intencao <- function(metrica) str_detect(normalizar_nome(metrica), "intenc|^voto|vote|intention")
 
 ler_performance <- function() {
   if (!file.exists(ARQUIVO_PERFORMANCE)) return(tibble(data = as.Date(character()), candidato = character(),
-                                                         metrica = character(), valor = numeric()))
-  read_csv(ARQUIVO_PERFORMANCE, col_types = cols(data = col_date(), candidato = col_character(),
+                                                         turno = integer(), metrica = character(), valor = numeric()))
+  read_csv(ARQUIVO_PERFORMANCE, col_types = cols(data = col_date(), candidato = col_character(), turno = col_integer(),
                                                  metrica = col_character(), valor = col_double()),
-           show_col_types = FALSE)
+           show_col_types = FALSE) %>%
+    garantir_coluna("turno")
 }
 
 salvar_performance <- function(d) {
@@ -149,5 +174,7 @@ apagar_performance <- function() if (file.exists(ARQUIVO_PERFORMANCE)) file.remo
 
 performance_js <- function(p = ler_performance()) {
   if (nrow(p) == 0) return(list())
-  p %>% mutate(data = as.character(data)) %>% transpose()
+  p %>% mutate(metrica = if_else(!is.na(turno), paste0(metrica, " · ", turno, "º turno"), metrica),
+               data = as.character(data)) %>%
+    select(data, candidato, metrica, valor) %>% transpose()
 }

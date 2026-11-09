@@ -1,36 +1,43 @@
 # Radar
 
-Um único app com as três etapas do monitoramento de postagens no Instagram:
+Um único app com as etapas do monitoramento de postagens no Instagram. Cada pesquisa é um **projeto**, com a sua pasta:
 
 | Aba | O que você faz | O que sai |
 |---|---|---|
-| **1 · Categorização** | Adiciona os `.xlsx` coletados, um por candidato | Postagens mais curtidas de cada candidato no período escolhido, com **legenda, imagens e vídeo** analisados pela IA; imagens e vídeos salvos em `midia/` |
-| **2 · Validação** | Confere cada postagem e aponta a classificação final (sozinho ou com outros pesquisadores, pela Planilha Google) | Base validada e **acurácia da IA** |
-| **3 · Comentários** | Coleta os comentários das postagens (Apify), a IA classifica a valência e você valida uma amostra | Comentários de cada postagem em `midia/comentarios/SHORTCODE.csv`, classificados como **positivos, neutros ou negativos** |
-| **4 · Relatório** | Revisa o texto de cada botão, os candidatos e o "Sobre a pesquisa" | **Um único relatório**, com os botões **Semana, Mês, Ano e Tudo** no topo e as seções de valência dos comentários |
+| **1 · Categorização** | Cria ou abre o projeto, importa um `.xlsx` por candidato (com nome, partido e foto), escolhe o período e a seleção, baixa a mídia e categoriza | Postagens selecionadas de cada candidato, com **legenda, imagens e vídeo** analisados pela IA; mídia salva na pasta de cada candidato |
+| **2 · Validação** | Confere cada postagem e os seus **comentários** (classificação da IA, margem de erro, coleta pelo Apify), ou aceita a classificação da IA de uma vez | Base validada, comentários classificados como **positivos, neutros ou negativos** e **acurácia da IA** |
+| **3 · Relatório** | Revisa o texto de cada botão, os candidatos e o "Sobre a pesquisa" | **Um único relatório**, com os botões **Semana, Mês, Ano e Tudo** no topo |
 
 ## Instalar o programa (recomendado)
 
 Baixe o instalador do seu sistema (Windows, Mac ou Linux) na página **Releases** do repositório no GitHub e siga o passo a passo do README. O instalador já traz o R e todos os pacotes.
 
 - **Chave da IA:** cada pessoa informa a **própria chave do OpenRouter** no painel **Chave da IA** da aba 1. Ela fica guardada só no computador de quem a informou.
-- **Seus dados:** rodadas, validações, mídias, relatórios e a chave ficam em **Documentos/Radar**. Para abrir essa pasta, use o menu **Arquivo → Abrir pasta de dados**. Instalar uma versão nova não apaga nada.
-- **Fotos dos candidatos e sua foto do rodapé:** ficam em `Documentos/Radar/assets/img_cand/`. Dá para trocar as fotos dos candidatos pelo app, na aba 4 (painel **Candidatos**), e a sua foto no painel **Sobre a pesquisa**.
+- **Projetos:** cada pesquisa fica numa pasta escolhida por você (painel **Projeto**, aba 1). Candidatos, períodos, mídias, validações e relatórios de pesquisas diferentes nunca se misturam. O Radar abre sempre no último projeto usado.
+- **Pasta do programa:** **Documentos/Radar** guarda só o que é seu: as chaves (OpenRouter e Apify) e a lista de projetos. Os dados das versões anteriores continuam nela e aparecem em **Abrir projeto** como "Pasta de dados do Radar". Instalar uma versão nova não apaga nada.
 
-### Onde fica cada coisa (dentro de Documentos/Radar)
+### Projetos
+
+No painel **Projeto** (aba 1):
+
+- **Novo projeto:** dê um nome à pesquisa e escolha onde salvar (o botão **Escolher…** abre a janela do sistema). O Radar cria, dentro da pasta escolhida, uma pasta com o nome da pesquisa. O cabeçalho, o rodapé e a sua foto do relatório vêm do projeto atual.
+- **Abrir projeto:** escolha um projeto recente ou indique a pasta de outro.
+- Cada projeto tem **uma rodada só**: categorizar de novo atualiza a seleção e mantém as validações das postagens que continuam nela. O relatório usa só as postagens do projeto.
+
+### Onde fica cada coisa (dentro da pasta do projeto)
 
 | O que | Pasta |
 |---|---|
-| Imagens das postagens (e capas dos vídeos) | `midia/postagens/` (`SHORTCODE.jpg`; carrosséis: `SHORTCODE_1.jpg`, `SHORTCODE_2.jpg`…) |
-| Vídeos | `midia/videos/` (`SHORTCODE.mp4`) |
-| Áudios extraídos dos vídeos | `midia/audios/` (`SHORTCODE.mp3`) |
-| Comentários | `midia/comentarios/` (`SHORTCODE.csv`) |
-| Fotos dos candidatos | `assets/img_cand/` (o nome de cada arquivo está na tabela de candidatos, ex.: `lula.jpg`) |
-| Sua foto no rodapé do relatório | `assets/img_cand/politica-logo.jpg` (ou `.png`, `.svg`, `.webp`); dá para trocar pelo app (aba 4 → Sobre a pesquisa) |
-| Rodadas, validações e relatório gerado | `saidas/` |
-| Chaves e configurações | `config/` |
+| Planilhas importadas | `bases/` (cópia de cada `.xlsx`; a lista fica em `config/bases.json`) |
+| Imagens das postagens (e capas dos vídeos) | `midia/<Candidato>/imagens/` (`AAAA-MM-DD_SHORTCODE.jpg`; carrosséis: `…_1.jpg`, `…_2.jpg`) |
+| Vídeos | `midia/<Candidato>/videos/` (`AAAA-MM-DD_SHORTCODE.mp4`) |
+| Áudios extraídos dos vídeos | `midia/<Candidato>/audios/` (`AAAA-MM-DD_SHORTCODE.mp3`) |
+| Comentários | `midia/<Candidato>/comentarios/` (`AAAA-MM-DD_SHORTCODE.csv`) |
+| Fotos dos candidatos e a sua foto do rodapé | `assets/img_cand/` |
+| Candidatos, pesquisas e desempenho, textos do relatório | `config/` |
+| Rodada, validações e relatório gerado | `saidas/` |
 
-Para abrir a pasta, use o menu **Arquivo → Abrir pasta de dados**.
+A data no início do nome é a da postagem. Arquivos baixados por versões anteriores (`midia/postagens/SHORTCODE.jpg` etc.) continuam sendo encontrados.
 
 ## Rodar pelo R, sem instalar (só na primeira vez)
 
@@ -39,10 +46,10 @@ Para abrir a pasta, use o menu **Arquivo → Abrir pasta de dados**.
    install.packages(c("shiny", "bslib", "DT", "httr2", "tidyverse", "readxl", "jsonlite", "av"))
    ```
    O pacote `av` extrai o áudio dos vídeos para a transcrição. Não é preciso instalar o ffmpeg.
-2. Informe a **chave do OpenRouter** na aba 1, no painel **Chave da IA** da barra lateral (ele abre sozinho enquanto não houver chave): cole a chave e clique em **Salvar chave**. Ela fica guardada só nesta pasta, em `config/chave_openrouter.txt`.
+2. Informe a **chave do OpenRouter** na aba 1, no painel **Chave da IA** da barra lateral (ele abre sozinho enquanto não houver chave): cole a chave e clique em **Salvar chave**. Ela fica guardada só neste computador, em `config/chave_openrouter.txt` da pasta de dados do programa (não vai junto com os projetos).
    - Para **compartilhar a pasta** com outra pessoa, clique antes em **Apagar chave**. A chave é removida da pasta e também do `.Renviron` do computador, se estiver lá.
    - A pessoa que receber a pasta informa a própria chave no mesmo quadro.
-3. Coloque as fotos dos candidatos e a sua foto do rodapé (`politica-logo.jpg` ou `.png`) em `assets/img_cand/`. O relatório busca as imagens nessa pasta. Também dá para trocar a foto de um candidato pelo app, na aba 4 (painel **Candidatos**).
+3. As fotos dos candidatos entram ao importar cada base (aba 1). A sua foto do rodapé (`politica-logo.jpg` ou `.png`) fica em `assets/img_cand/` do projeto e pode ser trocada na aba 3 (painel **Sobre a pesquisa**).
 
 ### Abrir o app
 
@@ -53,7 +60,7 @@ Para abrir a pasta, use o menu **Arquivo → Abrir pasta de dados**.
 
 - A **barra lateral** de cada aba é dividida em painéis que abrem e fecham com um clique (por exemplo: Chave da IA, Arquivos, Período, O que a IA analisa, Modelos). O botão principal da aba fica sempre visível no rodapé da barra.
 - A seta no topo da barra lateral esconde a barra inteira, para dar mais espaço.
-- Na aba 4, **Análises salvas**, **Candidatos** e **Sobre a pesquisa** ficam recolhidos embaixo do texto. Clique no título para abrir.
+- Na aba 3, **Análises salvas**, **Candidatos** e **Sobre a pesquisa** ficam recolhidos embaixo do texto. Clique no título para abrir.
 
 ## Categorias e subcategorias
 
@@ -69,25 +76,16 @@ A Liderança é marcada pelas suas subcategorias: uma postagem é de Liderança 
 
 ## 1 · Categorização
 
-1. **Importar:** adicione um `.xlsx` por vez. Escolha o arquivo, confira ou escreva o nome do candidato e clique em **Adicionar à lista**. Repita para todos os candidatos.
-2. **Selecionar:** escolha o início e o fim da coleta (alguns dias, uma semana, um mês, um ano…), o critério e a porcentagem. A regra é **os X% mais curtidos, mais visualizados ou mais comentados de cada candidato em todo o período escolhido** (não é por semana). Só os vídeos têm visualizações: pelo critério de visualizações, as demais postagens ficam no fim da fila. A tabela "Prévia da seleção por candidato" mostra quantas postagens entram.
-3. **Analisar:** por padrão, as três fontes. Dá para desmarcar alguma.
+1. **Projeto:** crie um projeto novo para cada pesquisa (veja acima).
+2. **Importar:** adicione um `.xlsx` por vez. Escolha o arquivo, confira ou escreva o **nome do candidato**, informe o **partido e número** (opcional) e a **foto** (opcional) e clique em **Adicionar à lista**. Repita para todos os candidatos. Os candidatos importados são os que entram no relatório, com essa foto e esse partido.
+   - **Pesquisas e desempenho (opcional):** no mesmo painel, um `.csv` com intenção de voto, seguidores etc. (veja na aba 3). Sem ele, essas seções não aparecem no relatório.
+3. **Selecionar:** escolha o início e o fim da coleta, o critério e a porcentagem: os X% **mais curtidos**, **mais visualizados**, **mais comentados** ou **aleatórios** de cada candidato no período escolhido. Só os vídeos têm visualizações. Na seleção aleatória, o sorteio é sempre o mesmo para a mesma base e o mesmo período. A tabela "Prévia da seleção por candidato" mostra quantas postagens entram.
+4. **Analisar:** por padrão, as três fontes. Dá para desmarcar alguma.
    - **Legenda:** o texto da postagem.
    - **Imagens:** todas as imagens do carrossel. Nos vídeos, a capa.
    - **Vídeos:** o áudio é extraído e transcrito, e a transcrição é classificada.
-4. Clique em **Baixar imagens, vídeos e áudios**. O app baixa a mídia das postagens selecionadas para a pasta `midia/` e extrai o áudio dos vídeos. Não usa IA e não tem custo. Acima do botão aparece quantas postagens ainda estão sem mídia.
-5. Clique em **Categorizar postagens**. Para cada postagem, o app:
-   - **transcreve** o áudio do vídeo;
-   - pede à IA que marque, **em cada fonte**, as subcategorias presentes.
-   - Se ainda faltar mídia, o app avisa antes: dá para voltar e baixar, ou categorizar só com o que houver.
-
-**Nomes dos arquivos** (pelo shortcode da postagem):
-
-| Tipo | Onde fica |
-|---|---|
-| Imagem única | `midia/postagens/SHORTCODE.jpg` |
-| Carrossel | `midia/postagens/SHORTCODE_1.jpg`, `SHORTCODE_2.jpg`, … |
-| Vídeo | `midia/videos/SHORTCODE.mp4`, com a capa em `midia/postagens/SHORTCODE.jpg` e o áudio em `midia/audios/SHORTCODE.mp3` |
+5. Clique em **Baixar imagens, vídeos e áudios**. O app baixa a mídia das postagens selecionadas para a pasta de cada candidato e extrai o áudio dos vídeos. Não usa IA e não tem custo. Acima do botão aparece quantas postagens ainda estão sem mídia.
+6. Clique em **Categorizar postagens**. Para cada postagem, o app transcreve o áudio do vídeo e pede à IA que marque, **em cada fonte**, as subcategorias presentes. Se ainda faltar mídia, o app avisa antes.
 
 O registro de cada download fica em `midia/log_downloads.csv`.
 
@@ -97,7 +95,7 @@ Se a categorização parar no meio (por falta de internet ou limite da API), bas
 
 **Visualizações:** vêm da coluna `videoPlayCount` da planilha (se ela faltar, de `videoViewCount`). Ao adicionar um arquivo novo na aba 1, as visualizações das postagens que já estão em rodadas antigas também são atualizadas.
 
-**Comentários da planilha:** as colunas `latestComments/1/text` a `latestComments/10/text` (os primeiros comentários de cada postagem) são guardadas automaticamente em `midia/comentarios/`. Elas formam a **versão demo** da aba 3 (veja abaixo).
+**Comentários da planilha:** as colunas `latestComments/1/text` a `latestComments/10/text` (os primeiros comentários de cada postagem) são guardadas automaticamente na pasta de comentários de cada candidato. Elas formam a **versão demo**: dá para classificar e gerar o relatório só com eles, sem custo, antes de baixar mais pelo Apify.
 
 **Sugestão da IA:** as subcategorias marcadas por **pelo menos metade das fontes** que a postagem tem. É o que já aparece ligado na validação.
 
@@ -125,7 +123,7 @@ Botões que ajudam:
 | **Nenhuma se aplica** | Desliga todos os interruptores |
 | **Formato** | Marca a postagem como "Produzido por IA", se for o caso |
 | **Confirmar e próxima** | Salva e mostra a próxima pendente |
-| **Aceitar classificação** | Aceita a sugestão da IA em **todas** as postagens ainda pendentes da rodada, sem revisão humana (fica registrado como "IA (aceita)") |
+| **Aceitar classificação da IA** | Um botão só para tudo: as postagens pendentes ficam com a sugestão da IA, os comentários ainda sem classificação são classificados pela IA (se você deixar marcado) e todos os comentários passam a valer com a classificação da IA. Depois, vai para o relatório. Fica registrado como "IA (aceita)"; o que você já validou não muda. |
 | **Anterior** / **Pular** | Servem para revisar |
 
 Não há limite: ligue todas as subcategorias que a postagem tiver. Ao terminar, aparece o botão **Ir para o relatório**.
@@ -135,12 +133,15 @@ Não há limite: ligue todas as subcategorias que a postagem tiver. Ao terminar,
 Abaixo da classificação de cada postagem fica o quadro **Comentários desta postagem**, a continuação da validação:
 
 - **Números:** comentários que a postagem tem no Instagram, quantos estão salvos (da planilha e do Apify), quantos foram classificados e validados, e o índice da postagem.
-- **Margem de erro do índice (IC 95%):** calculada com o número de comentários classificados e o total de comentários da postagem (com correção para população finita). Também aparece a margem só com os validados.
-- **Amostra necessária:** quantos comentários classificados seriam precisos para a margem escolhida na barra lateral (**Margem de erro desejada**, 5 pontos por padrão) e quantos faltam. É só uma referência: você escolhe quantos baixar.
+- **Margem de erro com a amostra atual (IC 95%):** calculada com os comentários classificados e o total de comentários da postagem (com correção para população finita), com o intervalo de confiança e a margem só com os validados.
+- **Amostra representativa:** quantos comentários classificados seriam precisos para a margem escolhida na barra lateral (**Margem de erro desejada**, 5 pontos por padrão), quantos faltam e, ao lado, a margem da amostra atual. É só uma referência: você escolhe quantos baixar.
+- Se houver comentários ainda sem classificação, um aviso amarelo mostra quantos.
 - **Classificar com IA:** classifica os comentários desta postagem que ainda não têm valência.
 - **Baixar mais … pelo Apify:** escolha quantos comentários novos quer e clique. O Apify devolve os primeiros comentários da postagem, por isso o pedido inclui os que ele já tinha coletado; o custo máximo aparece antes de confirmar.
 - **Lista de comentários:** cada um com a classificação da IA e as opções Positivo, Neutro e Negativo, 25 por página. Ajuste o que for preciso e clique em **Salvar validação desta página**.
-- **Aceitar a IA nesta postagem** ou **em todos os comentários da rodada:** valida a classificação da IA sem revisão humana e segue para o relatório.
+- **Aceitar a IA nos comentários desta postagem:** valida a classificação da IA só desta postagem.
+
+O relatório também mostra a precisão: a seção **Desempenho nos comentários** tem a tabela **Precisão da amostra de comentários**, com a margem atual, o IC 95% e a amostra representativa de cada candidato.
 
 Como calcular a margem: cada comentário vale 1, 0,5 ou 0. Com n comentários classificados de um total N, a margem é 1,96 × √(s²/n) × √((N − n)/(N − 1)), em que s² é a variância observada. A amostra necessária usa o pior caso (s² = 0,25): n₀ = 1,96² × 0,25 / m² e n = n₀ / (1 + (n₀ − 1)/N).
 
@@ -169,32 +170,16 @@ Na subaba **Validação compartilhada**, o app guia você em 4 passos:
 
 > **Atualização do Apps Script:** se você já tinha o Apps Script da versão anterior, cole os dois arquivos novos e use **Implantar → Gerenciar implantações → Editar → Nova versão**. Assim o link continua o mesmo.
 
-## 3 · Comentários
+### Comentários de todas as postagens (barra lateral da aba 2)
 
-Para cada rodada, a aba reúne os comentários das postagens, a classificação da IA e a validação.
+O painel **Comentários (todas as postagens)** reúne o que vale para a rodada inteira:
 
-### 1. Coletar
+- **Andamento:** quantos comentários estão salvos, classificados pela IA e validados.
+- **Coletar pelo Apify, direto do app:** informe a sua chave do Apify (em [console.apify.com → Settings → Integrations](https://console.apify.com/settings/integrations)) e escolha **quantos comentários por postagem** coletar. O app mostra antes o máximo de comentários e o custo máximo estimado, e esse limite vai junto com a coleta. Deixe marcado **Só postagens ainda sem comentários do Apify** para não pagar duas vezes. A chave fica só no seu computador (`Documentos/Radar/config/chave_apify.txt`) e pode ser apagada pelo app.
+- **Arquivo baixado do Apify:** rode o *Instagram Comments Scraper* no site do Apify, baixe o resultado em CSV ou JSON e escolha o arquivo. Os comentários vão para a pasta de cada candidato.
+- **Classificar todos os comentários:** a IA classifica cada comentário como **positivo, neutro ou negativo** em relação ao candidato e à postagem, considerando **ironia, sarcasmo, memes e figuras de linguagem**. As instruções ficam em `prompts/valencia_comentarios.txt`. O que já foi classificado não é cobrado de novo.
 
-Os comentários de cada postagem ficam em `midia/comentarios/SHORTCODE.csv` (uma linha por comentário: id, texto, curtidas, usuário, data, link e origem).
-
-**Versão demo (sem custo):** os primeiros comentários de cada postagem, que já vêm na planilha do Instagram (`latestComments`), entram sozinhos ao categorizar. Antes de pagar pelo Apify, dá para classificar, validar e gerar o relatório só com eles. Um aviso na aba 3 indica quando os comentários são só os da planilha.
-
-Para a análise completa, há dois jeitos de coletar mais:
-
-- **Pelo Apify, direto do app:** informe a sua chave do Apify (em [console.apify.com → Settings → Integrations](https://console.apify.com/settings/integrations)) e escolha **quantos comentários por postagem** coletar.
-  - O app mostra antes o **máximo de comentários e o custo máximo estimado** (pelo preço por 1.000 comentários informado; confira o valor atual do *Instagram Comments Scraper* no Apify).
-  - Esse limite vai junto com a coleta: o Apify não coleta nem cobra além dele.
-  - Deixe marcado **Só postagens ainda sem comentários do Apify** para não pagar duas vezes (os da planilha não contam).
-  - A chave fica só nesta pasta (`config/chave_apify.txt`) e pode ser apagada pelo app.
-- **Arquivo baixado do Apify:** rode o *Instagram Comments Scraper* no site do Apify com os links das postagens, baixe o resultado em CSV ou JSON e escolha o arquivo no app. Os comentários são separados por postagem automaticamente.
-
-### 2. Classificar com IA
-
-A IA classifica cada comentário como **positivo, neutro ou negativo** em relação ao candidato e à postagem, considerando **ironia, sarcasmo, memes e figuras de linguagem** (que os dicionários de palavras não captam). As instruções ficam em `prompts/valencia_comentarios.txt` e podem ser ajustadas. O que já foi classificado não é cobrado de novo.
-
-### 3. Validar
-
-Em **Validar**, cada postagem mostra uma **amostra fixa** de comentários (30 por padrão, ajustável) com três botões: **Positivo · Neutro · Negativo**, que já vêm com a sugestão da IA. Corrija o que for preciso e clique em **Confirmar e próxima**. A subaba **Acurácia da IA** mostra a concordância entre a IA e a validação, por valência.
+A subaba **Comentários** mostra a visão geral por postagem, e **Acurácia da IA** mostra também a concordância entre a IA e a validação dos comentários.
 
 ### Índice de valência
 
@@ -204,7 +189,7 @@ Cada comentário vale **1** (positivo), **0,5** (neutro) ou **0** (negativo). O 
 - **Intervalo de confiança de 95% (IC 95%):** mostra a margem de incerteza do índice. Como os comentários de uma mesma postagem tendem a ter o mesmo tom, o cálculo usa o erro-padrão robusto por postagem (para o estimador de razão) e a distribuição t com (número de postagens − 1) graus de liberdade. Com poucas postagens, o intervalo fica mais largo, como deve ser. Em simulações, o intervalo contém o valor verdadeiro em 90% a 95% das vezes, de 3 a 50 postagens; tratar os comentários como independentes acertaria só cerca de 35%.
 - Intervalos que se sobrepõem indicam que a diferença entre dois grupos pode ser casual.
 
-## 4 · Relatório
+## 3 · Relatório
 
 O relatório é **um só**. No topo dele, quem lê escolhe um dos botões:
 
@@ -234,66 +219,54 @@ Os cartões das candidaturas no topo mostram só a foto, o partido e o número. 
 
 Cada variável tem sempre a mesma cor em todas as seções: Liderança (anil), Partido (verde-azulado), Políticas (laranja), Autenticidade (rosa), Competência (dourado), Humanização (azul-claro); comentários positivos em verde, neutros em cinza e negativos em vermelho; e cada candidato com a sua cor.
 
-Na barra lateral da aba 4, em **Comentários**, escolha se entram **todos** (os validados e, os demais, com a classificação da IA) ou **só os validados**.
+Na barra lateral da aba 3, em **Comentários**, escolha se entram **todos** (os validados e, os demais, com a classificação da IA) ou **só os validados**.
 
 ### Idioma do relatório
 
-No painel **Idioma do relatório** (aba 4), escolha **Português**, **English** ou **Español**. No idioma escolhido saem:
+No painel **Idioma do relatório** (aba 3), escolha **Português**, **English** ou **Español**. No idioma escolhido saem:
 - os títulos, botões, gráficos, legendas e notas do relatório;
 - os nomes das categorias e subcategorias;
 - o rascunho das considerações finais e o texto redigido pela IA.
 
 O **título**, o **subtítulo**, o **texto do rodapé** e os quadros do **Sobre a pesquisa** são escritos por você, por isso são guardados **separadamente para cada idioma**. Ao trocar o idioma, os campos mostram a versão daquele idioma (na primeira vez, partem do texto em português, para você traduzir). Textos de considerações finais já salvos não são traduzidos: com outro idioma, clique em **Rascunho** e salve o texto novo.
 
-### Pesquisas eleitorais (índice × intenção de voto)
+### Pesquisas e desempenho (um arquivo só)
 
-No painel **Pesquisas e desempenho** (aba 4), escolha o CSV baixado de um agregador de pesquisas. Ele precisa das colunas `data`, `candidato` e `intencao`:
-
-```
-data,candidato,intencao
-05/08/2026,Lula (1º turno),"40,3"
-05/08/2026,Lula (2º turno),"45,6"
-```
-
-- Datas em `DD/MM/AAAA` ou `AAAA-MM-DD`; vírgula ou ponto decimal; separador vírgula ou ponto e vírgula.
-- O turno pode vir no nome do candidato, como acima, ou numa coluna `turno`. Sem turno, vale o 1º.
-- Os nomes são ligados aos da tabela de candidatos ("Flavio Bolsonaro" vira "Flávio Bolsonaro"). O painel avisa se algum nome não tem postagens na base.
-- Importar de novo substitui as pesquisas anteriores. O arquivo fica em `config/pesquisas.csv`.
-
-**Como o relatório compara as duas séries (seção 11):**
-- Para cada pesquisa, o índice de valência é calculado com os comentários das postagens publicadas **desde a pesquisa anterior** do mesmo candidato (a primeira usa os 14 dias antes dela). Assim, cada ponto do índice fica ao lado da intenção de voto medida no fim do mesmo intervalo.
-- O gráfico de cada candidato tem dois eixos: o índice (0 a 1, com a faixa do IC 95%) à esquerda e a intenção de voto (%) à direita. Botões trocam entre 1º e 2º turno.
-- As medidas resumo usam as **variações** entre pesquisas, não os níveis (duas séries com tendência parecem andar juntas mesmo sem relação):
-  - correlação entre a variação do índice e a variação da intenção (em p.p.) no mesmo intervalo;
-  - correlação entre o índice de um intervalo e a variação da intenção no intervalo seguinte (o índice antecipa as pesquisas?).
-  - Os resultados saem com o número de intervalos e o IC 95% (transformação de Fisher, a partir de 4 intervalos).
-- É uma associação exploratória, não causal. Com menos de 8 intervalos, o relatório avisa que o resultado serve só como indicação. A seção usa todo o período analisado, qualquer que seja o botão escolhido no topo.
-
-### Desempenho dos candidatos (performance.csv)
-
-No mesmo painel **Pesquisas e desempenho**, escolha o `performance.csv`: uma linha por data e candidato e uma coluna por métrica.
+Na aba 1, painel **Importar**, escolha um `.csv` com `data`, `candidato` e uma coluna por métrica:
 
 ```
 data;candidato;intencao_voto;seguidores_ig
-05/08/2026;Lula;40,3;15.300.000
-05/08/2026;Flávio Bolsonaro;32,5;11.800.000
+05/08/2026;James Talarico;40,3;150.000
+05/08/2026;Ken Paxton;32,5;210.000
 ```
 
-Aceita vírgula ou ponto e vírgula, vírgula decimal, ponto de milhar e valores como `15,3M`. No relatório, cada métrica vira um botão, com uma linha por candidato.
+- Datas em `DD/MM/AAAA` ou `AAAA-MM-DD`; vírgula ou ponto decimal, ponto de milhar e valores como `15,3M`; separador vírgula ou ponto e vírgula.
+- **Turno:** pode vir numa coluna `turno`, no nome do candidato ("Lula (2º turno)") ou no nome da coluna (`intencao_1turno`, `intencao_2turno`). Sem turno, a intenção de voto vale como 1º turno.
+- Os nomes são ligados aos dos candidatos importados. O painel avisa se algum nome não tem base importada.
+- Importar de novo substitui o arquivo anterior (fica em `config/performance.csv`).
+
+No relatório, o arquivo vira duas seções, que só aparecem quando ele existe:
+
+- **Desempenho dos candidatos:** cada métrica vira um botão, com uma linha por candidato.
+- **Índice de valência e intenção de voto:** as colunas de intenção de voto são comparadas com o índice da Liderança dos comentários.
+  - Para cada pesquisa, o índice é calculado com os comentários das postagens publicadas **desde a pesquisa anterior** (a primeira usa os 14 dias antes dela).
+  - Todos os candidatos ficam no mesmo gráfico: linha contínua para o índice (0 a 1) e tracejada para a intenção de voto (%), botões para 1º e 2º turno.
+  - As medidas resumo usam as **variações** entre pesquisas, não os níveis: a variação do índice × a variação da intenção no mesmo intervalo, e o índice de um intervalo × a variação da intenção no seguinte. Saem com o número de intervalos e o IC 95% (transformação de Fisher, a partir de 4 intervalos).
+  - É uma associação exploratória, não causal. Com menos de 8 intervalos, o relatório avisa que o resultado serve só como indicação.
 
 ### Cabeçalho e rodapé
 
-Em **Sobre a pesquisa** (aba 4):
+Em **Sobre a pesquisa** (aba 3):
 - **Cabeçalho:** título, subtítulo (opcional) e a assinatura, que aparece abaixo do subtítulo.
 - **Quadros do "Sobre a pesquisa":** use **Adicionar quadro** e o ícone de lixeira de cada quadro para decidir quais aparecem no relatório. O primeiro quadro abre a seção; os demais ficam lado a lado.
 - **Rodapé:** foto (vira `assets/img_cand/politica-logo`), nome, **cargo ou formação**, **minibiografia**, links do **Lattes**, **ORCID**, **LinkedIn**, **Google Acadêmico** e **GitHub** e uma nota final opcional. Os links preenchidos viram ícones; os vazios não aparecem. Cargo, minibiografia e nota têm uma versão para cada idioma.
 
 Clique em **Salvar cabeçalho, rodapé e textos** (ou só gere o relatório, que também salva).
 
-**Passo a passo na aba 4:**
+**Passo a passo na aba 3:**
 
-1. **Base validada:** **Tudo junto** (todas as rodadas e todos os arquivos) ou **Uma rodada**. Também dá para importar um CSV já validado.
-2. **Período da análise:** escolha **Semana**, **Mês**, **Ano** ou **Tudo**, os mesmos botões do relatório. O app mostra as datas de cada um.
+1. **Base validada:** o relatório usa só as postagens do projeto aberto (a rodada única dele), sem misturar pesquisas. Em pastas de versões anteriores, com várias rodadas, escolha uma. Também dá para importar um CSV já validado.
+2. **Texto por botão do relatório:** o período da pesquisa é o escolhido na aba 1. Aqui você escolhe qual botão (**Semana**, **Mês**, **Ano** ou **Tudo**) recebe as considerações finais e em qual o relatório abre. O app mostra as datas de cada um.
 3. **Texto do período:** o rascunho já vem com os números. Complete os trechos entre `[colchetes]` ou use **Redigir análise com IA** e revise. Depois clique em **Salvar texto deste período**. Faça isso para cada botão que quiser comentar.
 4. Clique em **Gerar relatório**. Ele abre no botão escolhido. Botões sem texto salvo recebem um texto automático só com os números.
 
@@ -321,9 +294,9 @@ As rodadas categorizadas com o esquema anterior (Conteúdo programático e Conte
 | Instruções da valência dos comentários | `prompts/valencia_comentarios.txt` |
 | Ator e preço de referência do Apify | `R/comentarios.R` (`APIFY_ATOR`, `APIFY_PRECO_MIL`) |
 | Instruções por fonte | `prompts/legenda.txt`, `prompts/imagem.txt`, `prompts/transcricao.txt`, `prompts/transcrever_audio.txt` |
-| Candidatos e textos do "Sobre a pesquisa" | Pelo app (aba 4) ou `config/` (`sobre_a_pesquisa.json`; em inglês e espanhol, `sobre_a_pesquisa_en.json` e `sobre_a_pesquisa_es.json`) |
-| Título, subtítulo, rodapé, links e idioma | Pelo app (aba 4) ou `config/relatorio.json` |
-| Análises salvas (textos de cada período) | Pelo app (aba 4) ou `config/periodos.json` |
+| Candidatos e textos do "Sobre a pesquisa" | Pelo app (aba 3) ou `config/` (`sobre_a_pesquisa.json`; em inglês e espanhol, `sobre_a_pesquisa_en.json` e `sobre_a_pesquisa_es.json`) |
+| Título, subtítulo, rodapé, links e idioma | Pelo app (aba 3) ou `config/relatorio.json` |
+| Análises salvas (textos de cada período) | Pelo app (aba 3) ou `config/periodos.json` |
 | Visual do relatório | `templates/relatorio_template.html` |
 | Validador compartilhado | `apps_script/` (depois de mudar, publique uma nova versão no Apps Script) |
 

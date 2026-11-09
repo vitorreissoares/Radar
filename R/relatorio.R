@@ -177,7 +177,9 @@ html_sobre <- function(quadros, proporcao, modelo_rotulo, criterio = "likes") {
   palavra <- CRITERIOS_SELECAO[[criterio %||% "likes"]] %||% "curtidas"
   quadro <- function(q, classe) {
     texto <- q$texto %>%
-      str_replace_all(fixed("{proporcao} das postagens mais curtidas"), paste("{proporcao} das postagens mais", palavra)) %>%
+      str_replace_all(fixed("{proporcao} das postagens mais curtidas"),
+                      if (identical(criterio, "aleatorio")) "{proporcao} das postagens, sorteadas aleatoriamente,"
+                      else paste("{proporcao} das postagens mais", palavra)) %>%
       str_replace_all(fixed("{criterio}"), palavra) %>%
       str_replace_all(fixed("{proporcao}"), paste0(round(proporcao * 100), "%")) %>%
       str_replace_all(fixed("{modelo}"), modelo_rotulo)
@@ -429,15 +431,18 @@ gerar_relatorio <- function(d, pasta = PASTA_RELATORIO, periodo_inicial = NULL,
   }
   # As fotos vão junto, na mesma estrutura do projeto (assets/img_cand)
   # (as da pasta de dados; as que faltarem vêm das fotos que acompanham o programa)
-  padrao_fotos <- "\\.(jpe?g|png|webp|svg)$"
-  fotos <- list.files(PASTA_FOTOS, pattern = padrao_fotos, full.names = TRUE, ignore.case = TRUE)
-  do_programa <- list.files(arquivo_app(PASTA_FOTOS), pattern = padrao_fotos, full.names = TRUE, ignore.case = TRUE)
-  fotos <- c(fotos, do_programa[!basename(do_programa) %in% basename(fotos)])
-  unlink(file.path(pasta, "img_cand"), recursive = TRUE)   # pasta da versão anterior
+  # Só as fotos usadas: as dos candidatos do relatório e a do rodapé
+  usadas <- unique(c(ler_candidatos_info() %>% filter(nome %in% candidatos | id %in% candidatos) %>% pull(foto), basename(arquivo_logo())))
+  usadas <- usadas[!is.na(usadas) & nzchar(usadas)]
+  origem <- map_chr(usadas, \(f) {
+    if (file.exists(file.path(PASTA_FOTOS, f))) file.path(PASTA_FOTOS, f)
+    else if (file.exists(arquivo_app(PASTA_FOTOS, f))) arquivo_app(PASTA_FOTOS, f) else NA_character_
+  })
+  unlink(file.path(pasta, "img_cand"), recursive = TRUE)                # pasta da versão anterior
+  unlink(file.path(pasta, PASTA_FOTOS), recursive = TRUE)
   dir.create(file.path(pasta, PASTA_FOTOS), showWarnings = FALSE, recursive = TRUE)
-  if (length(fotos)) file.copy(fotos, file.path(pasta, PASTA_FOTOS), overwrite = TRUE)
-  faltando <- setdiff(c(ler_candidatos_info()$foto, basename(arquivo_logo())), basename(fotos))
-  if (length(faltando)) message("Fotos não encontradas em ", PASTA_FOTOS, ": ", paste(faltando, collapse = ", "))
+  if (any(!is.na(origem))) file.copy(origem[!is.na(origem)], file.path(pasta, PASTA_FOTOS), overwrite = TRUE)
+  if (any(is.na(origem))) message("Fotos não encontradas em ", PASTA_FOTOS, ": ", paste(usadas[is.na(origem)], collapse = ", "))
   invisible(arquivo)
 }
 

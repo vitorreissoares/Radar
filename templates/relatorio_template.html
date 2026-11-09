@@ -2049,6 +2049,7 @@ __SOBRE_A_PESQUISA__
       <div class="radar-modos indice-modos" role="group" aria-label="Índice">
         <button type="button" class="radar-modo indice-modo ativo" data-indice="media">Média das subcategorias</button>
       </div>
+      <div id="indiceSemComentarios"></div>
       <div class="chart-wrap">
         <canvas id="indiceValenciaLinha"></canvas>
       </div>
@@ -2090,6 +2091,13 @@ __SOBRE_A_PESQUISA__
           <div id="radarValenciaTabela" class="radar-tabela"></div>
         </div>
       </div>
+      <div id="radarSemComentarios"></div>
+      <h3 class="chart-title" style="margin-top:18px">Precisão da amostra de comentários</h3>
+      <p class="chart-note">
+        Margem de erro do índice da Liderança de cada candidato com os comentários classificados (amostra atual) e o tamanho
+        de uma amostra representativa (margem de ±0,05), considerando o total de comentários das postagens no Instagram.
+      </p>
+      <div id="radarPrecisao" class="pesquisas-tabela"></div>
       <details class="radar-metodo" data-i18n-html="metodo_indice">
         <summary>Como o índice é calculado</summary>
         <p>
@@ -2435,6 +2443,15 @@ __DADOS__
         "Para cada pesquisa, o índice da Liderança (média ponderada das três subcategorias) é calculado com os comentários das postagens publicadas desde a pesquisa anterior. Linha contínua: índice (eixo da esquerda, de 0 a 1); linha tracejada: intenção de voto medida no fim do mesmo intervalo (eixo da direita, em %). Cada candidato tem a sua cor, e as linhas se sobrepõem para comparar. Usa todo o período analisado, qualquer que seja o botão escolhido no topo.": "For each poll, the Leadership index (weighted average of the three subcategories) is calculated from the comments on posts published since the previous poll. Solid line: index (left axis, 0 to 1); dashed line: voting intention measured at the end of the same interval (right axis, in %). Each candidate has its own color and the lines overlap for comparison. It uses the whole period analyzed, whichever button is selected at the top.",
         "nota_linha": "Each comment counts as 1 (positive), 0.5 (neutral) or 0 (negative). The Leadership index is the weighted average of the three subcategories (Authenticity, Competence and Humanization), weighted by the number of comments in each, from 0 (all negative) to 1 (all positive), calculated <span id=\"indiceValenciaUnidade\">per period</span>. Each candidate has its own line, to compare the evolution. With no candidates selected, all are shown.",
         "metodo_indice": "<summary>How the index is calculated</summary><p>Each comment counts as 1 (positive), 0.5 (neutral) or 0 (negative), and the index of each axis is the average of these values over all comments on the posts of that axis. The <strong>Leadership index</strong> is the weighted average of the Authenticity, Competence and Humanization indices, weighted by the number of comments in each subcategory. Candidates are calculated separately and shown overlaid for comparison.</p><p>The <strong>95% confidence interval</strong> takes into account that comments on the same post are not independent (post-level robust standard error for the ratio estimator) and uses the t distribution with (number of posts − 1) degrees of freedom, which makes it wider when there are few posts. Overlapping intervals indicate that the difference between candidates may be due to chance.</p>",
+        "Precisão da amostra de comentários": "Precision of the comment sample",
+        "Margem de erro do índice da Liderança de cada candidato com os comentários classificados (amostra atual) e o tamanho de uma amostra representativa (margem de ±0,05), considerando o total de comentários das postagens no Instagram.": "Margin of error of each candidate's Leadership index with the classified comments (current sample) and the size of a representative sample (±0.05 margin), given the total number of comments on the posts on Instagram.",
+        "Sem comentários classificados neste período: {nomes}.": "No classified comments in this period: {nomes}.",
+        "Postagens": "Posts",
+        "Comentários no Instagram": "Comments on Instagram",
+        "Classificados": "Classified",
+        "Margem atual": "Current margin",
+        "Amostra para ±0,05": "Sample for ±0.05",
+        "Faltam": "Missing",
         "A coluna de subcategoria não possui dados.": "The subcategory column has no data."
       },
       es: {
@@ -2561,6 +2578,15 @@ __DADOS__
         "Para cada pesquisa, o índice da Liderança (média ponderada das três subcategorias) é calculado com os comentários das postagens publicadas desde a pesquisa anterior. Linha contínua: índice (eixo da esquerda, de 0 a 1); linha tracejada: intenção de voto medida no fim do mesmo intervalo (eixo da direita, em %). Cada candidato tem a sua cor, e as linhas se sobrepõem para comparar. Usa todo o período analisado, qualquer que seja o botão escolhido no topo.": "Para cada encuesta, el índice de Liderazgo (promedio ponderado de las tres subcategorías) se calcula con los comentarios de las publicaciones hechas desde la encuesta anterior. Línea continua: índice (eje izquierdo, de 0 a 1); línea discontinua: intención de voto medida al final del mismo intervalo (eje derecho, en %). Cada candidato tiene su color y las líneas se superponen para comparar. Usa todo el período analizado, sea cual sea el botón elegido arriba.",
         "nota_linha": "Cada comentario vale 1 (positivo), 0,5 (neutro) o 0 (negativo). El índice de Liderazgo es el promedio ponderado de las tres subcategorías (Autenticidad, Competencia y Humanización), con peso según el número de comentarios de cada una, de 0 (todos negativos) a 1 (todos positivos), calculado <span id=\"indiceValenciaUnidade\">por período</span>. Cada candidato tiene su línea, para comparar la evolución. Sin candidatos seleccionados, aparecen todos.",
         "metodo_indice": "<summary>Cómo se calcula el índice</summary><p>Cada comentario vale 1 (positivo), 0,5 (neutro) o 0 (negativo), y el índice de cada eje es el promedio de esos valores sobre todos los comentarios de las publicaciones de ese eje. El <strong>índice de Liderazgo</strong> es el promedio ponderado de los índices de Autenticidad, Competencia y Humanización, con peso según el número de comentarios de cada subcategoría. Los candidatos se calculan por separado y aparecen superpuestos para comparar.</p><p>El <strong>intervalo de confianza del 95 %</strong> considera que los comentarios de una misma publicación no son independientes (error estándar robusto por publicación, para el estimador de razón) y usa la distribución t con (número de publicaciones − 1) grados de libertad, lo que lo hace más amplio cuando hay pocas publicaciones. Intervalos que se superponen indican que la diferencia entre los candidatos puede ser casual.</p>",
+        "Precisão da amostra de comentários": "Precisión de la muestra de comentarios",
+        "Margem de erro do índice da Liderança de cada candidato com os comentários classificados (amostra atual) e o tamanho de uma amostra representativa (margem de ±0,05), considerando o total de comentários das postagens no Instagram.": "Margen de error del índice de Liderazgo de cada candidato con los comentarios clasificados (muestra actual) y el tamaño de una muestra representativa (margen de ±0,05), considerando el total de comentarios de las publicaciones en Instagram.",
+        "Sem comentários classificados neste período: {nomes}.": "Sin comentarios clasificados en este período: {nomes}.",
+        "Postagens": "Publicaciones",
+        "Comentários no Instagram": "Comentarios en Instagram",
+        "Classificados": "Clasificados",
+        "Margem atual": "Margen actual",
+        "Amostra para ±0,05": "Muestra para ±0,05",
+        "Faltam": "Faltan",
         "A coluna de subcategoria não possui dados.": "La columna de subcategoría no tiene datos."
       }
     };
@@ -3850,7 +3876,8 @@ __DADOS__
         if (selecionados && selecionados.size && !selecionados.has(candidato)) return;
         if (!mapa.has(codigo)) {
           mapa.set(codigo, { codigo, candidato, data: item.data, url: item.url,
-                             cats: new Set(), subs: new Set(), pos: v[0], neu: v[1], neg: v[2] });
+                             cats: new Set(), subs: new Set(), pos: v[0], neu: v[1], neg: v[2],
+                             total: Number(item.comentarios) || 0 });
         }
         const p = mapa.get(codigo);
         const cat = categoriaTipo(item.categoria);
@@ -3893,6 +3920,44 @@ __DADOS__
       if (unidade === "month") return data.toLocaleDateString(LOCALE, { month: "short", year: "numeric" });
       const dia = data.toLocaleDateString(LOCALE, { day: "2-digit", month: "2-digit" });
       return unidade === "week" ? `${t("sem.")} ${dia}` : dia;
+    }
+
+    /* Candidatos do período (e do filtro) que não têm comentários classificados */
+    function avisoSemComentarios(elId, selecionados, posts) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      const todos = [...new Set(STATE.dados.map(i => normalizarCandidato(i.candidato)))]
+        .filter(c => !selecionados || !selecionados.size || selecionados.has(c));
+      const com = new Set(posts.map(p => p.candidato));
+      const sem = todos.filter(c => !com.has(c));
+      el.innerHTML = sem.length ? `<div class="pesquisa-aviso" style="margin:8px 0">${tf("Sem comentários classificados neste período: {nomes}.", { nomes: sem.join(", ") })}</div>` : "";
+    }
+
+    /* Precisão da amostra por candidato: margem atual (com correção para população finita)
+       e amostra representativa para ±0,05 (pior caso, variância 0,25) */
+    function tabelaPrecisao(posts) {
+      const el = document.getElementById("radarPrecisao");
+      if (!el) return;
+      const candidatos = [...new Set(posts.map(p => p.candidato))];
+      const dec = v => v === null || v === undefined || Number.isNaN(v) ? "—" : v.toLocaleString(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const linhas = candidatos.map(cand => {
+        const doCand = posts.filter(p => p.candidato === cand);
+        const e = indiceLideranca(doCand);
+        const n = doCand.reduce((s, p) => s + p.pos + p.neu + p.neg, 0);
+        const N = Math.max(n, doCand.reduce((s, p) => s + (p.total || 0), 0));
+        const fpc = N > 1 ? Math.sqrt(Math.max(0, (N - n) / (N - 1))) : 0;
+        const margem = e.indice === null ? null : ((e.sup - e.inf) / 2) * fpc;
+        const n0 = 1.96 ** 2 * 0.25 / 0.05 ** 2;
+        const necessario = N > 0 ? Math.min(N, Math.ceil(n0 / (1 + (n0 - 1) / N))) : 0;
+        return `<tr><td>${cand}</td><td>${doCand.length.toLocaleString(LOCALE)}</td><td>${N.toLocaleString(LOCALE)}</td>
+          <td>${n.toLocaleString(LOCALE)} (${N ? (100 * n / N).toLocaleString(LOCALE, { maximumFractionDigits: 1 }) : 0}%)</td>
+          <td>${margem === null ? "—" : "±" + dec(margem)}</td>
+          <td>${e.indice === null ? "—" : `${dec(Math.max(0, e.indice - margem))} – ${dec(Math.min(1, e.indice + margem))}`}</td>
+          <td>${necessario.toLocaleString(LOCALE)}</td><td>${Math.max(0, necessario - n).toLocaleString(LOCALE)}</td></tr>`;
+      }).join("");
+      el.innerHTML = candidatos.length ? `<table><thead><tr><th>${t("Candidato")}</th><th>${t("Postagens")}</th>
+        <th>${t("Comentários no Instagram")}</th><th>${t("Classificados")}</th><th>${t("Margem atual")}</th><th>${t("IC 95%")}</th>
+        <th>${t("Amostra para ±0,05")}</th><th>${t("Faltam")}</th></tr></thead><tbody>${linhas}</tbody></table>` : "";
     }
 
     /* Subcategorias da Liderança (a categoria que tem subcategorias) */
@@ -3942,6 +4007,7 @@ __DADOS__
       document.querySelectorAll(".indice-modo").forEach(b => b.classList.toggle("ativo", b.dataset.indice === modo));
       const posts = postagensComValencia(STATE.candidatosSelecionados.indice)
         .map(p => ({ ...p, quando: parseData(p.data) })).filter(p => p.quando);
+      avisoSemComentarios("indiceSemComentarios", STATE.candidatosSelecionados.indice, posts);
       if (!posts.length) {
         mostrarEstadoVazio(canvas, t("Não há comentários classificados para as postagens deste período."));
         return;
@@ -4036,6 +4102,8 @@ __DADOS__
       if (!canvas) return;
       destruirChart("radarValencia");
       const posts = postagensComValencia(STATE.candidatosSelecionados.radar);
+      avisoSemComentarios("radarSemComentarios", STATE.candidatosSelecionados.radar, posts);
+      tabelaPrecisao(posts);
       const modo = STATE.radarModo || "subcategorias";
       document.querySelectorAll(".radar-eixos").forEach(b => b.classList.toggle("ativo", b.dataset.modo === modo));
       const eixos = gruposValencia(modo === "subcategorias").filter(g => modo === "subcategorias" ? true : g.nivel === "categoria");
@@ -4247,6 +4315,8 @@ __DADOS__
       .filter(p => p.quando && Number.isFinite(p.valor));
 
     function rotuloMetrica(nome) {
+      const [base, turno] = String(nome).split(" · ");
+      if (turno) return `${rotuloMetrica(base)} · ${t(turno)}`;
       const n = normalizarTexto(nome).replace(/[_\s]+/g, " ");
       if (/intencao/.test(n)) return t("Intenção de voto (%)");
       if (/seguidor/.test(n)) return t("Seguidores no Instagram");

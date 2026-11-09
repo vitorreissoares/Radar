@@ -13,7 +13,7 @@ const { chromium } = require("playwright");
   await pagina.waitForTimeout(8000);
   const caiu = () => pagina.evaluate(() => !!document.getElementById("shiny-disconnected-overlay"));
   let falhou = false;
-  for (const aba of ["categorizacao", "validacao", "comentarios", "relatorio"]) {
+  for (const aba of ["categorizacao", "validacao", "relatorio"]) {
     await pagina.click(`a[data-value="${aba}"]`);
     await pagina.waitForTimeout(4000);
     const c = await caiu();
