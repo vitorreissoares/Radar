@@ -393,3 +393,36 @@ acuracia_comentarios <- function(shortCodes) {
     )) %>% bind_rows()
   )
 }
+
+# ---------------------------------------------------------
+# 5. Precisão do índice de uma postagem (amostra de comentários)
+# ---------------------------------------------------------
+# Cada comentário vale 1 (positivo), 0,5 (neutro) ou 0 (negativo). Com n comentários
+# classificados de um total de N, a margem de erro do índice (IC 95%) é
+#   1,96 × √(s²/n) × √((N − n)/(N − 1))      (correção para população finita)
+# s² é a variância observada (com menos de 2 comentários, o pior caso: 0,25).
+# Amostra necessária para uma margem m, no pior caso (s² = 0,25):
+#   n0 = 1,96² × 0,25 / m²   e   n = n0 / (1 + (n0 − 1)/N)
+VALOR_VALENCIA <- c(positivo = 1, neutro = 0.5, negativo = 0)
+
+precisao_indice <- function(valencias, total, margem = 0.05) {
+  y <- unname(VALOR_VALENCIA[valencias[valencias %in% names(VALOR_VALENCIA)]])
+  n <- length(y)
+  total <- max(as.numeric(total %||% 0), n, na.rm = TRUE)
+  z <- 1.96
+  s2 <- if (n >= 2) max(var(y), 0.01) else 0.25
+  fpc <- if (total > 1) max(0, (total - n) / (total - 1)) else 0
+  margem_atual <- if (n > 0) z * sqrt(s2 / n * fpc) else NA_real_
+  n0 <- z^2 * 0.25 / margem^2
+  necessarios <- if (total > 0) min(total, ceiling(n0 / (1 + (n0 - 1) / total))) else 0
+  list(n = n, total = total, indice = if (n) mean(y) else NA_real_, margem = margem_atual,
+       necessarios = necessarios, faltam = max(0, necessarios - n))
+}
+
+# Aceita a classificação da IA como validação (sem revisão humana)
+aceitar_valencia_ia <- function(shortCodes, avaliador = "IA (aceita)") {
+  b <- base_comentarios(shortCodes) %>% filter(!validado, !is.na(valencia_ia))
+  if (nrow(b) == 0) return(0L)
+  salvar_validacao_comentarios(b$comentario_id, b$shortCode, b$valencia_ia, avaliador)
+  nrow(b)
+}

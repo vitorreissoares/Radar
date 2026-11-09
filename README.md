@@ -70,7 +70,8 @@ Instalar uma versão nova ou desinstalar o programa **não apaga** essa pasta.
 
 1. Faça as mudanças e mude o número em `desktop/package.json` (por exemplo, `"version": "1.1.0"`).
 2. Envie para a branch `main`.
-3. O GitHub monta os instaladores das três plataformas, em cerca de 20 a 30 minutos (aba **Actions**), e os publica em **Releases** como `v1.1.0`.
+3. O GitHub monta o instalador do **Windows**, em cerca de 10 minutos (aba **Actions**), e o publica em **Releases** como `v1.1.0`.
+4. Versão final, para todos os sistemas: na aba **Actions**, abra **Programa de computador**, clique em **Run workflow** e escolha `todos`. Os instaladores de Mac e Linux entram na mesma versão.
 
 Enviar de novo sem mudar o número atualiza os instaladores dessa mesma versão. Mudanças só em arquivos `.md` (como este) não disparam a montagem.
 

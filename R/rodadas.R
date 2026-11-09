@@ -15,7 +15,7 @@ rodada_existe <- function(id) {
   !is.null(id) && length(id) == 1 && nzchar(id) && file.exists(file.path(pasta_rodada(id), "base_classificada.csv"))
 }
 
-criar_rodada <- function(classificados, data_inicio, data_fim, proporcao, modelo) {
+criar_rodada <- function(classificados, data_inicio, data_fim, proporcao, modelo, criterio = "likes") {
   id <- paste0(as.Date(data_inicio), "_a_", as.Date(data_fim))
   pasta <- pasta_rodada(id)
   dir.create(pasta, showWarnings = FALSE, recursive = TRUE)
@@ -26,6 +26,7 @@ criar_rodada <- function(classificados, data_inicio, data_fim, proporcao, modelo
     inicio = as.character(as.Date(data_inicio)),
     fim = as.character(as.Date(data_fim)),
     proporcao = proporcao,
+    criterio = criterio,
     modelo = modelo,
     criada_em = format(Sys.time(), "%Y-%m-%d %H:%M"),
     remota = FALSE,
@@ -364,4 +365,13 @@ base_validada_todas <- function(rodadas = listar_rodadas()) {
   map(rodadas, \(id) base_validada_rodada(id) %>% filter(validada) %>% mutate(rodada = id)) %>%
     bind_rows() %>%
     distinct(shortCode, .keep_all = TRUE)
+}
+
+# Aceita a sugestão da IA em todas as postagens ainda não validadas da rodada
+aceitar_sugestoes_ia <- function(id, avaliador = "IA (aceita)") {
+  b <- base_validada_rodada(id) %>% filter(!validada)
+  if (nrow(b) == 0) return(0L)
+  finais <- map(seq_len(nrow(b)), \(i) chaves_marcadas(b[i, ], "ia_sugestao_"))
+  salvar_validacao(id, b$shortCode, finais, formato = b$formato, avaliador = avaliador)
+  nrow(b)
 }

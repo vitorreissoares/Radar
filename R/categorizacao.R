@@ -130,10 +130,17 @@ quantas_no_topo <- function(n, proporcao) {
   if (ARREDONDAMENTO_TOP == "baixo") floor(n * proporcao) else ceiling(n * proporcao)
 }
 
+# Critério da seleção: os X% mais curtidos, mais visualizados ou mais comentados
+CRITERIOS_SELECAO <- c(likes = "curtidas", visualizacoes = "visualizadas", comentarios = "comentadas")
+
 # Filtra o período escolhido (alguns dias, uma semana, um mês, um ano...) e mantém
-# os X% mais curtidos de CADA candidato em todo esse período.
+# os X% de CADA candidato com mais curtidas, visualizações ou comentários nesse período.
 # Postagens sem legenda também entram: imagens e vídeos são analisados.
-preparar_dados <- function(dados, data_inicio, data_fim, proporcao = PROPORCAO_TOP_PADRAO) {
+# Só os vídeos têm visualizações: pelo critério de visualizações, as postagens sem
+# esse número ficam no fim da fila.
+preparar_dados <- function(dados, data_inicio, data_fim, proporcao = PROPORCAO_TOP_PADRAO,
+                           criterio = "likes") {
+  if (!criterio %in% names(CRITERIOS_SELECAO) || !criterio %in% names(dados)) criterio <- "likes"
 
   dados %>%
     filter(
@@ -143,7 +150,7 @@ preparar_dados <- function(dados, data_inicio, data_fim, proporcao = PROPORCAO_T
     ) %>%
     mutate(semana = calcular_semana(data)) %>%
     group_by(candidato) %>%
-    arrange(desc(likes), .by_group = TRUE) %>%
+    arrange(desc(coalesce(as.numeric(.data[[criterio]]), -Inf)), .by_group = TRUE) %>%
     filter(row_number() <= quantas_no_topo(n(), proporcao)) %>%
     ungroup() %>%
     arrange(candidato, data)
@@ -392,6 +399,32 @@ baixar_midia <- function(post) {
   log
 }
 
+# Baixa imagens, vídeos e o áudio dos vídeos de todas as postagens, sem IA
+# (o áudio só é extraído se houver o pacote av ou o ffmpeg)
+baixar_midia_base <- function(dados, progresso = NULL) {
+  total <- nrow(dados)
+  res <- map_dfr(seq_len(total), \(i) {
+    post <- dados[i, ]
+    if (is.function(progresso)) progresso(i, total, "baixando imagens e vídeo")
+    log <- tryCatch(baixar_midia(post), error = function(e) tibble(status = paste("erro:", conditionMessage(e))))
+    sc <- post$shortCode
+    video <- arquivo_video(sc)
+    audio <- if (!is.na(video) && pode_extrair_audio()) {
+      if (is.function(progresso)) progresso(i, total, "extraindo o áudio")
+      destino <- file.path(PASTA_AUDIOS, paste0(sc, ".mp3"))
+      tryCatch(file.exists(destino) || extrair_audio(video, destino), error = function(e) FALSE)
+    } else FALSE
+    tibble(shortCode = sc, imagens = length(arquivos_imagens(sc)), video = !is.na(video), audio = isTRUE(audio),
+           erros = sum(str_detect(log$status %||% character(), "^erro")))
+  })
+  res
+}
+
+# Postagens que ainda não têm nenhuma mídia baixada (imagens ou vídeo)
+sem_midia <- function(dados) {
+  dados %>% filter(map_lgl(shortCode, \(s) length(arquivos_imagens(s)) == 0 && is.na(arquivo_video(s))))
+}
+
 # Extrai o áudio do vídeo (pacote av) e pede a transcrição ao modelo de áudio
 # Extração do áudio dos vídeos: pelo pacote av ou, se ele não estiver
 # instalado (ex.: programa no Mac com chip Apple), pelo programa ffmpeg
@@ -569,10 +602,10 @@ classificar_base <- function(dados, modelos = list(texto = MODELO_PADRAO, imagem
 #                       "2026-09-27", "2026-10-03")
 
 rodar_categorizacao <- function(arquivos, candidatos, data_inicio, data_fim,
-                                proporcao = PROPORCAO_TOP_PADRAO, modelo = MODELO_PADRAO) {
+                                proporcao = PROPORCAO_TOP_PADRAO, modelo = MODELO_PADRAO, criterio = "likes") {
 
   dados <- ler_base(arquivos, candidatos) %>%
-    preparar_dados(data_inicio, data_fim, proporcao)
+    preparar_dados(data_inicio, data_fim, proporcao, criterio)
 
   message(nrow(dados), " postagens para classificar.")
 
@@ -581,7 +614,7 @@ rodar_categorizacao <- function(arquivos, candidatos, data_inicio, data_fim,
     progresso = \(i, n, msg) message(sprintf("[%d/%d] %s", i, n, msg))
   )
 
-  pasta <- criar_rodada(classificados, data_inicio, data_fim, proporcao, modelo)
+  pasta <- criar_rodada(classificados, data_inicio, data_fim, proporcao, modelo, criterio)
   salvar_comentarios(comentarios_da_planilha(dados))   # versão demo dos comentários
   message("Pronto! Rodada salva em ", pasta)
   invisible(pasta)

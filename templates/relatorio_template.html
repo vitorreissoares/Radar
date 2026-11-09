@@ -159,6 +159,8 @@ content="Monitoramento das estratégias de comunicação política dos candidato
     }
 
     .project-subtitle:empty { display: none; }
+    .eyebrow.autoria { margin: 2px 0 14px; }
+    .eyebrow:empty { display: none; }
 
     /* Rodapé: foto, nome, cargo, bio e redes profissionais */
     .rodape { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; max-width: 680px; margin: 0 auto; }
@@ -291,7 +293,7 @@ content="Monitoramento das estratégias de comunicação política dos candidato
     .candidate-card {
       flex: 0 0 calc((100% - 32px) / 3);
 
-      min-height: 208px;
+      min-height: 0;
 
       padding: 18px;
 
@@ -1255,12 +1257,18 @@ content="Monitoramento das estratégias de comunicação política dos candidato
     .radar-modo { border: 0; background: transparent; color: var(--muted); font-weight: 700; font-size: .76rem;
                   padding: 6px 14px; border-radius: 999px; cursor: pointer; }
     .radar-modo.ativo { background: var(--primary); color: #fff; }
+    /* Crescimento das subcategorias */
+    .crescimento-destaques { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 6px 0 12px; }
+    .crescimento-destaque { border-radius: 12px; background: #f6f8fb; padding: 10px 14px; border-left: 4px solid var(--primary); }
+    .crescimento-destaque span { display: block; color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; }
+    .crescimento-destaque strong { font-size: 1.05rem; color: #17232c; }
+    .crescimento-destaque small { display: block; color: var(--muted); font-size: .76rem; }
     /* 11 — Índice × intenção de voto */
     .pesquisas-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin-top: 6px; }
     .pesquisa-painel { border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; background: #fff; }
     .pesquisa-painel h4 { margin: 0 0 6px; font-size: .9rem; color: #17232c; display: flex; align-items: center; gap: 8px; }
     .pesquisa-painel h4 .cor { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-    .pesquisa-painel .chart-wrap { height: 260px; }
+    .pesquisa-grafico { height: 380px; }
     .pesquisas-resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 16px 0 8px; }
     .pesquisa-medida { border-radius: 12px; background: #f6f8fb; padding: 10px 14px; }
     .pesquisa-medida span { display: block; color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; }
@@ -1386,11 +1394,11 @@ content="Monitoramento das estratégias de comunicação política dos candidato
 
 
   <div>
-    <p class="eyebrow">__AUTORIA__</p>
-
     <h1>__TITULO__</h1>
 
     <p class="project-subtitle">__SUBTITULO__</p>
+
+    <p class="eyebrow autoria">__AUTORIA__</p>
 
     <p class="project-description">
       <strong id="periodoTexto">__PERIODO__.</strong>
@@ -1673,6 +1681,31 @@ __SOBRE_A_PESQUISA__
   </div>
 </section>
 
+
+<!-- ===================================================
+     CRESCIMENTO DAS SUBCATEGORIAS
+     =================================================== -->
+<section class="project-section" id="secaoCrescimento">
+  <div class="section-head" data-target="resultadoCrescimento" tabindex="0" role="button" aria-expanded="false">
+    <span class="section-title">
+      <span class="result-number">00</span>
+      Qual subcategoria mais cresceu
+    </span>
+    <i class="fas fa-chevron-down section-icon"></i>
+  </div>
+  <div class="section-content" id="resultadoCrescimento">
+    <div class="chart-card wide">
+      <h3 class="chart-title">Variação das subcategorias da Liderança em relação ao período anterior</h3>
+      <p class="chart-note" id="crescimentoNota">
+        Diferença, em pontos percentuais, entre a parcela das postagens de cada candidato com a subcategoria no período
+        escolhido no topo e no período anterior de mesmo tamanho.
+      </p>
+      <div id="crescimentoDestaques" class="crescimento-destaques"></div>
+      <div class="chart-wrap"><canvas id="crescimentoGrafico"></canvas></div>
+      <div id="crescimentoTabela" class="pesquisas-tabela"></div>
+    </div>
+  </div>
+</section>
 
 <!-- ===================================================
      RESULTADO 04
@@ -1996,21 +2029,25 @@ __SOBRE_A_PESQUISA__
   <div class="section-head" data-target="resultadoIndice" tabindex="0" role="button" aria-expanded="false">
     <span class="section-title">
       <span class="result-number">09</span>
-      Evolução do índice de valência dos comentários
+      Evolução do índice da Liderança nos comentários
     </span>
     <i class="fas fa-chevron-down section-icon"></i>
   </div>
   <div class="section-content" id="resultadoIndice">
     <div class="chart-card wide">
-      <h3 class="chart-title">Índice de valência ao longo do tempo — subcategorias da Liderança e índice geral</h3>
+      <h3 class="chart-title">Índice da Liderança ao longo do tempo, por candidato</h3>
       <p class="chart-note" data-i18n-html="nota_linha">
-        Cada comentário vale 1 (positivo), 0,5 (neutro) ou 0 (negativo), e o índice é a média desses valores,
+        Cada comentário vale 1 (positivo), 0,5 (neutro) ou 0 (negativo). O índice da Liderança é a média ponderada
+        das três subcategorias (Autenticidade, Competência e Humanização), com peso pelo número de comentários de cada uma,
         de 0 (todos negativos) a 1 (todos positivos), calculada <span id="indiceValenciaUnidade">por período</span>.
-        A linha tracejada é o índice geral. Sem candidatos selecionados, todos entram na conta.
+        Cada candidato tem a sua linha, para comparar a evolução. Sem candidatos selecionados, todos aparecem.
       </p>
       <div class="candidate-filter-bar">
         <span class="filter-label"><i class="fas fa-filter"></i> Selecionar candidatos:</span>
         <div id="indiceCandidateFilterButtons" class="filter-buttons"></div>
+      </div>
+      <div class="radar-modos indice-modos" role="group" aria-label="Índice">
+        <button type="button" class="radar-modo indice-modo ativo" data-indice="media">Média das subcategorias</button>
       </div>
       <div class="chart-wrap">
         <canvas id="indiceValenciaLinha"></canvas>
@@ -2032,19 +2069,19 @@ __SOBRE_A_PESQUISA__
   </div>
   <div class="section-content" id="resultadoRadar">
     <div class="chart-card wide">
-      <h3 class="chart-title">Comentários positivos e negativos no período</h3>
+      <h3 class="chart-title">Índice de valência por subcategoria, por candidato</h3>
       <p class="chart-note">
-        Proporção de comentários positivos (verde) e negativos (vermelho) em todo o período selecionado.
-        Quanto maior a área verde, melhor o desempenho nas mídias sociais; quanto maior a vermelha, pior.
-        Sem candidatos selecionados, todos entram na conta.
+        Cada candidato é uma camada do radar, sobreposta às dos outros (os valores não se somam): quanto mais longe do
+        centro, mais positivos os comentários naquele eixo. Ao lado, o índice da Liderança (média ponderada das três
+        subcategorias) de cada candidato no período. Sem candidatos selecionados, todos aparecem.
       </p>
       <div class="candidate-filter-bar">
         <span class="filter-label"><i class="fas fa-filter"></i> Selecionar candidatos:</span>
         <div id="radarCandidateFilterButtons" class="filter-buttons"></div>
       </div>
       <div class="radar-modos" role="group" aria-label="O que comparar">
-        <button type="button" class="radar-modo ativo" data-modo="subcategorias">Subcategorias da Liderança</button>
-        <button type="button" class="radar-modo" data-modo="categorias">Categorias</button>
+        <button type="button" class="radar-modo radar-eixos ativo" data-modo="subcategorias">Subcategorias da Liderança</button>
+        <button type="button" class="radar-modo radar-eixos" data-modo="categorias">Categorias</button>
       </div>
       <div class="radar-grade">
         <div class="chart-wrap radar-wrap"><canvas id="radarValencia"></canvas></div>
@@ -2056,18 +2093,39 @@ __SOBRE_A_PESQUISA__
       <details class="radar-metodo" data-i18n-html="metodo_indice">
         <summary>Como o índice é calculado</summary>
         <p>
-          Cada comentário vale 1 (positivo), 0,5 (neutro) ou 0 (negativo), e o índice é a média desses valores sobre
-          todos os comentários do grupo (cada comentário pesa igual). No <strong>índice geral</strong>, cada postagem entra
-          uma vez só, mesmo quando pertence a mais de uma categoria; por isso ele não é a média dos índices das categorias,
-          que contaria os mesmos comentários mais de uma vez.
+          Cada comentário vale 1 (positivo), 0,5 (neutro) ou 0 (negativo), e o índice de cada eixo é a média desses valores
+          sobre todos os comentários das postagens daquele eixo. O <strong>índice da Liderança</strong> é a média ponderada
+          dos índices de Autenticidade, Competência e Humanização, com peso pelo número de comentários de cada subcategoria.
+          Os candidatos são calculados separadamente e aparecem sobrepostos, para comparar.
         </p>
         <p>
           O <strong>intervalo de confiança de 95%</strong> considera que os comentários de uma mesma postagem não são
           independentes (erro-padrão robusto por postagem, para o estimador de razão) e usa a distribuição t com
           (número de postagens − 1) graus de liberdade, o que o deixa mais largo quando há poucas postagens.
-          Intervalos que se sobrepõem indicam que a diferença entre os grupos pode ser casual.
+          Intervalos que se sobrepõem indicam que a diferença entre os candidatos pode ser casual.
         </p>
       </details>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================
+     DESEMPENHO DOS CANDIDATOS (performance.csv)
+     =================================================== -->
+<section class="project-section" id="secaoPerformance">
+  <div class="section-head" data-target="resultadoPerformance" tabindex="0" role="button" aria-expanded="false">
+    <span class="section-title">
+      <span class="result-number">00</span>
+      Desempenho dos candidatos
+    </span>
+    <i class="fas fa-chevron-down section-icon"></i>
+  </div>
+  <div class="section-content" id="resultadoPerformance">
+    <div class="chart-card wide">
+      <h3 class="chart-title">Evolução de cada candidato</h3>
+      <p class="chart-note">Valores informados no arquivo performance.csv, em todas as datas disponíveis.</p>
+      <div id="performanceMetricas" class="radar-modos" role="group" aria-label="Métrica"></div>
+      <div class="chart-wrap"><canvas id="performanceGrafico"></canvas></div>
     </div>
   </div>
 </section>
@@ -2087,10 +2145,10 @@ __SOBRE_A_PESQUISA__
     <div class="chart-card wide">
       <h3 class="chart-title">Comentários e pesquisas eleitorais ao longo do tempo</h3>
       <p class="chart-note">
-        Para cada pesquisa, o índice de valência é calculado com os comentários das postagens publicadas desde a pesquisa
-        anterior. Assim, cada ponto do índice (eixo da esquerda, de 0 a 1, com a faixa do IC 95%) fica ao lado da
-        intenção de voto medida no fim do mesmo intervalo (eixo da direita, em %). Usa todo o período analisado,
-        qualquer que seja o botão escolhido no topo.
+        Para cada pesquisa, o índice da Liderança (média ponderada das três subcategorias) é calculado com os comentários
+        das postagens publicadas desde a pesquisa anterior. Linha contínua: índice (eixo da esquerda, de 0 a 1);
+        linha tracejada: intenção de voto medida no fim do mesmo intervalo (eixo da direita, em %). Cada candidato tem a
+        sua cor, e as linhas se sobrepõem para comparar. Usa todo o período analisado, qualquer que seja o botão escolhido no topo.
       </p>
       <div class="pesquisa-controles">
         <div class="radar-modos" role="group" aria-label="Turno">
@@ -2098,7 +2156,7 @@ __SOBRE_A_PESQUISA__
           <button type="button" class="radar-modo pesquisa-turno" data-turno="2">2º turno</button>
         </div>
       </div>
-      <div id="pesquisasPaineis" class="pesquisas-grade"></div>
+      <div class="chart-wrap pesquisa-grafico"><canvas id="pesquisasGrafico"></canvas></div>
       <div id="pesquisasResumo" class="pesquisas-resumo"></div>
       <div id="pesquisasTabela" class="pesquisas-tabela"></div>
       <details class="radar-metodo" data-i18n-html="metodo_pesquisas">
@@ -2307,8 +2365,6 @@ __DADOS__
         "Escolha do período": "Period selection", "Tipo de período": "Period type", "O que comparar": "What to compare",
         "Tudo o que foi analisado": "Everything analyzed", "Último ano analisado": "Last year analyzed",
         "Último mês analisado": "Last month analyzed", "Últimos 7 dias analisados": "Last 7 days analyzed",
-        "nota_linha": 'Each comment counts as 1 (positive), 0.5 (neutral) or 0 (negative), and the index is the average of these values, from 0 (all negative) to 1 (all positive), computed <span id="indiceValenciaUnidade">per period</span>. The dashed line is the overall index. With no candidates selected, all are included.',
-        "metodo_indice": '<summary>How the index is calculated</summary><p>Each comment counts as 1 (positive), 0.5 (neutral) or 0 (negative), and the index is the average of these values over all comments in the group (each comment weighs the same). In the <strong>overall index</strong>, each post counts only once, even when it belongs to more than one category; that is why it is not the average of the category indices, which would count the same comments more than once.</p><p>The <strong>95% confidence interval</strong> takes into account that comments on the same post are not independent (post-level robust standard error for the ratio estimator) and uses the t distribution with (number of posts − 1) degrees of freedom, which makes it wider when there are few posts. Overlapping intervals indicate that the difference between groups may be due to chance.</p>',
         // gráficos e mensagens
         "publicações carregadas": "posts loaded", "candidato encontrado": "candidate found", "candidatos encontrados": "candidates found",
         "comentários": "comments", "postagens": "posts", "curtidas": "likes", "visualizações": "views",
@@ -2354,6 +2410,31 @@ __DADOS__
         "Variação do índice": "Change in index",
         "Variação (p.p.)": "Change (p.p.)",
         "metodo_pesquisas": "<summary>How to read the comparison</summary><p>Comparing the levels of the two series is misleading: two trending lines seem to move together even when unrelated. That is why the summary measure uses <strong>changes</strong> between consecutive polls: the correlation between the change in the index and the change in voting intention (in percentage points) in the same interval, and between the index in one interval and the change in intention in the next (does the index anticipate the polls?). Changes for all candidates in the round are pooled.</p><p>This is an exploratory association, not a causal relationship: people who comment on Instagram do not represent the electorate, and with few intervals the correlation is very unstable (the confidence interval shows this). With fewer than 8 intervals, the result is only indicative.</p>",
+        "Evolução do índice da Liderança nos comentários": "Evolution of the Leadership index in comments",
+        "Índice da Liderança ao longo do tempo, por candidato": "Leadership index over time, by candidate",
+        "Média das subcategorias": "Average of the subcategories",
+        "Índice de valência por subcategoria, por candidato": "Valence index by subcategory, by candidate",
+        "Qual subcategoria mais cresceu": "Which subcategory grew the most",
+        "Variação das subcategorias da Liderança em relação ao período anterior": "Change in Leadership subcategories compared with the previous period",
+        "Desempenho dos candidatos": "Candidate performance",
+        "Evolução de cada candidato": "Evolution of each candidate",
+        "Valores informados no arquivo performance.csv, em todas as datas disponíveis.": "Values from the performance.csv file, on all available dates.",
+        "Índice da Liderança": "Leadership index",
+        "a": "to",
+        "média ponderada das três subcategorias": "weighted average of the three subcategories",
+        "Não há postagens no período anterior para comparar.": "There are no posts in the previous period to compare.",
+        "Poucas postagens em um dos períodos para {nomes} (menos de 10): a variação pode mudar muito com uma ou duas postagens.": "Few posts in one of the periods for {nomes} (fewer than 10): the change can shift a lot with one or two posts.",
+        "Todos os candidatos": "All candidates", "Nenhuma aumentou": "None increased", "todas ficaram iguais ou diminuíram": "all stayed the same or decreased",
+        "Subcategoria": "Subcategory",
+        "Período anterior": "Previous period",
+        "Período atual": "Current period",
+        "Seguidores no Instagram": "Instagram followers",
+        "Diferença, em pontos percentuais, entre a parcela das postagens de cada candidato com a subcategoria na segunda metade do período ({b0} a {b1}) e na primeira ({a0} a {a1}).": "Difference, in percentage points, between each candidate's share of posts with the subcategory in the second half of the period ({b0} to {b1}) and in the first half ({a0} to {a1}).",
+        "Diferença, em pontos percentuais, entre a parcela das postagens de cada candidato com a subcategoria no período escolhido ({b0} a {b1}) e no período anterior de mesmo tamanho ({a0} a {a1}).": "Difference, in percentage points, between each candidate's share of posts with the subcategory in the selected period ({b0} to {b1}) and in the previous period of the same length ({a0} to {a1}).",
+        "Cada candidato é uma camada do radar, sobreposta às dos outros (os valores não se somam): quanto mais longe do centro, mais positivos os comentários naquele eixo. Ao lado, o índice da Liderança (média ponderada das três subcategorias) de cada candidato no período. Sem candidatos selecionados, todos aparecem.": "Each candidate is a layer of the radar, overlaid on the others (values are not added up): the farther from the center, the more positive the comments on that axis. Beside it, each candidate's Leadership index (weighted average of the three subcategories) in the period. With no candidates selected, all are shown.",
+        "Para cada pesquisa, o índice da Liderança (média ponderada das três subcategorias) é calculado com os comentários das postagens publicadas desde a pesquisa anterior. Linha contínua: índice (eixo da esquerda, de 0 a 1); linha tracejada: intenção de voto medida no fim do mesmo intervalo (eixo da direita, em %). Cada candidato tem a sua cor, e as linhas se sobrepõem para comparar. Usa todo o período analisado, qualquer que seja o botão escolhido no topo.": "For each poll, the Leadership index (weighted average of the three subcategories) is calculated from the comments on posts published since the previous poll. Solid line: index (left axis, 0 to 1); dashed line: voting intention measured at the end of the same interval (right axis, in %). Each candidate has its own color and the lines overlap for comparison. It uses the whole period analyzed, whichever button is selected at the top.",
+        "nota_linha": "Each comment counts as 1 (positive), 0.5 (neutral) or 0 (negative). The Leadership index is the weighted average of the three subcategories (Authenticity, Competence and Humanization), weighted by the number of comments in each, from 0 (all negative) to 1 (all positive), calculated <span id=\"indiceValenciaUnidade\">per period</span>. Each candidate has its own line, to compare the evolution. With no candidates selected, all are shown.",
+        "metodo_indice": "<summary>How the index is calculated</summary><p>Each comment counts as 1 (positive), 0.5 (neutral) or 0 (negative), and the index of each axis is the average of these values over all comments on the posts of that axis. The <strong>Leadership index</strong> is the weighted average of the Authenticity, Competence and Humanization indices, weighted by the number of comments in each subcategory. Candidates are calculated separately and shown overlaid for comparison.</p><p>The <strong>95% confidence interval</strong> takes into account that comments on the same post are not independent (post-level robust standard error for the ratio estimator) and uses the t distribution with (number of posts − 1) degrees of freedom, which makes it wider when there are few posts. Overlapping intervals indicate that the difference between candidates may be due to chance.</p>",
         "A coluna de subcategoria não possui dados.": "The subcategory column has no data."
       },
       es: {
@@ -2411,8 +2492,6 @@ __DADOS__
         "Escolha do período": "Selección del período", "Tipo de período": "Tipo de período", "O que comparar": "Qué comparar",
         "Tudo o que foi analisado": "Todo lo analizado", "Último ano analisado": "Último año analizado",
         "Último mês analisado": "Último mes analizado", "Últimos 7 dias analisados": "Últimos 7 días analizados",
-        "nota_linha": 'Cada comentario vale 1 (positivo), 0,5 (neutro) o 0 (negativo), y el índice es el promedio de esos valores, de 0 (todos negativos) a 1 (todos positivos), calculado <span id="indiceValenciaUnidade">por período</span>. La línea discontinua es el índice general. Sin candidatos seleccionados, se incluyen todos.',
-        "metodo_indice": '<summary>Cómo se calcula el índice</summary><p>Cada comentario vale 1 (positivo), 0,5 (neutro) o 0 (negativo), y el índice es el promedio de esos valores sobre todos los comentarios del grupo (cada comentario pesa lo mismo). En el <strong>índice general</strong>, cada publicación cuenta una sola vez, aunque pertenezca a más de una categoría; por eso no es el promedio de los índices de las categorías, que contaría los mismos comentarios más de una vez.</p><p>El <strong>intervalo de confianza del 95 %</strong> considera que los comentarios de una misma publicación no son independientes (error estándar robusto por publicación, para el estimador de razón) y usa la distribución t con (número de publicaciones − 1) grados de libertad, lo que lo hace más amplio cuando hay pocas publicaciones. Intervalos que se superponen indican que la diferencia entre los grupos puede ser casual.</p>',
         "publicações carregadas": "publicaciones cargadas", "candidato encontrado": "candidato encontrado", "candidatos encontrados": "candidatos encontrados",
         "comentários": "comentarios", "postagens": "publicaciones", "curtidas": "me gusta", "visualizações": "visualizaciones",
         "sem comentários": "sin comentarios", "Sem categoria": "Sin categoría",
@@ -2457,6 +2536,31 @@ __DADOS__
         "Variação do índice": "Variación del índice",
         "Variação (p.p.)": "Variación (p.p.)",
         "metodo_pesquisas": "<summary>Cómo leer la comparación</summary><p>Comparar los niveles de las dos series engaña: dos líneas con tendencia parecen moverse juntas aunque no tengan relación. Por eso la medida resumen usa las <strong>variaciones</strong> entre encuestas consecutivas: la correlación entre el cambio del índice y el cambio de la intención de voto (en puntos porcentuales) en el mismo intervalo, y entre el índice de un intervalo y el cambio de la intención en el siguiente (¿el índice anticipa las encuestas?). Las variaciones de todos los candidatos de la vuelta se analizan juntas.</p><p>Es una asociación exploratoria, no una relación causal: quienes comentan en Instagram no representan al electorado, y con pocos intervalos la correlación es muy inestable (el intervalo de confianza lo muestra). Con menos de 8 intervalos, el resultado es solo indicativo.</p>",
+        "Evolução do índice da Liderança nos comentários": "Evolución del índice de Liderazgo en los comentarios",
+        "Índice da Liderança ao longo do tempo, por candidato": "Índice de Liderazgo a lo largo del tiempo, por candidato",
+        "Média das subcategorias": "Promedio de las subcategorías",
+        "Índice de valência por subcategoria, por candidato": "Índice de valencia por subcategoría, por candidato",
+        "Qual subcategoria mais cresceu": "Qué subcategoría más creció",
+        "Variação das subcategorias da Liderança em relação ao período anterior": "Variación de las subcategorías de Liderazgo respecto al período anterior",
+        "Desempenho dos candidatos": "Desempeño de los candidatos",
+        "Evolução de cada candidato": "Evolución de cada candidato",
+        "Valores informados no arquivo performance.csv, em todas as datas disponíveis.": "Valores del archivo performance.csv, en todas las fechas disponibles.",
+        "Índice da Liderança": "Índice de Liderazgo",
+        "a": "a",
+        "média ponderada das três subcategorias": "promedio ponderado de las tres subcategorías",
+        "Não há postagens no período anterior para comparar.": "No hay publicaciones en el período anterior para comparar.",
+        "Poucas postagens em um dos períodos para {nomes} (menos de 10): a variação pode mudar muito com uma ou duas postagens.": "Pocas publicaciones en uno de los períodos para {nomes} (menos de 10): la variación puede cambiar mucho con una o dos publicaciones.",
+        "Todos os candidatos": "Todos los candidatos", "Nenhuma aumentou": "Ninguna aumentó", "todas ficaram iguais ou diminuíram": "todas se mantuvieron o bajaron",
+        "Subcategoria": "Subcategoría",
+        "Período anterior": "Período anterior",
+        "Período atual": "Período actual",
+        "Seguidores no Instagram": "Seguidores en Instagram",
+        "Diferença, em pontos percentuais, entre a parcela das postagens de cada candidato com a subcategoria na segunda metade do período ({b0} a {b1}) e na primeira ({a0} a {a1}).": "Diferencia, en puntos porcentuales, entre la proporción de publicaciones de cada candidato con la subcategoría en la segunda mitad del período ({b0} a {b1}) y en la primera ({a0} a {a1}).",
+        "Diferença, em pontos percentuais, entre a parcela das postagens de cada candidato com a subcategoria no período escolhido ({b0} a {b1}) e no período anterior de mesmo tamanho ({a0} a {a1}).": "Diferencia, en puntos porcentuales, entre la proporción de publicaciones de cada candidato con la subcategoría en el período elegido ({b0} a {b1}) y en el período anterior de la misma duración ({a0} a {a1}).",
+        "Cada candidato é uma camada do radar, sobreposta às dos outros (os valores não se somam): quanto mais longe do centro, mais positivos os comentários naquele eixo. Ao lado, o índice da Liderança (média ponderada das três subcategorias) de cada candidato no período. Sem candidatos selecionados, todos aparecem.": "Cada candidato es una capa del radar, superpuesta a las demás (los valores no se suman): cuanto más lejos del centro, más positivos los comentarios en ese eje. Al lado, el índice de Liderazgo (promedio ponderado de las tres subcategorías) de cada candidato en el período. Sin candidatos seleccionados, aparecen todos.",
+        "Para cada pesquisa, o índice da Liderança (média ponderada das três subcategorias) é calculado com os comentários das postagens publicadas desde a pesquisa anterior. Linha contínua: índice (eixo da esquerda, de 0 a 1); linha tracejada: intenção de voto medida no fim do mesmo intervalo (eixo da direita, em %). Cada candidato tem a sua cor, e as linhas se sobrepõem para comparar. Usa todo o período analisado, qualquer que seja o botão escolhido no topo.": "Para cada encuesta, el índice de Liderazgo (promedio ponderado de las tres subcategorías) se calcula con los comentarios de las publicaciones hechas desde la encuesta anterior. Línea continua: índice (eje izquierdo, de 0 a 1); línea discontinua: intención de voto medida al final del mismo intervalo (eje derecho, en %). Cada candidato tiene su color y las líneas se superponen para comparar. Usa todo el período analizado, sea cual sea el botón elegido arriba.",
+        "nota_linha": "Cada comentario vale 1 (positivo), 0,5 (neutro) o 0 (negativo). El índice de Liderazgo es el promedio ponderado de las tres subcategorías (Autenticidad, Competencia y Humanización), con peso según el número de comentarios de cada una, de 0 (todos negativos) a 1 (todos positivos), calculado <span id=\"indiceValenciaUnidade\">por período</span>. Cada candidato tiene su línea, para comparar la evolución. Sin candidatos seleccionados, aparecen todos.",
+        "metodo_indice": "<summary>Cómo se calcula el índice</summary><p>Cada comentario vale 1 (positivo), 0,5 (neutro) o 0 (negativo), y el índice de cada eje es el promedio de esos valores sobre todos los comentarios de las publicaciones de ese eje. El <strong>índice de Liderazgo</strong> es el promedio ponderado de los índices de Autenticidad, Competencia y Humanización, con peso según el número de comentarios de cada subcategoría. Los candidatos se calculan por separado y aparecen superpuestos para comparar.</p><p>El <strong>intervalo de confianza del 95 %</strong> considera que los comentarios de una misma publicación no son independientes (error estándar robusto por publicación, para el estimador de razón) y usa la distribución t con (número de publicaciones − 1) grados de libertad, lo que lo hace más amplio cuando hay pocas publicaciones. Intervalos que se superponen indican que la diferencia entre los candidatos puede ser casual.</p>",
         "A coluna de subcategoria não possui dados.": "La columna de subcategoría no tiene datos."
       }
     };
@@ -3791,21 +3895,59 @@ __DADOS__
       return unidade === "week" ? `${t("sem.")} ${dia}` : dia;
     }
 
-    /* 09 — Evolução do índice de valência das subcategorias da Liderança e do índice geral */
+    /* Subcategorias da Liderança (a categoria que tem subcategorias) */
+    function subcategoriasLideranca() {
+      const cat = ESQUEMA.categorias.find(c => c.subcategorias && c.subcategorias.length);
+      return cat ? cat.subcategorias : [];
+    }
+
+    /* Índice da Liderança: média ponderada dos índices das três subcategorias, com peso pelo
+       número de comentários de cada uma. Equivale a contar cada postagem uma vez por
+       subcategoria que ela tem; o erro-padrão continua robusto por postagem. */
+    function indiceLideranca(posts) {
+      const subs = subcategoriasLideranca();
+      const pesados = posts.map(p => {
+        const k = subs.filter(s => p.subs.has(s)).length;
+        return k ? { ...p, pos: p.pos * k, neu: p.neu * k, neg: p.neg * k, _n: p.pos + p.neu + p.neg } : null;
+      }).filter(Boolean);
+      const e = estatisticaIndice(pesados);
+      e.n = pesados.reduce((s, p) => s + p._n, 0);
+      return e;
+    }
+
+    function estatisticaModo(posts, modo) {
+      return !modo || modo === "media" ? indiceLideranca(posts) : estatisticaIndice(posts.filter(p => p.subs.has(modo)));
+    }
+
+    function nomeModoIndice(modo) {
+      return !modo || modo === "media" ? t("Índice da Liderança") : modo;
+    }
+
+    /* 09 — Evolução do índice da Liderança (ou de uma subcategoria), uma linha por candidato */
     function criarGraficoIndiceTempo() {
       const canvas = document.getElementById("indiceValenciaLinha");
       if (!canvas) return;
       destruirChart("indiceValenciaLinha");
+      const modo = STATE.indiceModo || "media";
+      // Botões das subcategorias (nomes no idioma do relatório), criados uma vez
+      const grupoBotoes = document.querySelector(".indice-modos");
+      if (grupoBotoes && grupoBotoes.querySelectorAll(".indice-modo").length === 1) {
+        subcategoriasLideranca().forEach(nome => {
+          const b = document.createElement("button");
+          b.type = "button"; b.className = "radar-modo indice-modo"; b.dataset.indice = nome; b.textContent = nome;
+          b.onclick = () => { STATE.indiceModo = nome; criarGraficoIndiceTempo(); };
+          grupoBotoes.appendChild(b);
+        });
+      }
+      document.querySelectorAll(".indice-modo").forEach(b => b.classList.toggle("ativo", b.dataset.indice === modo));
       const posts = postagensComValencia(STATE.candidatosSelecionados.indice)
         .map(p => ({ ...p, quando: parseData(p.data) })).filter(p => p.quando);
-      const grupos = gruposValencia(true);
       if (!posts.length) {
         mostrarEstadoVazio(canvas, t("Não há comentários classificados para as postagens deste período."));
         return;
       }
       restaurarCanvas(canvas);
       const unidade = unidadeTempo(posts.map(p => p.quando));
-      // Todos os períodos entre a primeira e a última postagem (os sem comentários ficam em branco)
       const inicios = posts.map(p => inicioDoPeriodo(p.quando, unidade).getTime());
       const chaves = [];
       for (let d = new Date(Math.min(...inicios)); d.getTime() <= Math.max(...inicios); ) {
@@ -3815,15 +3957,14 @@ __DADOS__
       }
       const nota = document.getElementById("indiceValenciaUnidade");
       if (nota) nota.textContent = t({ day: "por dia", week: "por semana", month: "por mês" }[unidade]);
-      const serie = (nome, cor, testa, extra = {}) => {
-        const pontos = chaves.map(k => estatisticaIndice(posts.filter(p => testa(p) && inicioDoPeriodo(p.quando, unidade).getTime() === k)));
-        return { label: nome, data: pontos.map(e => e.indice), extra: pontos, borderColor: cor, backgroundColor: cor,
-                 pointRadius: 3.5, pointHoverRadius: 6, borderWidth: 2.2, tension: 0.25, spanGaps: true, ...extra };
-      };
-      const datasets = [
-        serie("Índice geral", CORES_INDICE_GERAL, () => true, { borderDash: [6, 4], borderWidth: 2.6, order: 0 }),
-        ...grupos.map(g => serie(g.nome, g.cor, g.testa))
-      ];
+      const candidatos = [...new Set(posts.map(p => p.candidato))];
+      const datasets = candidatos.map(cand => {
+        const doCand = posts.filter(p => p.candidato === cand);
+        const pontos = chaves.map(k => estatisticaModo(doCand.filter(p => inicioDoPeriodo(p.quando, unidade).getTime() === k), modo));
+        const cor = getCandidateColor(cand);
+        return { label: cand, data: pontos.map(e => e.indice), extra: pontos, borderColor: cor, backgroundColor: cor,
+                 pointRadius: 3.5, pointHoverRadius: 6, borderWidth: 2.6, tension: 0.25, spanGaps: true };
+      });
       STATE.charts.indiceValenciaLinha = new Chart(canvas, {
         type: "line",
         data: { labels: chaves.map(k => rotuloTempo(new Date(k), unidade)), datasets },
@@ -3844,7 +3985,7 @@ __DADOS__
           },
           scales: {
             y: { min: 0, max: 1, ticks: { stepSize: 0.25, callback: v => formatarIndice(v) },
-                 title: { display: true, text: t("Índice de valência (0 a 1)") } },
+                 title: { display: true, text: `${nomeModoIndice(modo)} (0 ${t("a")} 1)` } },
             x: { title: { display: false } }
           }
         }
@@ -3896,62 +4037,64 @@ __DADOS__
       destruirChart("radarValencia");
       const posts = postagensComValencia(STATE.candidatosSelecionados.radar);
       const modo = STATE.radarModo || "subcategorias";
-      document.querySelectorAll(".radar-modo").forEach(b => b.classList.toggle("ativo", b.dataset.modo === modo));
-      const grupos = gruposValencia(modo === "subcategorias")
-        .filter(g => modo === "subcategorias" ? true : g.nivel === "categoria")
-        .map(g => ({ ...g, est: estatisticaIndice(posts.filter(g.testa)) }));
+      document.querySelectorAll(".radar-eixos").forEach(b => b.classList.toggle("ativo", b.dataset.modo === modo));
+      const eixos = gruposValencia(modo === "subcategorias").filter(g => modo === "subcategorias" ? true : g.nivel === "categoria");
       const tabela = document.getElementById("radarValenciaTabela");
       const geralEl = document.getElementById("radarIndiceGeral");
-      if (!posts.length || !grupos.some(g => g.est.n)) {
+      const candidatos = [...new Set(posts.map(p => p.candidato))];
+      const porCandidato = candidatos.map(cand => {
+        const doCand = posts.filter(p => p.candidato === cand);
+        return { cand, cor: getCandidateColor(cand), eixos: eixos.map(g => estatisticaIndice(doCand.filter(g.testa))),
+                 lideranca: indiceLideranca(doCand) };
+      });
+      if (!posts.length || !porCandidato.some(c => c.eixos.some(e => e.n))) {
         mostrarEstadoVazio(canvas, t("Não há comentários classificados para as postagens deste período."));
         if (tabela) tabela.innerHTML = "";
         if (geralEl) geralEl.innerHTML = "";
         return;
       }
       restaurarCanvas(canvas);
-      const pct = (e, campo) => e.n ? (e[campo] / e.n) * 100 : 0;
       STATE.charts.radarValencia = new Chart(canvas, {
         type: "radar",
         data: {
-          labels: grupos.map(g => g.nome),
-          datasets: [
-            { label: t("Positivos (%)"), data: grupos.map(g => pct(g.est, "pos")), borderColor: CORES_VALENCIA.positivo,
-              backgroundColor: hexParaRgba(CORES_VALENCIA.positivo, 0.18), pointBackgroundColor: CORES_VALENCIA.positivo,
-              borderWidth: 2.4, tension: 0.35, pointRadius: 4 },
-            { label: t("Negativos (%)"), data: grupos.map(g => pct(g.est, "neg")), borderColor: CORES_VALENCIA.negativo,
-              backgroundColor: hexParaRgba(CORES_VALENCIA.negativo, 0.14), pointBackgroundColor: CORES_VALENCIA.negativo,
-              borderWidth: 2.4, tension: 0.35, pointRadius: 4 }
-          ]
+          labels: eixos.map(g => g.nome),
+          datasets: porCandidato.map(c => ({
+            label: c.cand, data: c.eixos.map(e => e.indice), extra: c.eixos, borderColor: c.cor,
+            backgroundColor: hexParaRgba(c.cor, 0.12), pointBackgroundColor: c.cor, borderWidth: 2.4,
+            tension: 0.3, pointRadius: 4, spanGaps: true
+          }))
         },
         options: {
           responsive: true, maintainAspectRatio: false,
           plugins: {
             legend: { position: "bottom" },
-            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label.replace(" (%)", "")}: ${Number(ctx.raw).toLocaleString(LOCALE, { maximumFractionDigits: 1 })}%` } }
+            tooltip: { callbacks: { label: ctx => {
+              const e = ctx.dataset.extra[ctx.dataIndex];
+              return e.indice === null ? `${ctx.dataset.label}: ${t("sem comentários")}` :
+                `${ctx.dataset.label}: ${formatarIndice(e.indice)} (${textoIntervalo(e)} · ${e.n.toLocaleString(LOCALE)} ${t("comentários")})`;
+            } } }
           },
           scales: {
             r: {
-              min: 0, max: 100,
+              min: 0, max: 1,
               grid: { circular: true, color: "rgba(100, 116, 139, .18)" },
               angleLines: { color: "rgba(100, 116, 139, .18)" },
-              ticks: { stepSize: 25, callback: v => `${v}%`, backdropColor: "transparent", color: "#94a3b8" },
-              pointLabels: { font: { size: 13, weight: "700" }, color: ctx => grupos[ctx.index] ? grupos[ctx.index].cor : "#334155" }
+              ticks: { stepSize: 0.25, callback: v => formatarIndice(v), backdropColor: "transparent", color: "#94a3b8" },
+              pointLabels: { font: { size: 13, weight: "700" }, color: ctx => eixos[ctx.index] ? eixos[ctx.index].cor : "#334155" }
             }
           }
         }
       });
-      // Índice geral: cada postagem uma vez só (sem contar comentários duas vezes)
-      const geral = estatisticaIndice(posts);
       if (geralEl) {
-        geralEl.innerHTML = `<span class="radar-geral-rotulo">${t("Índice geral")}</span>
-          <strong>${formatarIndice(geral.indice)}</strong>
-          <span>${textoIntervalo(geral)}</span>
-          <span class="valencia-sub">${geral.n.toLocaleString(LOCALE)} ${t("comentários")} · ${geral.m} ${t("postagens")}</span>`;
+        geralEl.innerHTML = `<span class="radar-geral-rotulo">${t("Índice da Liderança")}</span>
+          <span class="valencia-sub">${t("média ponderada das três subcategorias")}</span>`;
       }
       if (tabela) {
-        tabela.innerHTML = grupos.map(g => `<div class="radar-item"><span class="radar-cor" style="background:${g.cor}"></span>
-            <strong>${g.nome}</strong><span class="radar-indice">${formatarIndice(g.est.indice)}</span>
-            <span class="valencia-sub">${textoIntervalo(g.est)} · ${g.est.n.toLocaleString(LOCALE)} ${t("comentários")} · ${g.est.m} ${t("postagens")}</span></div>`).join("");
+        tabela.innerHTML = porCandidato
+          .sort((a, b) => (b.lideranca.indice ?? -1) - (a.lideranca.indice ?? -1))
+          .map(c => `<div class="radar-item"><span class="radar-cor" style="background:${c.cor}"></span>
+            <strong>${c.cand}</strong><span class="radar-indice">${formatarIndice(c.lideranca.indice)}</span>
+            <span class="valencia-sub">${textoIntervalo(c.lideranca)} · ${c.lideranca.n.toLocaleString(LOCALE)} ${t("comentários")} · ${c.lideranca.m} ${t("postagens")}</span></div>`).join("");
       }
     }
 
@@ -3960,6 +4103,202 @@ __DADOS__
       criarGraficoIndiceTempo();
       criarGraficoRadarValencia();
       criarSecaoPesquisas();
+      criarSecaoPerformance();
+      criarSecaoCrescimento();
+      renumerarSecoes();
+    }
+
+    /* Numeração das seções visíveis (as que dependem de arquivos opcionais podem sumir) */
+    function renumerarSecoes() {
+      let n = 0;
+      document.querySelectorAll(".project-section").forEach(secao => {
+        const el = secao.querySelector(".result-number");
+        if (!el || !/^\d+$/.test(el.textContent.trim())) return;
+        if (secao.style.display === "none") return;
+        el.textContent = String(++n).padStart(2, "0");
+      });
+    }
+
+    /* ---------- Qual subcategoria mais cresceu ----------
+       Compara o período escolhido no topo com o período anterior de mesmo tamanho
+       (no botão "Tudo", a primeira metade com a segunda). Medida: parcela das postagens
+       de cada candidato que têm a subcategoria, em %. */
+    function postagensComSubs(dados) {
+      const mapa = new Map();
+      dados.forEach(item => {
+        const chave = chavePostagem(item);
+        if (!mapa.has(chave)) mapa.set(chave, { candidato: normalizarCandidato(item.candidato), data: parseData(item.data), subs: new Set() });
+        if (item.subcategoria) mapa.get(chave).subs.add(String(item.subcategoria).trim());
+      });
+      return [...mapa.values()].filter(p => p.data);
+    }
+
+    function janelasCrescimento() {
+      const todos = postagensComSubs(STATE.todos || STATE.dados);
+      if (!todos.length) return null;
+      const DIA = 86400000;
+      const periodo = PERIODOS[PERIODO.modo];
+      const dia = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+      let ini, fim, antIni, antFim;
+      if (periodo && PERIODO.modo !== "tudo") {
+        ini = parseData(periodo.inicio).getTime(); fim = parseData(periodo.fim).getTime();
+        const dur = fim - ini + DIA;
+        antFim = ini - DIA; antIni = ini - dur;
+      } else {
+        const ds = todos.map(p => dia(p.data));
+        const a = Math.min(...ds), b = Math.max(...ds);
+        const meio = a + Math.floor((b - a) / DIA / 2) * DIA;
+        antIni = a; antFim = meio; ini = meio + DIA; fim = b;
+      }
+      const dentro = (p, x, y) => dia(p.data) >= x && dia(p.data) <= y;
+      return { atual: todos.filter(p => dentro(p, ini, fim)), anterior: todos.filter(p => dentro(p, antIni, antFim)),
+               rotulos: [new Date(antIni), new Date(antFim), new Date(ini), new Date(fim)], tudo: !periodo || PERIODO.modo === "tudo" };
+    }
+
+    function criarSecaoCrescimento() {
+      const secao = document.getElementById("secaoCrescimento");
+      const canvas = document.getElementById("crescimentoGrafico");
+      if (!secao || !canvas) return;
+      destruirChart("crescimentoGrafico");
+      const j = janelasCrescimento();
+      const subs = subcategoriasLideranca();
+      const nota = document.getElementById("crescimentoNota");
+      const destaques = document.getElementById("crescimentoDestaques");
+      const tabela = document.getElementById("crescimentoTabela");
+      if (!j || !subs.length) { secao.style.display = "none"; return; }
+      secao.style.display = "";
+      const [a0, a1, b0, b1] = j.rotulos.map(d => d.toLocaleDateString(LOCALE));
+      if (nota) nota.textContent = j.tudo
+        ? tf("Diferença, em pontos percentuais, entre a parcela das postagens de cada candidato com a subcategoria na segunda metade do período ({b0} a {b1}) e na primeira ({a0} a {a1}).", { a0, a1, b0, b1 })
+        : tf("Diferença, em pontos percentuais, entre a parcela das postagens de cada candidato com a subcategoria no período escolhido ({b0} a {b1}) e no período anterior de mesmo tamanho ({a0} a {a1}).", { a0, a1, b0, b1 });
+      const candidatos = [...new Set([...j.atual, ...j.anterior].map(p => p.candidato))];
+      const linhas = [];
+      candidatos.forEach(cand => {
+        const at = j.atual.filter(p => p.candidato === cand), an = j.anterior.filter(p => p.candidato === cand);
+        subs.forEach(sub => {
+          const nAt = at.filter(p => p.subs.has(sub)).length, nAn = an.filter(p => p.subs.has(sub)).length;
+          const pAt = at.length ? 100 * nAt / at.length : null, pAn = an.length ? 100 * nAn / an.length : null;
+          linhas.push({ cand, sub, nAt, nAn, totAt: at.length, totAn: an.length, pAt, pAn,
+                        delta: pAt !== null && pAn !== null ? pAt - pAn : null });
+        });
+      });
+      // Todos os candidatos juntos
+      const geral = subs.map(sub => {
+        const nAt = j.atual.filter(p => p.subs.has(sub)).length, nAn = j.anterior.filter(p => p.subs.has(sub)).length;
+        const pAt = j.atual.length ? 100 * nAt / j.atual.length : null, pAn = j.anterior.length ? 100 * nAn / j.anterior.length : null;
+        return { sub, pAt, pAn, delta: pAt !== null && pAn !== null ? pAt - pAn : null };
+      });
+      const pp = v => v === null ? "—" : `${v >= 0 ? "+" : ""}${v.toLocaleString(LOCALE, { maximumFractionDigits: 1 })} p.p.`;
+      const pc = v => v === null ? "—" : `${v.toLocaleString(LOCALE, { maximumFractionDigits: 1 })}%`;
+      if (!j.anterior.length || !j.atual.length) {
+        mostrarEstadoVazio(canvas, t("Não há postagens no período anterior para comparar."));
+        if (destaques) destaques.innerHTML = ""; if (tabela) tabela.innerHTML = "";
+        return;
+      }
+      restaurarCanvas(canvas);
+      const maior = lista => lista.filter(l => l.delta !== null).sort((x, y) => y.delta - x.delta)[0];
+      const destaque = (titulo, cor, m) => `<div class="crescimento-destaque" style="border-color:${cor}"><span>${titulo}</span>
+          ${m && m.delta > 0.05 ? `<strong>${m.sub} ${pp(m.delta)}</strong><small>${pc(m.pAn)} → ${pc(m.pAt)}</small>`
+                                : `<strong>${t("Nenhuma aumentou")}</strong><small>${t("todas ficaram iguais ou diminuíram")}</small>`}</div>`;
+      destaques.innerHTML = [
+        destaque(t("Todos os candidatos"), "var(--primary)", maior(geral)),
+        ...candidatos.map(cand => destaque(cand, getCandidateColor(cand), maior(linhas.filter(l => l.cand === cand))))
+      ].join("");
+      const poucas = candidatos.filter(cand => {
+        const l = linhas.find(x => x.cand === cand);
+        return l && (l.totAn < 10 || l.totAt < 10);
+      });
+      if (poucas.length) destaques.innerHTML += `<div class="pesquisa-aviso">${tf("Poucas postagens em um dos períodos para {nomes} (menos de 10): a variação pode mudar muito com uma ou duas postagens.", { nomes: poucas.join(", ") })}</div>`;
+      STATE.charts.crescimentoGrafico = new Chart(canvas, {
+        type: "bar",
+        data: {
+          labels: subs,
+          datasets: candidatos.map(cand => ({
+            label: cand, backgroundColor: getCandidateColor(cand), borderRadius: 6,
+            data: subs.map(sub => linhas.find(l => l.cand === cand && l.sub === sub).delta),
+            extra: subs.map(sub => linhas.find(l => l.cand === cand && l.sub === sub))
+          }))
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: "bottom" },
+            tooltip: { callbacks: { label: ctx => {
+              const l = ctx.dataset.extra[ctx.dataIndex];
+              return `${ctx.dataset.label}: ${pp(l.delta)} (${pc(l.pAn)} → ${pc(l.pAt)}; ${l.nAn}/${l.totAn} → ${l.nAt}/${l.totAt})`;
+            } } }
+          },
+          scales: {
+            y: { title: { display: true, text: t("Variação (p.p.)") }, ticks: { callback: v => `${v > 0 ? "+" : ""}${v}` },
+                 grid: { color: ctx => ctx.tick.value === 0 ? "#94a3b8" : "rgba(100,116,139,.15)" } },
+            x: { ticks: { color: ctx => corSubcategoria(subs[ctx.index]), font: { weight: "700" } } }
+          }
+        }
+      });
+      tabela.innerHTML = `<table><thead><tr><th>${t("Candidato")}</th><th>${t("Subcategoria")}</th>
+          <th>${t("Período anterior")}</th><th>${t("Período atual")}</th><th>${t("Variação (p.p.)")}</th></tr></thead><tbody>
+        ${linhas.map(l => `<tr><td>${l.cand}</td><td>${l.sub}</td><td>${pc(l.pAn)} (${l.nAn}/${l.totAn})</td>
+          <td>${pc(l.pAt)} (${l.nAt}/${l.totAt})</td><td>${pp(l.delta)}</td></tr>`).join("")}</tbody></table>`;
+    }
+
+    /* ---------- Desempenho dos candidatos (performance.csv) ---------- */
+    const PERFORMANCE = (window.PERFORMANCE || [])
+      .map(p => ({ ...p, quando: parseData(p.data), valor: Number(p.valor) }))
+      .filter(p => p.quando && Number.isFinite(p.valor));
+
+    function rotuloMetrica(nome) {
+      const n = normalizarTexto(nome).replace(/[_\s]+/g, " ");
+      if (/intencao/.test(n)) return t("Intenção de voto (%)");
+      if (/seguidor/.test(n)) return t("Seguidores no Instagram");
+      return String(nome).replace(/_/g, " ").replace(/^./, c => c.toUpperCase());
+    }
+
+    function formatarValorMetrica(v) {
+      const abs = Math.abs(v);
+      return abs >= 1e4 ? v.toLocaleString(LOCALE, { notation: "compact", maximumFractionDigits: 1 })
+                        : v.toLocaleString(LOCALE, { maximumFractionDigits: 1 });
+    }
+
+    function criarSecaoPerformance() {
+      const secao = document.getElementById("secaoPerformance");
+      if (!secao) return;
+      if (!PERFORMANCE.length) { secao.style.display = "none"; return; }
+      secao.style.display = "";
+      const metricas = [...new Set(PERFORMANCE.map(p => p.metrica))];
+      if (!metricas.includes(STATE.metricaPerformance)) STATE.metricaPerformance = metricas[0];
+      const botoes = document.getElementById("performanceMetricas");
+      botoes.innerHTML = metricas.map(m => `<button type="button" class="radar-modo ${m === STATE.metricaPerformance ? "ativo" : ""}" data-metrica="${m}">${rotuloMetrica(m)}</button>`).join("");
+      botoes.querySelectorAll("button").forEach(b => b.onclick = () => { STATE.metricaPerformance = b.dataset.metrica; criarSecaoPerformance(); });
+      botoes.style.display = metricas.length > 1 ? "" : "none";
+      destruirChart("performanceGrafico");
+      const canvas = document.getElementById("performanceGrafico");
+      const dados = PERFORMANCE.filter(p => p.metrica === STATE.metricaPerformance);
+      const candidatos = [...new Set(dados.map(p => normalizarCandidato(p.candidato)))];
+      STATE.charts.performanceGrafico = new Chart(canvas, {
+        type: "line",
+        data: {
+          datasets: candidatos.map(cand => {
+            const cor = getCandidateColor(cand);
+            return { label: cand, borderColor: cor, backgroundColor: cor, borderWidth: 2.4, pointRadius: 4, tension: 0.2,
+                     data: dados.filter(p => normalizarCandidato(p.candidato) === cand).sort((a, b) => a.quando - b.quando)
+                                .map(p => ({ x: p.quando, y: p.valor })) };
+          })
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: "nearest", intersect: false },
+          plugins: {
+            legend: { position: "bottom" },
+            tooltip: { callbacks: { title: itens => itens.length ? formatarData(itens[0].raw.x) : "",
+                                    label: ctx => `${ctx.dataset.label}: ${formatarValorMetrica(ctx.raw.y)}` } }
+          },
+          scales: {
+            x: { type: "time", time: { unit: "day" },
+                 ticks: { callback: v => new Date(v).toLocaleDateString(LOCALE, { day: "2-digit", month: "2-digit" }), maxTicksLimit: 10 } },
+            y: { title: { display: true, text: rotuloMetrica(STATE.metricaPerformance) }, ticks: { callback: v => formatarValorMetrica(v) } }
+          }
+        }
+      });
     }
 
     /* ---------- 11 — Índice de valência × intenção de voto ----------
@@ -4004,7 +4343,7 @@ __DADOS__
         const linhas = lista.map((p, i) => {
           const inicio = i ? lista[i - 1].quando : new Date(p.quando.getTime() - 14 * UM_DIA);
           const fim = new Date(p.quando.getTime() + UM_DIA - 1);   // inclui o dia da pesquisa
-          const est = estatisticaIndice(doCand.filter(x => x.quando > inicio && x.quando <= fim));
+          const est = indiceLideranca(doCand.filter(x => x.quando > inicio && x.quando <= fim));
           return { candidato: nome, inicio, quando: p.quando, intencao: p.intencao, est };
         });
         linhas.forEach((l, i) => {
@@ -4030,68 +4369,56 @@ __DADOS__
         b.onclick = () => { STATE.pesquisaTurno = Number(b.dataset.turno); criarSecaoPesquisas(); };
       });
       const grupos = intervalosPesquisas(STATE.pesquisaTurno);
-      const paineis = document.getElementById("pesquisasPaineis");
-      Object.keys(STATE.charts).filter(k => k.startsWith("pesquisa_")).forEach(k => destruirChart(k));
-      paineis.innerHTML = grupos.map((g, i) => `
-        <div class="pesquisa-painel">
-          <h4><span class="cor" style="background:${getCandidateColor(g.candidato)}"></span>${g.candidato}</h4>
-          <div class="chart-wrap"><canvas id="pesquisa_${i}"></canvas></div>
-        </div>`).join("");
-      grupos.forEach((g, i) => {
-        const canvas = document.getElementById(`pesquisa_${i}`);
+      destruirChart("pesquisasGrafico");
+      const canvas = document.getElementById("pesquisasGrafico");
+      const todasDatas = grupos.flatMap(g => g.linhas.map(l => l.quando.getTime()));
+      const intencoes = grupos.flatMap(g => g.linhas.map(l => l.intencao));
+      const ponto = (l, v) => ({ x: l.quando, y: v });
+      const datasets = grupos.flatMap(g => {
         const cor = getCandidateColor(g.candidato);
-        const x = g.linhas.map(l => l.quando);
-        const ponto = (l, v) => ({ x: l.quando, y: v });
-        STATE.charts[`pesquisa_${i}`] = new Chart(canvas, {
-          type: "line",
-          data: {
-            datasets: [
-              { label: t("IC 95% (máx.)"), data: g.linhas.map(l => ponto(l, l.est.sup)), yAxisID: "y", borderWidth: 0,
-                pointRadius: 0, backgroundColor: hexParaRgba(CORES_INDICE_GERAL, 0.10), fill: "+1", spanGaps: true, faixa: true },
-              { label: t("IC 95% (mín.)"), data: g.linhas.map(l => ponto(l, l.est.inf)), yAxisID: "y", borderWidth: 0,
-                pointRadius: 0, fill: false, spanGaps: true, faixa: true },
-              { label: t("Índice de valência"), data: g.linhas.map(l => ponto(l, l.est.indice)), yAxisID: "y",
-                borderColor: CORES_INDICE_GERAL, backgroundColor: CORES_INDICE_GERAL, borderWidth: 2.2, pointRadius: 4,
-                tension: 0.2, spanGaps: true, extra: g.linhas },
-              { label: t("Intenção de voto (%)"), data: g.linhas.map(l => ponto(l, l.intencao)), yAxisID: "y2",
-                borderColor: cor, backgroundColor: cor, borderWidth: 2.2, borderDash: [6, 4], pointRadius: 4,
-                pointStyle: "rectRot", tension: 0.2, extra: g.linhas }
-            ]
-          },
-          options: {
-            responsive: true, maintainAspectRatio: false,
-            interaction: { mode: "index", intersect: false },
-            plugins: {
-              legend: { position: "bottom", labels: { usePointStyle: true, filter: (item, dados) => !dados.datasets[item.datasetIndex].faixa } },
-              tooltip: {
-                filter: item => item.dataset.extra,
-                callbacks: {
-                  title: itens => itens.length ? formatarData(itens[0].raw.x) : "",
-                  label: ctx => {
-                    const l = ctx.dataset.extra[ctx.dataIndex];
-                    if (ctx.dataset.yAxisID === "y2") {
-                      const d = l.dIntencao === null ? "" : ` (${l.dIntencao >= 0 ? "+" : ""}${l.dIntencao.toLocaleString(LOCALE, { maximumFractionDigits: 1 })} p.p.)`;
-                      return `${t("Intenção de voto")}: ${l.intencao.toLocaleString(LOCALE, { maximumFractionDigits: 1 })}%${d}`;
-                    }
-                    return l.est.indice === null ? `${t("Índice de valência")}: ${t("sem comentários")}` :
-                      `${t("Índice de valência")}: ${formatarIndice(l.est.indice)} (${textoIntervalo(l.est)} · ${l.est.n.toLocaleString(LOCALE)} ${t("comentários")})`;
+        return [
+          { label: `${g.candidato} · ${t("Índice da Liderança")}`, data: g.linhas.map(l => ponto(l, l.est.indice)), yAxisID: "y",
+            borderColor: cor, backgroundColor: cor, borderWidth: 2.6, pointRadius: 4.5, tension: 0.2, spanGaps: true,
+            extra: g.linhas, tipo: "indice" },
+          { label: `${g.candidato} · ${t("Intenção de voto")}`, data: g.linhas.map(l => ponto(l, l.intencao)), yAxisID: "y2",
+            borderColor: cor, backgroundColor: hexParaRgba(cor, 0.5), borderWidth: 2, borderDash: [6, 4], pointRadius: 4,
+            pointStyle: "rectRot", tension: 0.2, extra: g.linhas, tipo: "intencao" }
+        ];
+      });
+      STATE.charts.pesquisasGrafico = new Chart(canvas, {
+        type: "line",
+        data: { datasets },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: "nearest", intersect: false },
+          plugins: {
+            legend: { position: "bottom", labels: { usePointStyle: true } },
+            tooltip: {
+              callbacks: {
+                title: itens => itens.length ? formatarData(itens[0].raw.x) : "",
+                label: ctx => {
+                  const l = ctx.dataset.extra[ctx.dataIndex];
+                  if (ctx.dataset.tipo === "intencao") {
+                    const d = l.dIntencao === null ? "" : ` (${l.dIntencao >= 0 ? "+" : ""}${l.dIntencao.toLocaleString(LOCALE, { maximumFractionDigits: 1 })} p.p.)`;
+                    return `${ctx.dataset.label}: ${l.intencao.toLocaleString(LOCALE, { maximumFractionDigits: 1 })}%${d}`;
                   }
+                  return l.est.indice === null ? `${ctx.dataset.label}: ${t("sem comentários")}` :
+                    `${ctx.dataset.label}: ${formatarIndice(l.est.indice)} (${textoIntervalo(l.est)} · ${l.est.n.toLocaleString(LOCALE)} ${t("comentários")})`;
                 }
               }
-            },
-            scales: {
-              x: { type: "time", time: { unit: "day", tooltipFormat: "dd/MM/yyyy" },
-                   min: Math.min(...x) - 3 * 86400000, max: Math.max(...x) + 3 * 86400000,
-                   ticks: { callback: v => new Date(v).toLocaleDateString(LOCALE, { day: "2-digit", month: "2-digit" }), maxTicksLimit: 8 } },
-              y: { min: 0, max: 1, position: "left", ticks: { stepSize: 0.25, callback: v => formatarIndice(v) },
-                   title: { display: true, text: t("Índice de valência (0 a 1)") } },
-              y2: { position: "right", grid: { drawOnChartArea: false },
-                    suggestedMin: Math.max(0, Math.min(...g.linhas.map(l => l.intencao)) - 5),
-                    suggestedMax: Math.max(...g.linhas.map(l => l.intencao)) + 5,
-                    ticks: { callback: v => `${v}%` }, title: { display: true, text: t("Intenção de voto (%)") } }
             }
+          },
+          scales: {
+            x: { type: "time", time: { unit: "day", tooltipFormat: "dd/MM/yyyy" },
+                 min: Math.min(...todasDatas) - 3 * 86400000, max: Math.max(...todasDatas) + 3 * 86400000,
+                 ticks: { callback: v => new Date(v).toLocaleDateString(LOCALE, { day: "2-digit", month: "2-digit" }), maxTicksLimit: 10 } },
+            y: { min: 0, max: 1, position: "left", ticks: { stepSize: 0.25, callback: v => formatarIndice(v) },
+                 title: { display: true, text: `${t("Índice da Liderança")} (0 ${t("a")} 1)` } },
+            y2: { position: "right", grid: { drawOnChartArea: false },
+                  suggestedMin: Math.max(0, Math.min(...intencoes) - 5), suggestedMax: Math.max(...intencoes) + 5,
+                  ticks: { callback: v => `${v}%` }, title: { display: true, text: t("Intenção de voto (%)") } }
           }
-        });
+        }
       });
 
       // Medidas resumo: variações de todos os candidatos do turno juntas
@@ -6107,8 +6434,11 @@ __DADOS__
                               estado: STATE.candidatosSelecionados.indice, onChange: criarGraficoIndiceTempo });
       criarFiltroCandidatos({ containerId: "radarCandidateFilterButtons",
                               estado: STATE.candidatosSelecionados.radar, onChange: criarGraficoRadarValencia });
-      document.querySelectorAll(".radar-modo").forEach(botao => {
+      document.querySelectorAll(".radar-eixos").forEach(botao => {
         botao.onclick = () => { STATE.radarModo = botao.dataset.modo; criarGraficoRadarValencia(); };
+      });
+      document.querySelectorAll(".indice-modo").forEach(botao => {
+        botao.onclick = () => { STATE.indiceModo = botao.dataset.indice; criarGraficoIndiceTempo(); };
       });
     }
 

@@ -81,3 +81,73 @@ pesquisas_js <- function(p = ler_pesquisas()) {
   if (nrow(p) == 0) return(list())
   p %>% mutate(data = as.character(data)) %>% transpose()
 }
+
+# ---------------------------------------------------------
+# Desempenho dos candidatos (performance.csv)
+# ---------------------------------------------------------
+# Uma linha por data e candidato e uma coluna por métrica, por exemplo:
+#   data,candidato,intencao_voto,seguidores_ig
+#   05/08/2026,Lula,"40,3",15300000
+# Também aceita o formato longo: data,candidato,metrica,valor.
+# Fica guardado em config/performance.csv (formato longo).
+
+ARQUIVO_PERFORMANCE <- "config/performance.csv"
+
+numero_br <- function(x) {
+  x <- str_remove_all(as.character(x), "[%\\s]")
+  # "15.300.000" ou "15.300.000,5": ponto de milhar; "40,3": vírgula decimal
+  milhar <- str_detect(x, "^-?\\d{1,3}(\\.\\d{3})+(,\\d+)?$")
+  x[milhar] <- str_remove_all(x[milhar], "\\.")
+  x <- str_replace(x, ",", ".")
+  # 15,3M / 2.2K
+  mult <- case_when(str_detect(x, "(?i)m$") ~ 1e6, str_detect(x, "(?i)k$|mil$") ~ 1e3, TRUE ~ 1)
+  suppressWarnings(as.numeric(str_remove(x, "(?i)(m|k|mil)$")) * mult)
+}
+
+ler_performance_arquivo <- function(arquivo, candidatos = character()) {
+  primeira <- readLines(arquivo, n = 1, warn = FALSE, encoding = "UTF-8")
+  delim <- if (str_count(primeira, ";") > str_count(primeira, ",")) ";" else ","
+  bruto <- read_delim(arquivo, delim = delim, col_types = cols(.default = col_character()),
+                      locale = locale(encoding = "UTF-8"), show_col_types = FALSE, trim_ws = TRUE)
+  originais <- names(bruto)
+  names(bruto) <- normalizar_nome(names(bruto))
+  if (!all(c("data", "candidato") %in% names(bruto))) {
+    stop("O arquivo precisa das colunas data e candidato (encontradas: ", paste(originais, collapse = ", "), ").")
+  }
+  longo <- if (all(c("metrica", "valor") %in% names(bruto))) {
+    bruto %>% select(data, candidato, metrica, valor)
+  } else {
+    outras <- setdiff(names(bruto), c("data", "candidato"))
+    if (!length(outras)) stop("O arquivo não tem colunas de métricas além de data e candidato.")
+    rotulos <- set_names(originais[match(outras, names(bruto))], outras)
+    bruto %>% pivot_longer(all_of(outras), names_to = "metrica", values_to = "valor") %>%
+      mutate(metrica = unname(rotulos[metrica]))
+  }
+  d <- longo %>%
+    mutate(data = suppressWarnings(coalesce(dmy(data, quiet = TRUE), ymd(data, quiet = TRUE))),
+           valor = numero_br(valor), candidato = casar_candidato(str_squish(candidato), candidatos)) %>%
+    filter(!is.na(data), !is.na(valor), nzchar(candidato))
+  if (nrow(d) == 0) stop("Nenhuma linha válida (confira as datas e os números).")
+  d %>% group_by(data, candidato, metrica) %>% summarise(valor = mean(valor), .groups = "drop") %>%
+    arrange(metrica, candidato, data)
+}
+
+ler_performance <- function() {
+  if (!file.exists(ARQUIVO_PERFORMANCE)) return(tibble(data = as.Date(character()), candidato = character(),
+                                                         metrica = character(), valor = numeric()))
+  read_csv(ARQUIVO_PERFORMANCE, col_types = cols(data = col_date(), candidato = col_character(),
+                                                 metrica = col_character(), valor = col_double()),
+           show_col_types = FALSE)
+}
+
+salvar_performance <- function(d) {
+  dir.create(dirname(ARQUIVO_PERFORMANCE), showWarnings = FALSE, recursive = TRUE)
+  write_csv(d %>% mutate(data = as.character(data)), ARQUIVO_PERFORMANCE, na = "")
+}
+
+apagar_performance <- function() if (file.exists(ARQUIVO_PERFORMANCE)) file.remove(ARQUIVO_PERFORMANCE)
+
+performance_js <- function(p = ler_performance()) {
+  if (nrow(p) == 0) return(list())
+  p %>% mutate(data = as.character(data)) %>% transpose()
+}

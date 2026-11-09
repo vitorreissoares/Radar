@@ -1,10 +1,11 @@
 # Monta o programa Radar para Windows, Mac e Linux.
 #
-# - A cada envio para a branch main, os instaladores são montados e publicados na
+# - A cada envio para a branch main, o instalador do Windows é montado e publicado na
 #   página "Releases", na versão indicada em desktop/package.json ("version").
+#   Para montar também Mac e Linux (versão final), rode à mão e escolha "todos".
 #   Para lançar uma versão nova, basta mudar esse número (ex.: 1.0.0 -> 1.1.0).
 #   Enviar de novo com o mesmo número atualiza os arquivos dessa versão.
-# - Também dá para rodar à mão (aba Actions > Programa de computador > Run workflow).
+# - Rodar à mão: aba Actions > Programa de computador > Run workflow > sistemas: todos.
 #
 # Cada instalador leva o R e os pacotes dentro: quem instala não precisa de mais nada.
 
@@ -15,6 +16,12 @@ on:
     branches: [main]
     paths-ignore: ["**.md"]
   workflow_dispatch:
+    inputs:
+      sistemas:
+        description: "Sistemas para montar"
+        type: choice
+        options: [todos, windows]
+        default: todos
 
 # Um envio novo cancela a montagem anterior que ainda estiver rodando
 concurrency:
@@ -25,43 +32,42 @@ permissions:
   contents: write
 
 jobs:
+  # Quais sistemas montar: ao enviar para a main, só o Windows (versões de teste,
+  # mais rápidas); para montar todos, rode à mão (Actions > Programa de computador >
+  # Run workflow) e escolha "todos".
+  escolher:
+    name: Escolher os sistemas
+    runs-on: ubuntu-latest
+    outputs:
+      matriz: ${{ steps.matriz.outputs.matriz }}
+    steps:
+      - id: matriz
+        env:
+          SISTEMAS: ${{ github.event_name == 'workflow_dispatch' && inputs.sistemas || 'windows' }}
+        run: |
+          cat > todos.json <<'JSON'
+          [
+            {"nome": "Windows", "os": "windows-latest", "micromamba": "win-64", "plataforma": "win-64",
+             "builder": "--win --x64", "recursos": "dist/win-unpacked/resources", "arquivos": "desktop/dist/*.exe"},
+            {"nome": "Mac (chip Apple)", "os": "macos-15", "micromamba": "osx-arm64", "plataforma": "osx-arm64",
+             "builder": "--mac --arm64", "recursos": "dist/mac-arm64/Radar.app/Contents/Resources", "arquivos": "desktop/dist/*.dmg"},
+            {"nome": "Mac (Intel)", "os": "macos-15", "micromamba": "osx-arm64", "plataforma": "osx-64",
+             "builder": "--mac --x64", "recursos": "dist/mac/Radar.app/Contents/Resources", "arquivos": "desktop/dist/*.dmg"},
+            {"nome": "Linux", "os": "ubuntu-22.04", "micromamba": "linux-64", "plataforma": "linux-64",
+             "builder": "--linux --x64", "recursos": "dist/linux-unpacked/resources",
+             "arquivos": "desktop/dist/*.AppImage\ndesktop/dist/*.deb"}
+          ]
+          JSON
+          if [ "$SISTEMAS" = "todos" ]; then filtro='.'; else filtro='map(select(.nome == "Windows"))'; fi
+          echo "matriz=$(jq -c "{include: ($filtro)}" todos.json)" >> "$GITHUB_OUTPUT"
+
   construir:
     name: ${{ matrix.nome }}
+    needs: escolher
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - nome: Windows
-            os: windows-latest
-            micromamba: win-64
-            plataforma: win-64
-            builder: --win --x64
-            recursos: dist/win-unpacked/resources
-            arquivos: desktop/dist/*.exe
-          - nome: Mac (chip Apple)
-            os: macos-15
-            micromamba: osx-arm64
-            plataforma: osx-arm64
-            builder: --mac --arm64
-            recursos: dist/mac-arm64/Radar.app/Contents/Resources
-            arquivos: desktop/dist/*.dmg
-          - nome: Mac (Intel)
-            os: macos-15
-            micromamba: osx-arm64
-            plataforma: osx-64
-            builder: --mac --x64
-            recursos: dist/mac/Radar.app/Contents/Resources
-            arquivos: desktop/dist/*.dmg
-          - nome: Linux
-            os: ubuntu-22.04
-            micromamba: linux-64
-            plataforma: linux-64
-            builder: --linux --x64
-            recursos: dist/linux-unpacked/resources
-            arquivos: |
-              desktop/dist/*.AppImage
-              desktop/dist/*.deb
+      matrix: ${{ fromJSON(needs.escolher.outputs.matriz) }}
 
     defaults:
       run:

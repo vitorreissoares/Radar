@@ -98,11 +98,10 @@ ler_sobre <- function(idioma = "pt") {
   if (!file.exists(arquivo)) return(padrao)
   quadros <- tryCatch(read_json(arquivo), error = function(e) list())
   if (length(quadros) == 0) return(padrao)
-  # Quadro sem título e sem texto (ex.: apagado por engano) volta ao texto padrão
-  imap(quadros, \(q, i) {
-    if (vazio_txt(q$titulo) && vazio_txt(q$texto) && i <= length(padrao)) padrao[[i]] else
-      list(titulo = q$titulo %||% "", texto = q$texto %||% "")
-  })
+  quadros <- map(quadros, \(q) list(titulo = q$titulo %||% "", texto = q$texto %||% ""))
+  # Todos os quadros vazios (ex.: apagados por engano): volta ao texto padrão
+  if (all(map_lgl(quadros, \(q) vazio_txt(q$titulo) && vazio_txt(q$texto)))) return(padrao)
+  quadros
 }
 
 salvar_sobre <- function(quadros, idioma = "pt") {
@@ -137,24 +136,17 @@ html_cards <- function(candidatos, idioma = "pt") {
   sprintf('
       <article class="candidate-card" data-candidate="%1$s" tabindex="0">
         <div class="candidate-top">
-          <img class="candidate-photo" src="assets/img_cand/%2$s" alt="%7$s %1$s">
+          <img class="candidate-photo" src="assets/img_cand/%2$s" alt="%5$s %1$s">
           <div>
             <h2 class="candidate-name">%1$s</h2>
             <p class="candidate-party">%3$s</p>
           </div>
         </div>
-        <div class="candidate-meta">
-          <div class="meta-box"><span>%8$s</span><strong>%4$s</strong></div>
-          <div class="meta-box"><span>%9$s</span><strong>%5$s</strong></div>
-        </div>
-        <p class="candidate-info">%6$s</p>
+        <p class="candidate-info">%4$s</p>
       </article>',
     esc(info$nome), esc(info$foto), esc(info$partido),
-    esc(info$intencao_voto), esc(info$seguidores_ig),
     L(idioma, "Clique para filtrar os resultados.", "Click to filter the results.", "Haga clic para filtrar los resultados."),
-    L(idioma, "Foto de", "Photo of", "Foto de"),
-    L(idioma, "Intenção de voto", "Voting intention", "Intención de voto"),
-    L(idioma, "Seguidores IG", "IG followers", "Seguidores IG")
+    L(idioma, "Foto de", "Photo of", "Foto de")
   ) %>% paste(collapse = "\n")
 }
 
@@ -181,14 +173,18 @@ html_paragrafos <- function(texto) {
 }
 
 # Os 7 quadros do "Sobre a pesquisa": o primeiro ocupa a largura toda, os demais em grade
-html_sobre <- function(quadros, proporcao, modelo_rotulo) {
+html_sobre <- function(quadros, proporcao, modelo_rotulo, criterio = "likes") {
+  palavra <- CRITERIOS_SELECAO[[criterio %||% "likes"]] %||% "curtidas"
   quadro <- function(q, classe) {
     texto <- q$texto %>%
+      str_replace_all(fixed("{proporcao} das postagens mais curtidas"), paste("{proporcao} das postagens mais", palavra)) %>%
+      str_replace_all(fixed("{criterio}"), palavra) %>%
       str_replace_all(fixed("{proporcao}"), paste0(round(proporcao * 100), "%")) %>%
       str_replace_all(fixed("{modelo}"), modelo_rotulo)
     sprintf('      <div class="%s">\n        <h3>%s</h3>\n        %s\n      </div>',
             classe, esc(q$titulo), paragrafos_html(texto, escapar = FALSE))
   }
+  quadros <- keep(quadros, \(q) !(vazio_txt(q$titulo) && vazio_txt(q$texto)))
   if (length(quadros) == 0) return("")
   paste0(
     quadro(quadros[[1]], "method-card research-intro-card"), "\n",
@@ -375,7 +371,7 @@ csv_relatorio <- function(d, idioma = "pt") {
 # periodo_inicial é o botão que abre primeiro ("semana", "mes", "ano" ou "tudo").
 # Devolve o caminho do index.html.
 gerar_relatorio <- function(d, pasta = PASTA_RELATORIO, periodo_inicial = NULL,
-                            proporcao = PROPORCAO_TOP_PADRAO, modelo_rotulo = MODELO_ROTULO,
+                            proporcao = PROPORCAO_TOP_PADRAO, modelo_rotulo = MODELO_ROTULO, criterio = "likes",
                             config = ler_config_relatorio(), sobre = ler_sobre(config$idioma %||% "pt")) {
   config <- textos_no_idioma(config)
 
@@ -393,7 +389,8 @@ gerar_relatorio <- function(d, pasta = PASTA_RELATORIO, periodo_inicial = NULL,
     "    window.ESQUEMA = ", json_js(esquema_js(idioma)), ";\n",
     "    window.IDIOMA = ", json_js(idioma), ";\n",
     "    window.VALENCIA = ", json_js(valencia_js(d)), ";\n",
-    "    window.PESQUISAS = ", json_js(pesquisas_js()), ";"
+    "    window.PESQUISAS = ", json_js(pesquisas_js()), ";\n",
+    "    window.PERFORMANCE = ", json_js(performance_js()), ";"
   )
 
   # Texto inicial do cabeçalho e das considerações (o JavaScript troca ao mudar de período)
@@ -412,7 +409,7 @@ gerar_relatorio <- function(d, pasta = PASTA_RELATORIO, periodo_inicial = NULL,
     str_replace(fixed("__RODAPE__"), \(m) str_replace_all(html_rodape(config), fixed("__ROTULO_REDES__"), L(idioma, "Redes profissionais", "Professional networks", "Redes profesionales"))) %>%
     str_replace(fixed('<html lang="pt-BR">'), \(m) sprintf('<html lang="%s">', L(idioma, "pt-BR", "en", "es"))) %>%
     str_replace(fixed("__CARDS_CANDIDATOS__"), \(m) html_cards(candidatos, idioma)) %>%
-    str_replace(fixed("__SOBRE_A_PESQUISA__"), \(m) html_sobre(sobre, proporcao, modelo_rotulo)) %>%
+    str_replace(fixed("__SOBRE_A_PESQUISA__"), \(m) html_sobre(sobre, proporcao, modelo_rotulo, criterio)) %>%
     str_replace(fixed("__CANDIDATE_IMAGES__"), \(m) js_imagens_candidatos()) %>%
     str_replace(fixed("__CONSIDERACOES__"), \(m) inicial$analise %||% "") %>%
     str_replace(fixed("__DADOS__"), \(m) dados_js) %>%

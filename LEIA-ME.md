@@ -69,16 +69,17 @@ A Liderança é marcada pelas suas subcategorias: uma postagem é de Liderança 
 
 ## 1 · Categorização
 
-1. **Arquivos:** adicione um `.xlsx` por vez. Escolha o arquivo, confira ou escreva o nome do candidato e clique em **Adicionar à lista**. Repita para todos os candidatos.
-2. **Período e %:** escolha o início e o fim da coleta (alguns dias, uma semana, um mês, um ano…) e a porcentagem. A regra é **os X% mais curtidos de cada candidato em todo o período escolhido** (não é por semana). A tabela "Seleção por candidato" mostra quantas postagens entram.
-3. **O que a IA analisa:** por padrão, as três fontes. Dá para desmarcar alguma.
+1. **Importar:** adicione um `.xlsx` por vez. Escolha o arquivo, confira ou escreva o nome do candidato e clique em **Adicionar à lista**. Repita para todos os candidatos.
+2. **Selecionar:** escolha o início e o fim da coleta (alguns dias, uma semana, um mês, um ano…), o critério e a porcentagem. A regra é **os X% mais curtidos, mais visualizados ou mais comentados de cada candidato em todo o período escolhido** (não é por semana). Só os vídeos têm visualizações: pelo critério de visualizações, as demais postagens ficam no fim da fila. A tabela "Prévia da seleção por candidato" mostra quantas postagens entram.
+3. **Analisar:** por padrão, as três fontes. Dá para desmarcar alguma.
    - **Legenda:** o texto da postagem.
    - **Imagens:** todas as imagens do carrossel. Nos vídeos, a capa.
    - **Vídeos:** o áudio é extraído e transcrito, e a transcrição é classificada.
-4. Clique em **Categorizar postagens**. Para cada postagem, o app:
-   - **baixa** as imagens e o vídeo para a pasta `midia/`;
+4. Clique em **Baixar imagens, vídeos e áudios**. O app baixa a mídia das postagens selecionadas para a pasta `midia/` e extrai o áudio dos vídeos. Não usa IA e não tem custo. Acima do botão aparece quantas postagens ainda estão sem mídia.
+5. Clique em **Categorizar postagens**. Para cada postagem, o app:
    - **transcreve** o áudio do vídeo;
    - pede à IA que marque, **em cada fonte**, as subcategorias presentes.
+   - Se ainda faltar mídia, o app avisa antes: dá para voltar e baixar, ou categorizar só com o que houver.
 
 **Nomes dos arquivos** (pelo shortcode da postagem):
 
@@ -124,9 +125,24 @@ Botões que ajudam:
 | **Nenhuma se aplica** | Desliga todos os interruptores |
 | **Formato** | Marca a postagem como "Produzido por IA", se for o caso |
 | **Confirmar e próxima** | Salva e mostra a próxima pendente |
+| **Aceitar classificação** | Aceita a sugestão da IA em **todas** as postagens ainda pendentes da rodada, sem revisão humana (fica registrado como "IA (aceita)") |
 | **Anterior** / **Pular** | Servem para revisar |
 
 Não há limite: ligue todas as subcategorias que a postagem tiver. Ao terminar, aparece o botão **Ir para o relatório**.
+
+### Comentários da postagem
+
+Abaixo da classificação de cada postagem fica o quadro **Comentários desta postagem**, a continuação da validação:
+
+- **Números:** comentários que a postagem tem no Instagram, quantos estão salvos (da planilha e do Apify), quantos foram classificados e validados, e o índice da postagem.
+- **Margem de erro do índice (IC 95%):** calculada com o número de comentários classificados e o total de comentários da postagem (com correção para população finita). Também aparece a margem só com os validados.
+- **Amostra necessária:** quantos comentários classificados seriam precisos para a margem escolhida na barra lateral (**Margem de erro desejada**, 5 pontos por padrão) e quantos faltam. É só uma referência: você escolhe quantos baixar.
+- **Classificar com IA:** classifica os comentários desta postagem que ainda não têm valência.
+- **Baixar mais … pelo Apify:** escolha quantos comentários novos quer e clique. O Apify devolve os primeiros comentários da postagem, por isso o pedido inclui os que ele já tinha coletado; o custo máximo aparece antes de confirmar.
+- **Lista de comentários:** cada um com a classificação da IA e as opções Positivo, Neutro e Negativo, 25 por página. Ajuste o que for preciso e clique em **Salvar validação desta página**.
+- **Aceitar a IA nesta postagem** ou **em todos os comentários da rodada:** valida a classificação da IA sem revisão humana e segue para o relatório.
+
+Como calcular a margem: cada comentário vale 1, 0,5 ou 0. Com n comentários classificados de um total N, a margem é 1,96 × √(s²/n) × √((N − n)/(N − 1)), em que s² é a variância observada. A amostra necessária usa o pior caso (s² = 0,25): n₀ = 1,96² × 0,25 / m² e n = n₀ / (1 + (n₀ − 1)/N).
 
 ### Acurácia da IA
 
@@ -205,10 +221,16 @@ Algumas seções:
 
 | Seção | O que mostra |
 |---|---|
-| **08 · Top 10** | As 10 postagens com mais curtidas, mais comentários e mais visualizações (só os vídeos têm visualizações) |
-| **09 · Evolução do índice de valência** | Linha do tempo do índice da Autenticidade, da Competência, da Humanização e do índice geral (tracejado) |
-| **10 · Desempenho nos comentários** | **Radar** circular com a proporção de comentários positivos (verde) e negativos (vermelho) do período, por subcategoria da Liderança ou por categoria, com o índice de cada uma e o **índice geral**, todos com IC 95%. Quanto maior a área verde, melhor o desempenho; quanto maior a vermelha, pior. |
-| **11 · Índice de valência e intenção de voto** | Aparece quando há pesquisas importadas (veja abaixo): o índice dos comentários ao lado da intenção de voto de cada candidato, por turno |
+| **Qual subcategoria mais cresceu** | Para o botão escolhido (Semana, Mês, Ano), compara a parcela das postagens de cada candidato com Autenticidade, Competência e Humanização com a do período anterior de mesmo tamanho (no botão Tudo, a segunda metade com a primeira). Mostra a variação em pontos percentuais, o maior aumento de cada candidato e de todos juntos, e avisa quando há menos de 10 postagens num dos períodos. |
+| **Top 10** | As 10 postagens com mais curtidas, mais comentários e mais visualizações (só os vídeos têm visualizações) |
+| **Evolução do índice da Liderança** | Uma linha por candidato com o **índice da Liderança**: a média ponderada das três subcategorias, com peso pelo número de comentários de cada uma. Botões mostram cada subcategoria separada, se quiser. |
+| **Desempenho nos comentários** | **Radar** com uma camada por candidato, sobrepostas (os valores não se somam): o índice de cada subcategoria da Liderança (ou de cada categoria). Ao lado, o índice da Liderança de cada candidato, com IC 95%. |
+| **Desempenho dos candidatos** | Aparece quando há um `performance.csv` importado (veja abaixo): a evolução de cada métrica (intenção de voto, seguidores…) por candidato |
+| **Índice de valência e intenção de voto** | Aparece só quando há pesquisas importadas: o índice da Liderança e a intenção de voto de todos os candidatos no mesmo gráfico, por turno |
+
+As seções são numeradas na ordem em que aparecem; as que dependem de arquivos opcionais somem quando o arquivo não foi importado.
+
+Os cartões das candidaturas no topo mostram só a foto, o partido e o número. Intenção de voto e seguidores ficam na seção **Desempenho dos candidatos**.
 
 Cada variável tem sempre a mesma cor em todas as seções: Liderança (anil), Partido (verde-azulado), Políticas (laranja), Autenticidade (rosa), Competência (dourado), Humanização (azul-claro); comentários positivos em verde, neutros em cinza e negativos em vermelho; e cada candidato com a sua cor.
 
@@ -225,7 +247,7 @@ O **título**, o **subtítulo**, o **texto do rodapé** e os quadros do **Sobre 
 
 ### Pesquisas eleitorais (índice × intenção de voto)
 
-No painel **Pesquisas eleitorais** (aba 4), escolha o CSV baixado de um agregador de pesquisas. Ele precisa das colunas `data`, `candidato` e `intencao`:
+No painel **Pesquisas e desempenho** (aba 4), escolha o CSV baixado de um agregador de pesquisas. Ele precisa das colunas `data`, `candidato` e `intencao`:
 
 ```
 data,candidato,intencao
@@ -247,10 +269,23 @@ data,candidato,intencao
   - Os resultados saem com o número de intervalos e o IC 95% (transformação de Fisher, a partir de 4 intervalos).
 - É uma associação exploratória, não causal. Com menos de 8 intervalos, o relatório avisa que o resultado serve só como indicação. A seção usa todo o período analisado, qualquer que seja o botão escolhido no topo.
 
+### Desempenho dos candidatos (performance.csv)
+
+No mesmo painel **Pesquisas e desempenho**, escolha o `performance.csv`: uma linha por data e candidato e uma coluna por métrica.
+
+```
+data;candidato;intencao_voto;seguidores_ig
+05/08/2026;Lula;40,3;15.300.000
+05/08/2026;Flávio Bolsonaro;32,5;11.800.000
+```
+
+Aceita vírgula ou ponto e vírgula, vírgula decimal, ponto de milhar e valores como `15,3M`. No relatório, cada métrica vira um botão, com uma linha por candidato.
+
 ### Cabeçalho e rodapé
 
 Em **Sobre a pesquisa** (aba 4):
-- **Cabeçalho:** título, subtítulo (opcional) e a assinatura acima do título.
+- **Cabeçalho:** título, subtítulo (opcional) e a assinatura, que aparece abaixo do subtítulo.
+- **Quadros do "Sobre a pesquisa":** use **Adicionar quadro** e o ícone de lixeira de cada quadro para decidir quais aparecem no relatório. O primeiro quadro abre a seção; os demais ficam lado a lado.
 - **Rodapé:** foto (vira `assets/img_cand/politica-logo`), nome, **cargo ou formação**, **minibiografia**, links do **Lattes**, **ORCID**, **LinkedIn**, **Google Acadêmico** e **GitHub** e uma nota final opcional. Os links preenchidos viram ícones; os vazios não aparecem. Cargo, minibiografia e nota têm uma versão para cada idioma.
 
 Clique em **Salvar cabeçalho, rodapé e textos** (ou só gere o relatório, que também salva).
